@@ -41,6 +41,52 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["regions"]["Insert"]>;
         Relationships: [];
       };
+      regions_live: {
+        Row: {
+          id: string;
+          city: string;
+          postal_code: string | null;
+          federal_state: string;
+          country: string;
+          openplz_municipality_key: string | null;
+          is_live: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          city: string;
+          postal_code?: string | null;
+          federal_state: string;
+          country?: string;
+          openplz_municipality_key?: string | null;
+          is_live?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["regions_live"]["Insert"]>;
+        Relationships: [];
+      };
+      waitlist: {
+        Row: {
+          id: string;
+          email: string;
+          city: string;
+          federal_state: string | null;
+          country: string | null;
+          role: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          city: string;
+          federal_state?: string | null;
+          country?: string | null;
+          role?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["waitlist"]["Insert"]>;
+        Relationships: [];
+      };
       verification_attempts: {
         Row: {
           id: string;
@@ -66,7 +112,7 @@ export type Database = {
 export const isProfileComplete = (profile: Profile | null) =>
   Boolean(
     profile?.full_name &&
-      profile.birthdate &&
-      profile.city &&
-      profile.user_type
+    profile.birthdate &&
+    profile.city &&
+    profile.user_type
   );

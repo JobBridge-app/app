@@ -17,8 +17,9 @@ import { getRegions, type Region } from "@/lib/regions";
 import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2 } from "lucide-react";
 import { verifySignupCode } from "@/lib/verify";
+import { LocationStep } from "./onboarding/LocationStep";
 
-type Step = "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
+type Step = "location" | "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
 
 type AuthMode = "signup" | "signin" | null;
 
@@ -26,6 +27,7 @@ type OnboardingWizardProps = {
   initialProfile?: Profile | null;
   forcedStep?: Step | null;
   initialEmail?: string;
+  initialRegion?: string;
 };
 
 const isProfileComplete = (profile: Profile | null | undefined) => {
@@ -42,6 +44,7 @@ export function OnboardingWizard({
   initialProfile,
   forcedStep = null,
   initialEmail = "",
+  initialRegion = "",
 }: OnboardingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(
@@ -76,7 +79,7 @@ export function OnboardingWizard({
     role: (initialProfile?.user_type as UserType) || null,
     fullName: initialProfile?.full_name || "",
     birthdate: initialProfile?.birthdate || "",
-    region: initialProfile?.city || "",
+    region: initialProfile?.city || initialRegion || "",
     companyName: "",
     companyEmail: "",
     companyMessage: "",
@@ -167,7 +170,7 @@ export function OnboardingWizard({
           role: profileTyped.user_type as UserType,
           fullName: profileTyped.full_name || "",
           birthdate: profileTyped.birthdate || "",
-          region: profileTyped.city || "",
+          region: profileTyped.city || user.user_metadata?.city || "",
         }));
       }
       return true;
@@ -209,7 +212,10 @@ export function OnboardingWizard({
     setError(null);
 
     try {
-      const { error } = await signUpWithEmail(email, password);
+      const { error } = await signUpWithEmail(email, password, {
+        city: profileData.region,
+        full_name: profileData.fullName,
+      });
       if (error) throw error;
       setStep("email-confirm");
       setEmailStatus("Wir haben dir eine Bestätigung gesendet. Bitte prüfe dein Postfach.");
@@ -427,6 +433,13 @@ export function OnboardingWizard({
     if (step === "welcome") {
       setStep("mode");
     } else if (step === "mode") {
+      if (mode === "signin") {
+        setStep("auth");
+      } else {
+        setStep("location");
+      }
+    } else if (step === "location") {
+      // Logic handled in LocationStep onComplete, but if we need a fallback:
       setStep("auth");
     } else if (step === "auth") {
       if (mode === "signup") {
@@ -443,7 +456,7 @@ export function OnboardingWizard({
       }
       setStep("profile");
     } else if (step === "profile") {
-      if (!profileData.fullName || !profileData.birthdate || !profileData.region) {
+      if (!profileData.fullName || !profileData.birthdate) {
         setError("Bitte fülle alle Felder aus.");
         return;
       }
@@ -462,8 +475,14 @@ export function OnboardingWizard({
   const prevStep = () => {
     if (step === "mode") {
       setStep("welcome");
-    } else if (step === "auth") {
+    } else if (step === "location") {
       setStep("mode");
+    } else if (step === "auth") {
+      if (mode === "signup") {
+        setStep("location");
+      } else {
+        setStep("mode");
+      }
     } else if (step === "profile") {
       setStep("role");
     } else if (step === "contact") {
@@ -581,6 +600,44 @@ export function OnboardingWizard({
                   <ButtonPrimary onClick={nextStep} disabled={!mode} className="flex-1" loading={loading}>
                     Weiter
                   </ButtonPrimary>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Schritt 3 (optional): Location NUR wenn mode="signup" */}
+          {step === "location" && (
+            <motion.div
+              key="location"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden min-h-[400px]">
+                {/* Lichtkante */}
+                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
+                {/* Subtile Textur */}
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
+                  }}
+                />
+                <LocationStep
+                  onComplete={(regionData) => {
+                    setProfileData((prev) => ({
+                      ...prev,
+                      region: regionData.city,
+                    }));
+                    setStep("auth");
+                  }}
+                />
+                <div className="mt-8 flex justify-center">
+                  <ButtonSecondary onClick={prevStep} className="w-full">
+                    Zurück
+                  </ButtonSecondary>
                 </div>
               </div>
             </motion.div>
@@ -949,40 +1006,8 @@ export function OnboardingWizard({
                       Erforderlich für Jugendschutz.
                     </p>
                   </div>
-                  <div>
-                    <label className="mb-2 block text-lg font-medium text-white">
-                      Region / Stadt
-                    </label>
-                    {regionsLoading ? (
-                      <div className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-slate-400">
-                        Regionen werden geladen...
-                      </div>
-                    ) : (
-                      <select
-                        value={profileData.region}
-                        onChange={(e) =>
-                          setProfileData((prev) => ({ ...prev, region: e.target.value }))
-                        }
-                        className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        required
-                      >
-                        <option value="">Bitte wähle eine Region</option>
-                        {regions.map((region) => (
-                          <option key={region.id} value={region.name} className="bg-slate-900">
-                            {region.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                    <p className="mt-2 text-sm text-slate-400">
-                      Damit wir dir passende Angebote zeigen können.
-                    </p>
-                    {regions.length === 0 && !regionsLoading && (
-                      <p className="mt-2 text-sm text-amber-400">
-                        Wenn deine Region nicht verfügbar ist, unterstützen wir sie noch nicht.
-                      </p>
-                    )}
-                  </div>
+
+                  {/* Region selection removed from this step as it is handled at the start */}
                   {error && (
                     <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
                       {error}
@@ -999,206 +1024,211 @@ export function OnboardingWizard({
                 </form>
               </div>
             </motion.div>
-          )}
+          )
+          }
 
           {/* Schritt 7: Company-Kontakt */}
-          {step === "contact" && (
-            <motion.div
-              key="contact"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
-
-                <CardHeader
-                  title="Kontaktiere uns"
-                  subtitle="Für Unternehmen schalten wir Zugänge manuell frei."
-                />
-                {isSaving ? (
-                  <Loader text="Wird gespeichert..." />
-                ) : (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleCompanyContact();
+          {
+            step === "contact" && (
+              <motion.div
+                key="contact"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
+                  {/* Lichtkante */}
+                  <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
+                  {/* Subtile Textur */}
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
                     }}
-                    className="space-y-6"
-                  >
-                    <div>
-                      <label className="mb-2 block text-lg font-medium text-white">
-                        Firmenname / Organisation
-                      </label>
-                      <input
-                        type="text"
-                        value={profileData.companyName}
-                        onChange={(e) =>
-                          setProfileData((prev) => ({ ...prev, companyName: e.target.value }))
-                        }
-                        className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        placeholder="Musterfirma GmbH"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-lg font-medium text-white">
-                        E-Mail-Adresse
-                      </label>
-                      <input
-                        type="email"
-                        value={profileData.companyEmail}
-                        onChange={(e) =>
-                          setProfileData((prev) => ({ ...prev, companyEmail: e.target.value }))
-                        }
-                        className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        placeholder="kontakt@firma.de"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-lg font-medium text-white">
-                        Nachricht
-                      </label>
-                      <textarea
-                        value={profileData.companyMessage}
-                        onChange={(e) =>
-                          setProfileData((prev) => ({ ...prev, companyMessage: e.target.value }))
-                        }
-                        rows={5}
-                        className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        placeholder="Erzähl uns kurz, was du suchst oder anbietest..."
-                        required
-                      />
-                    </div>
-                    {error && (
-                      <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
-                        {error}
-                        <button
-                          onClick={handleCompanyContact}
-                          className="mt-2 text-sm underline text-rose-200 hover:text-rose-100"
-                        >
-                          Noch einmal versuchen
-                        </button>
+                  />
+
+                  <CardHeader
+                    title="Kontaktiere uns"
+                    subtitle="Für Unternehmen schalten wir Zugänge manuell frei."
+                  />
+                  {isSaving ? (
+                    <Loader text="Wird gespeichert..." />
+                  ) : (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleCompanyContact();
+                      }}
+                      className="space-y-6"
+                    >
+                      <div>
+                        <label className="mb-2 block text-lg font-medium text-white">
+                          Firmenname / Organisation
+                        </label>
+                        <input
+                          type="text"
+                          value={profileData.companyName}
+                          onChange={(e) =>
+                            setProfileData((prev) => ({ ...prev, companyName: e.target.value }))
+                          }
+                          className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          placeholder="Musterfirma GmbH"
+                          required
+                        />
                       </div>
-                    )}
-                    <div className="flex gap-4">
-                      <ButtonSecondary onClick={prevStep} className="flex-1">
-                        Zurück
-                      </ButtonSecondary>
-                      <ButtonPrimary type="submit" className="flex-1" loading={isSaving}>
-                        Absenden
-                      </ButtonPrimary>
-                    </div>
-                    <div className="text-center text-sm text-slate-400">
-                      Oder schreibe uns direkt an:{" "}
-                      <a
-                        href={`mailto:${CONTACT_EMAIL}`}
-                        className="text-blue-400 hover:text-blue-300 underline"
-                      >
-                        {CONTACT_EMAIL}
-                      </a>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Schritt 8: Zusammenfassung */}
-          {step === "summary" && (
-            <motion.div
-              key="summary"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
-
-                <CardHeader
-                  title="Überblick vor dem Start"
-                  subtitle="So sehen Auftraggeber dein Profil auf den ersten Blick."
-                />
-                {isSaving ? (
-                  <Loader text="Wird gespeichert..." />
-                ) : (
-                  <>
-                    <div className="space-y-3 text-left">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300/80">Übersicht</p>
-                      <div className="glass-card rounded-2xl border border-white/20 bg-white/5 p-7 space-y-5">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="text-sm text-slate-400">Rolle</div>
-                            <div className="text-xl font-semibold text-white">
-                              {profileData.role === "youth" && "Jobsuchende/r (unter 18)"}
-                              {profileData.role === "adult" && "Jobanbieter (ab 18)"}
-                              {profileData.role === "company" && "Unternehmen / Organisation"}
-                            </div>
-                          </div>
+                      <div>
+                        <label className="mb-2 block text-lg font-medium text-white">
+                          E-Mail-Adresse
+                        </label>
+                        <input
+                          type="email"
+                          value={profileData.companyEmail}
+                          onChange={(e) =>
+                            setProfileData((prev) => ({ ...prev, companyEmail: e.target.value }))
+                          }
+                          className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          placeholder="kontakt@firma.de"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-lg font-medium text-white">
+                          Nachricht
+                        </label>
+                        <textarea
+                          value={profileData.companyMessage}
+                          onChange={(e) =>
+                            setProfileData((prev) => ({ ...prev, companyMessage: e.target.value }))
+                          }
+                          rows={5}
+                          className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          placeholder="Erzähl uns kurz, was du suchst oder anbietest..."
+                          required
+                        />
+                      </div>
+                      {error && (
+                        <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
+                          {error}
                           <button
-                            type="button"
-                            onClick={() => setStep("profile")}
-                            className="text-sm text-cyan-200 underline-offset-4 hover:underline"
+                            onClick={handleCompanyContact}
+                            className="mt-2 text-sm underline text-rose-200 hover:text-rose-100"
                           >
-                            Bearbeiten
+                            Noch einmal versuchen
                           </button>
                         </div>
-                        <div>
-                          <div className="text-sm text-slate-400">Name</div>
-                          <div className="text-xl font-semibold text-white">{profileData.fullName}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-slate-400">Region</div>
-                          <div className="text-xl font-semibold text-white">{profileData.region}</div>
-                        </div>
+                      )}
+                      <div className="flex gap-4">
+                        <ButtonSecondary onClick={prevStep} className="flex-1">
+                          Zurück
+                        </ButtonSecondary>
+                        <ButtonPrimary type="submit" className="flex-1" loading={isSaving}>
+                          Absenden
+                        </ButtonPrimary>
                       </div>
-                    </div>
-                    {error && (
-                      <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
-                        {error}
-                        <button
-                          onClick={handleCompleteOnboarding}
-                          className="mt-2 text-sm underline text-rose-200 hover:text-rose-100"
+                      <div className="text-center text-sm text-slate-400">
+                        Oder schreibe uns direkt an:{" "}
+                        <a
+                          href={`mailto:${CONTACT_EMAIL}`}
+                          className="text-blue-400 hover:text-blue-300 underline"
                         >
-                          Noch einmal versuchen
-                        </button>
+                          {CONTACT_EMAIL}
+                        </a>
                       </div>
-                    )}
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <ButtonSecondary onClick={() => setStep("profile")}>Daten bearbeiten</ButtonSecondary>
-                      <ButtonPrimary onClick={handleCompleteOnboarding} className="sm:w-40" loading={isSaving}>
-                        Start
-                      </ButtonPrimary>
-                    </div>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                    </form>
+                  )}
+                </div>
+              </motion.div>
+            )
+          }
 
-      </div>
-    </div>
+          {/* Schritt 8: Zusammenfassung */}
+          {
+            step === "summary" && (
+              <motion.div
+                key="summary"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
+                  {/* Lichtkante */}
+                  <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
+                  {/* Subtile Textur */}
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
+                    }}
+                  />
+
+                  <CardHeader
+                    title="Überblick vor dem Start"
+                    subtitle="So sehen Auftraggeber dein Profil auf den ersten Blick."
+                  />
+                  {isSaving ? (
+                    <Loader text="Wird gespeichert..." />
+                  ) : (
+                    <>
+                      <div className="space-y-3 text-left">
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-300/80">Übersicht</p>
+                        <div className="glass-card rounded-2xl border border-white/20 bg-white/5 p-7 space-y-5">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="text-sm text-slate-400">Rolle</div>
+                              <div className="text-xl font-semibold text-white">
+                                {profileData.role === "youth" && "Jobsuchende/r (unter 18)"}
+                                {profileData.role === "adult" && "Jobanbieter (ab 18)"}
+                                {profileData.role === "company" && "Unternehmen / Organisation"}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setStep("profile")}
+                              className="text-sm text-cyan-200 underline-offset-4 hover:underline"
+                            >
+                              Bearbeiten
+                            </button>
+                          </div>
+                          <div>
+                            <div className="text-sm text-slate-400">Name</div>
+                            <div className="text-xl font-semibold text-white">{profileData.fullName}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-slate-400">Region</div>
+                            <div className="text-xl font-semibold text-white">{profileData.region}</div>
+                          </div>
+                        </div>
+                      </div>
+                      {error && (
+                        <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
+                          {error}
+                          <button
+                            onClick={handleCompleteOnboarding}
+                            className="mt-2 text-sm underline text-rose-200 hover:text-rose-100"
+                          >
+                            Noch einmal versuchen
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-8">
+                        <ButtonSecondary onClick={() => setStep("profile")}>Daten bearbeiten</ButtonSecondary>
+                        <ButtonPrimary onClick={handleCompleteOnboarding} className="sm:w-40" loading={isSaving}>
+                          Start
+                        </ButtonPrimary>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            )
+          }
+        </AnimatePresence >
+
+      </div >
+    </div >
   );
 }

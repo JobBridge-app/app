@@ -21,11 +21,17 @@ export default async function OnboardingPage() {
       ? authState.session.user.email ?? ""
       : "";
 
+  const initialRegion =
+    (authState.state === "email-unconfirmed" || authState.state === "incomplete-profile")
+      ? authState.session.user.user_metadata?.city
+      : "";
+
   return (
     <OnboardingWizard
       initialProfile={initialProfile}
       forcedStep={forcedStep}
       initialEmail={initialEmail}
+      initialRegion={initialRegion}
     />
   );
 }
