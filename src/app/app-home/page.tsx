@@ -1,17 +1,16 @@
-import { AppHomeContent } from "@/components/app-home/AppHomeContent";
-import { getAuthState } from "@/lib/auth";
+import { requireCompleteProfile } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export default async function AppHomePage() {
-  const authState = await getAuthState();
+  const { profile } = await requireCompleteProfile();
 
-  if (authState.state === "no-session") {
-    redirect("/");
+  // Strict Redirect based on User Type
+  if (profile.user_type === "company") {
+    redirect("/app-home/offers");
+  } else {
+    redirect("/app-home/jobs");
   }
 
-  if (authState.state === "incomplete-profile") {
-    redirect("/onboarding");
-  }
-
-  return <AppHomeContent profile={authState.profile} />;
+  // Fallback (should not be reached if types are correct)
+  return null;
 }

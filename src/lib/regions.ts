@@ -23,10 +23,10 @@ const FALLBACK_REGIONS: Region[] = [
 export const getRegions = async (): Promise<Region[]> => {
   try {
     const { data, error } = await supabaseBrowser
-      .from("regions")
-      .select("id, name, is_active")
-      .eq("is_active", true)
-      .order("name");
+      .from("regions_live")
+      .select("id, city, display_name, is_live")
+      .eq("is_live", true)
+      .order("city");
 
     if (error) {
       console.warn("Fehler beim Laden der Regionen, verwende Fallback-Liste:", error);
@@ -38,7 +38,11 @@ export const getRegions = async (): Promise<Region[]> => {
       return FALLBACK_REGIONS;
     }
 
-    return data as Region[];
+    return data.map((r: any) => ({
+      id: r.id,
+      name: r.display_name || r.city,
+      is_active: r.is_live
+    })) as Region[];
   } catch (error) {
     console.warn("Fehler beim Laden der Regionen, verwende Fallback-Liste:", error);
     return FALLBACK_REGIONS;

@@ -1,4 +1,4 @@
-export type UserType = "youth" | "adult" | "senior" | "company";
+export type UserType = "youth" | "adult" | "senior" | "company" | "admin";
 export type JobStatus = "draft" | "open" | "closed";
 export type ApplicationStatus = "submitted" | "withdrawn" | "accepted" | "rejected";
 export type SystemRoleType = "admin" | "moderator" | "analyst";
@@ -10,6 +10,8 @@ export type Profile = {
   city: string | null;
   user_type: UserType | null;
   is_verified: boolean | null;
+  market_id: string | null;
+  theme_preference?: "light" | "dark" | "system";
   created_at: string | null;
   email?: string; // Often joined from auth.users or waitlist, keeping optional
 };
@@ -66,6 +68,8 @@ export type Database = {
           city?: string | null;
           user_type?: UserType | null;
           is_verified?: boolean | null;
+          market_id?: string | null;
+          theme_preference?: "light" | "dark" | "system";
           created_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
@@ -140,6 +144,11 @@ export type Database = {
           country: string;
           openplz_municipality_key: string | null;
           is_live: boolean;
+          slug?: string | null;
+          display_name?: string | null;
+          brand_prefix?: string | null;
+          centroid_lat?: number | null;
+          centroid_lng?: number | null;
           created_at: string;
         };
         Insert: {
@@ -150,6 +159,11 @@ export type Database = {
           country?: string;
           openplz_municipality_key?: string | null;
           is_live?: boolean;
+          slug?: string | null;
+          display_name?: string | null;
+          brand_prefix?: string | null;
+          centroid_lat?: number | null;
+          centroid_lng?: number | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["regions_live"]["Insert"]>;
@@ -245,9 +259,38 @@ export type Database = {
           }
         ];
       };
+      demo_sessions: {
+        Row: {
+          user_id: string;
+          enabled: boolean;
+          demo_view: "job_seeker" | "job_provider";
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          enabled?: boolean;
+          demo_view?: "job_seeker" | "job_provider";
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["demo_sessions"]["Insert"]>;
+        Relationships: [];
+      };
+      demo_jobs: Database["public"]["Tables"]["jobs"]; // Reusing structure
+      demo_applications: Database["public"]["Tables"]["applications"];
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_jobs_feed: {
+        Args: {
+          p_market_id: string;
+          p_user_lat?: number | null;
+          p_user_lng?: number | null;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: any[];
+      };
+    };
     Enums: {
       user_type: UserType;
       job_status: JobStatus;
@@ -261,6 +304,13 @@ export const isProfileComplete = (profile: Profile | null) =>
   Boolean(
     profile?.full_name &&
     profile.birthdate &&
-    profile.city &&
     profile.user_type
   );
+
+export type Market = {
+  id: string;
+  slug: string;
+  display_name: string;
+  brand_prefix: string;
+  is_live: boolean;
+};

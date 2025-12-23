@@ -43,6 +43,28 @@ export const getCurrentSessionAndProfile = async (): Promise<{
     ? (rolesResult.data as any[]).map((r) => r.role?.name).filter(Boolean)
     : [];
 
+  // --- DEMO MODE INJECTION ---
+  if (profile) {
+    // We check the demo status to see if we should simulate a different role
+    // We use a safe inline check to avoid massive dependency cycles contextually,
+    // but importing getDemoStatus from lib/demo is safe given project structure.
+    const { data: demoSession } = await supabase
+      .from("demo_sessions")
+      .select("enabled, demo_view")
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (demoSession?.enabled) {
+      // Overwrite user_type based on demo_view
+      if (demoSession.demo_view === 'job_provider') {
+        profile.user_type = 'company';
+      } else {
+        profile.user_type = 'youth';
+      }
+    }
+  }
+  // ---------------------------
+
   return { session, profile: profile ?? null, systemRoles };
 };
 
