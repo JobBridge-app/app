@@ -43,6 +43,7 @@ export async function createJobService(
             public_location_label,
             public_lat,
             public_lng,
+            wage_hourly, // Exclude for now until DB patch is applied
             ...demoPayload
         } = payload;
         payload = demoPayload as any;

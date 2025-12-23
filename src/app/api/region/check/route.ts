@@ -33,13 +33,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ status: "unknown" });
         }
 
-        const region = data[0] as Database["public"]["Tables"]["regions_live"]["Row"];
+        const region = data[0];
 
-        if (region.is_live) {
-            return NextResponse.json({ status: "live", region });
-        } else {
-            return NextResponse.json({ status: "not_live", region });
-        }
+        // Since we are querying 'regions_live', existence implies it is live.
+        return NextResponse.json({ status: "live", region });
     } catch (err) {
         console.error("API error:", err);
         return NextResponse.json(

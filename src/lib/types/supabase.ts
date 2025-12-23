@@ -574,7 +574,14 @@ export interface Database {
             [_ in never]: never
         }
         Functions: {
-            [_ in never]: never
+            get_jobs_feed: {
+                Args: {
+                    p_market_id: string
+                    p_user_lat?: number | null
+                    p_user_lng?: number | null
+                }
+                Returns: Database["public"]["Tables"]["jobs"]["Row"][]
+            }
         }
         Enums: {
             application_status: "submitted" | "accepted" | "rejected" | "hired"
