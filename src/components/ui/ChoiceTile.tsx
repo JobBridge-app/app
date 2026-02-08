@@ -19,31 +19,37 @@ export function ChoiceTile({
   className,
   disabled = false,
 }: ChoiceTileProps) {
+  const interactive = !disabled && typeof onClick === "function";
+
   return (
-    <motion.div
-      onClick={disabled ? undefined : onClick}
-      initial={{ opacity: 0, scale: 0.95 }}
+    <motion.button
+      type="button"
+      onClick={interactive ? onClick : undefined}
+      disabled={disabled}
+      aria-pressed={selected}
+      initial={{ opacity: 0, y: 8 }}
       animate={{
         opacity: 1,
-        scale: selected ? 1.05 : 1.0,
+        y: 0,
       }}
-      whileHover={!disabled && onClick ? { scale: 1.03, rotateY: 1 } : undefined}
-      whileTap={!disabled && onClick ? { scale: 0.98 } : undefined}
+      whileHover={interactive ? { y: -1, scale: selected ? 1.01 : 1.02 } : undefined}
+      whileTap={interactive ? { scale: 0.99 } : undefined}
       transition={{
-        duration: 0.3,
+        duration: 0.25,
         ease: "easeOut",
       }}
       className={clsx(
-        "relative cursor-pointer backdrop-blur-xl border rounded-3xl overflow-hidden transition-all duration-300",
+        "relative w-full text-left backdrop-blur-xl border rounded-3xl overflow-hidden transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/70",
         selected
-          ? "bg-white/8 border-cyan-400 ring-2 ring-cyan-400/70 shadow-[0_0_40px_rgba(34,211,238,0.55)]"
-          : "bg-white/6 border-white/10 hover:bg-white/8 hover:scale-105 hover:shadow-lg",
+          ? "bg-white/10 border-cyan-300/80 ring-1 ring-cyan-300/40 shadow-[0_0_0_1px_rgba(34,211,238,0.25),0_18px_70px_rgba(0,0,0,0.55)]"
+          : "bg-white/6 border-white/10 hover:bg-white/8",
+        interactive ? "cursor-pointer" : "cursor-default",
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}
     >
       {/* Content */}
-      <div className="relative z-10 p-6">{children}</div>
+      <div className="relative z-10 p-5 sm:p-6">{children}</div>
       
       {/* Selected state - Checkmark */}
       {selected && (
@@ -67,7 +73,6 @@ export function ChoiceTile({
           </svg>
         </motion.div>
       )}
-    </motion.div>
+    </motion.button>
   );
 }
-

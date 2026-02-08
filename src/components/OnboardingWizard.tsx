@@ -803,6 +803,7 @@ export function OnboardingWizard({
                           <div className="flex items-center justify-between relative z-10">
                             <label className="text-base font-medium text-white/90">Bestätigungscode eingeben</label>
                           </div>
+
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 relative z-10">
                             <input
                               type="text"
@@ -815,26 +816,36 @@ export function OnboardingWizard({
                               inputMode="numeric"
                               pattern="[0-9]*"
                               maxLength={8}
-                              className={`flex-1 rounded-2xl border ${codeError ? "border-rose-400/50 bg-rose-500/10 focus:ring-rose-500/30" : "border-white/20 bg-black/20 focus:border-cyan-400/50 focus:ring-cyan-400/30"} px-5 py-4 text-center text-xl tracking-[0.35em] text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all`}
+                              className={`min-w-0 flex-1 rounded-2xl border ${codeError ? "border-rose-400/50 bg-rose-500/10 focus:ring-rose-500/30" : "border-white/20 bg-black/20 focus:border-cyan-400/50 focus:ring-cyan-400/30"} px-5 py-4 text-center text-xl tracking-[0.35em] text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all`}
                               placeholder="12345678"
                               value={code}
                               autoFocus
                               disabled={codeLocked}
                             />
-                            <ButtonSecondary onClick={handleVerifyCode} className="sm:w-auto h-14 px-6 font-medium whitespace-nowrap" disabled={loading || code.length < 8 || codeLocked}>
+                            <ButtonSecondary
+                              onClick={handleVerifyCode}
+                              className="w-full sm:w-auto flex-shrink-0 h-14 px-6 font-medium whitespace-nowrap"
+                              disabled={loading || code.length < 8 || codeLocked}
+                            >
                               Code prüfen
                             </ButtonSecondary>
                           </div>
+
                           {codeError && (
                             <motion.div
-                              initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
                               className="text-sm text-rose-300 bg-rose-950/30 px-3 py-2 rounded-lg border border-rose-500/20 inline-block"
                             >
                               {codeError}
                             </motion.div>
                           )}
                           {codeMessage && (
-                            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-green-300 font-medium bg-green-900/20 px-3 py-2 rounded-lg border border-green-500/20 inline-block">
+                            <motion.p
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="text-sm text-green-300 font-medium bg-green-900/20 px-3 py-2 rounded-lg border border-green-500/20 inline-block"
+                            >
                               {codeMessage}
                             </motion.p>
                           )}
@@ -878,7 +889,7 @@ export function OnboardingWizard({
                 />
 
                 {/* Choice Tiles */}
-                <div className="flex flex-col gap-4 mb-8">
+                <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2">
                   {[
                     {
                       value: "youth" as UserType,
@@ -888,17 +899,17 @@ export function OnboardingWizard({
                     },
                     {
                       value: "adult" as UserType,
-                      title: "Privatperson/Eltern/Anbieter",
+                      title: "Privatperson / Eltern / Anbieter",
                       description: "Ich möchte Aufträge vergeben",
                       icon: <HandHeart className="h-6 w-6 text-cyan-300" />,
                     },
                     {
                       value: "company" as UserType,
-                      title: "Organisation/Unternehmen",
+                      title: "Organisation / Unternehmen",
                       description: "Ich vertrete ein Unternehmen",
                       icon: <Building2 className="h-6 w-6 text-indigo-300" />,
                     },
-                  ].map((role) => {
+                  ].map((role, idx) => {
                     const active = profileData.role === role.value;
                     return (
                       <ChoiceTile
@@ -908,16 +919,19 @@ export function OnboardingWizard({
                           setError(null);
                         }}
                         selected={active}
+                        className={`h-full ${idx === 2 ? "sm:col-span-2" : ""}`}
                       >
-                        <div
-                          className={`flex items-center gap-4 rounded-2xl border px-5 py-4 text-left transition shadow-inner border-white/10 bg-white/5`}
-                        >
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
+                        <div className="flex items-start gap-4">
+                          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white/10">
                             {role.icon}
                           </div>
-                          <div className="space-y-1">
-                            <div className="text-lg font-semibold text-white leading-tight">{role.title}</div>
-                            <div className="text-sm text-slate-300 leading-snug">{role.description}</div>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="text-base font-semibold text-white leading-tight break-words sm:text-lg">
+                              {role.title}
+                            </div>
+                            <div className="text-sm text-slate-300 leading-snug">
+                              {role.description}
+                            </div>
                           </div>
                         </div>
                       </ChoiceTile>
@@ -999,7 +1013,7 @@ export function OnboardingWizard({
                       onChange={(e) =>
                         setProfileData((prev) => ({ ...prev, birthdate: e.target.value }))
                       }
-                      className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className="w-full appearance-none shadow-none [color-scheme:dark] rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white invalid:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                       required
                     />
                     <p className="mt-2 text-sm text-slate-400">

@@ -70,7 +70,7 @@ export function StepProfile({
             type="date"
             value={birthdate}
             onChange={(e) => onChange("birthdate", e.target.value)}
-            className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-4 text-lg text-white placeholder:text-slate-300/70 focus:border-cyan-300/80 focus:outline-none focus:ring-2 focus:ring-cyan-300/60 md:text-xl"
+            className="w-full appearance-none shadow-none [color-scheme:dark] rounded-2xl border border-white/15 bg-white/5 px-4 py-4 text-lg text-white invalid:text-slate-500 placeholder:text-slate-300/70 focus:border-cyan-300/80 focus:outline-none focus:ring-2 focus:ring-cyan-300/60 md:text-xl"
             whileFocus={{ scale: 1.005 }}
           />
         </label>
