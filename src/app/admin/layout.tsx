@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminGlobalSearch } from "./components/AdminGlobalSearch";
+import { MobileAdminNav } from "./components/MobileAdminNav";
 
 export default async function AdminLayout({
     children,
@@ -23,11 +24,10 @@ export default async function AdminLayout({
 
             {/* Content */}
             <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-                {/* Mobile Admin Header (Visible only on small screens) */}
-                <header className="md:hidden flex items-center justify-between p-4 bg-slate-900 border-b border-white/10">
-                    <span className="font-bold text-white">JobBridge Staff</span>
-                    <Link href="/app-home" className="text-sm text-slate-400">Exit</Link>
-                </header>
+                {/* Mobile Admin Header & Nav */}
+                <div className="md:hidden">
+                    <MobileAdminNav />
+                </div>
 
                 <div className="hidden md:flex items-center justify-end px-8 py-4 border-b border-white/5 bg-slate-950/40 backdrop-blur-md">
                     <AdminGlobalSearch />
