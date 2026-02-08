@@ -85,7 +85,7 @@ export function ApplyButton({ canApply, guardianStatus: initialStatus, jobId }: 
                         <div className="bg-amber-500/10 p-1.5 rounded-lg text-amber-500">
                             <ShieldCheck size={20} />
                         </div>
-                        <span className="text-white font-medium">Jugendschutz & Sicherheit</span>
+                        <span className="text-white font-medium">Jugendschutz & Datenschutz</span>
                     </div>
                 }
             >
@@ -95,18 +95,12 @@ export function ApplyButton({ canApply, guardianStatus: initialStatus, jobId }: 
                         <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5">
                             <h3 className="text-white font-medium mb-2 flex items-center gap-2">
                                 <Info size={16} className="text-indigo-400" />
-                                Bestätigung erforderlich
+                                Einverständnis erforderlich
                             </h3>
                             <p className="text-slate-400 text-sm leading-relaxed">
-                                Um die Sicherheit auf unserer Plattform zu gewährleisten und den gesetzlichen Schutzbestimmungen für Minderjährige gerecht zu werden, benötigen wir eine einmalige Bestätigung durch einen Erziehungsberechtigten.
+                                Um deine Sicherheit zu gewährleisten und den gesetzlichen Anforderungen (DSGVO & Jugendschutz) zu entsprechen, benötigen wir vor deiner ersten Bewerbung eine einmalige Bestätigung durch deine Eltern.
                             </p>
                         </div>
-
-                        {!inviteLink && (
-                            <p className="text-slate-300 text-sm leading-relaxed px-1">
-                                Dein Konto ist aktuell noch eingeschränkt. Du kannst interessante Jobs entdecken, aber für eine Bewerbung müssen deine Eltern dein Profil freischalten. Dies dient deiner Absicherung.
-                            </p>
-                        )}
                     </div>
 
                     {/* Action Area */}
@@ -159,7 +153,7 @@ export function ApplyButton({ canApply, guardianStatus: initialStatus, jobId }: 
                                         1
                                     </div>
                                     <div className="text-sm text-slate-400">
-                                        Erstelle einen sicheren Einladungslink für deine Eltern.
+                                        Erstelle einen sicheren Einladungslink.
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4 p-4 border border-dashed border-white/10 rounded-xl bg-white/5 opacity-50">
@@ -167,7 +161,7 @@ export function ApplyButton({ canApply, guardianStatus: initialStatus, jobId }: 
                                         2
                                     </div>
                                     <div className="text-sm text-slate-500">
-                                        Ein Elternteil bestätigt dein Konto & du kannst dich bewerben.
+                                        Deine Eltern bestätigen dein Konto & die Datenverarbeitung.
                                     </div>
                                 </div>
                             </motion.div>
