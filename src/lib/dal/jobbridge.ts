@@ -71,13 +71,13 @@ export async function getEffectiveView(opts?: {
   };
 
   const userId = opts?.userId ?? (await getSessionUser());
-  const resolvedUserId = typeof userId === "string" ? userId : (userId.ok ? userId.data.userId : null);
+  if (typeof userId !== "string" && !userId.ok) {
+    return { ok: false, error: userId.error, debug: { ...debug, step: "resolveUserId" } };
+  }
+
+  const resolvedUserId = typeof userId === "string" ? userId : userId.data.userId;
   if (!resolvedUserId) {
-    return {
-      ok: false,
-      error: typeof userId === "string" ? { message: "Missing userId" } : userId.error,
-      debug: { ...debug, step: "resolveUserId" },
-    };
+    return { ok: false, error: { message: "Missing userId" }, debug: { ...debug, step: "resolveUserId" } };
   }
 
   // 1) Demo mode is the ONLY switch for demo_* tables.

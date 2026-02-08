@@ -642,6 +642,25 @@ export interface Database {
                 }
                 Returns: Database["public"]["Tables"]["jobs"]["Row"][]
             }
+            create_job_atomic: {
+                Args: {
+                    p_market_id: string
+                    p_title: string
+                    p_description: string
+                    p_wage_hourly?: number | null
+                    p_category?: string | null
+                    p_address_reveal_policy?: string | null
+                    p_public_location_label?: string | null
+                    p_public_lat?: number | null
+                    p_public_lng?: number | null
+                    p_address_full?: string | null
+                    p_private_lat?: number | null
+                    p_private_lng?: number | null
+                    p_notes?: string | null
+                    p_location_id?: string | null
+                }
+                Returns: unknown
+            }
         }
         Enums: {
             application_status: "submitted" | "accepted" | "rejected" | "hired"
