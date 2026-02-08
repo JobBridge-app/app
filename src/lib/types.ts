@@ -347,6 +347,37 @@ export type Database = {
           }
         ];
       };
+      guardian_invitations: {
+        Row: {
+          id: string;
+          child_id: string;
+          token: string;
+          status: "active" | "redeemed" | "expired" | "revoked";
+          expires_at: string;
+          redeemed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          child_id: string;
+          token: string;
+          status?: "active" | "redeemed" | "expired" | "revoked";
+          expires_at: string;
+          redeemed_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["guardian_invitations"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "guardian_invitations_child_id_fkey";
+            columns: ["child_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
