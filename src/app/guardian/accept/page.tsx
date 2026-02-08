@@ -3,10 +3,14 @@
 import { useSearchParams } from "next/navigation";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { Suspense } from "react";
+import { supabaseBrowser } from "@/lib/supabaseClient";
+import { useState } from "react";
 
 function GuardianAcceptContent() {
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
+    const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
+    const [error, setError] = useState<string | null>(null);
 
     if (!token) {
         return (
@@ -16,6 +20,24 @@ function GuardianAcceptContent() {
             </div>
         );
     }
+
+    const redeem = async () => {
+        setState("loading");
+        setError(null);
+        try {
+            const { data, error } = await supabaseBrowser.rpc("redeem_guardian_invitation", { token_input: token });
+            if (error) throw error;
+            const res = data as unknown as { success?: boolean; error?: string } | null;
+            if (!res?.success) {
+                throw new Error(res?.error || "Bestätigung fehlgeschlagen.");
+            }
+            setState("success");
+        } catch (e) {
+            setState("error");
+            const msg = e instanceof Error ? e.message : "Unbekannter Fehler";
+            setError(msg);
+        }
+    };
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-slate-950 text-white">
@@ -31,12 +53,27 @@ function GuardianAcceptContent() {
                     <p className="text-sm text-slate-300 mb-6">
                         Durch die Bestätigung stimmst du zu, dass dein Kind über JobBridge Tätigkeiten annimmt und du als gesetzlicher Vertreter fungierst.
                     </p>
+                    {state === "success" ? (
+                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                            Bestätigung erfolgreich. Das Konto deines Kindes ist jetzt freigeschaltet.
+                        </div>
+                    ) : (
                     <ButtonPrimary
-                        onClick={() => alert("Bestätigung wird verarbeitet... (Backend needed)")}
+                        onClick={redeem}
+                        disabled={state === "loading"}
                         className="w-full"
                     >
-                        Jetzt bestätigen
+                        {state === "loading" ? "Wird bestätigt..." : "Jetzt bestätigen"}
                     </ButtonPrimary>
+                    )}
+                    {state === "error" && (
+                        <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                            {error || "Bestätigung fehlgeschlagen."}
+                            <div className="mt-2 text-xs text-slate-400">
+                                Hinweis: Du musst als Elternteil eingeloggt sein.
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

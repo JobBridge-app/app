@@ -9,7 +9,7 @@ import { StepRole } from "./StepRole";
 import { StepProfile } from "./StepProfile";
 import { StepSummary } from "./StepSummary";
 import { createSupabaseClient } from "@/lib/supabaseClient";
-import { Profile, UserType } from "@/lib/types";
+import { type AccountType, type OnboardingRole, Profile, type ProviderKind } from "@/lib/types";
 import { saveProfile } from "@/lib/profile";
 
 type StepKey = "welcome" | "role" | "profile" | "summary";
@@ -32,13 +32,13 @@ export function OnboardingFlow({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<{
-    role: UserType | null;
+    role: OnboardingRole | null;
     fullName: string;
     birthdate: string;
     city: string;
     agreed: boolean;
   }>({
-    role: initialProfile?.user_type ?? null,
+    role: initialProfile?.account_type ? (initialProfile.account_type === "job_provider" ? (initialProfile.provider_kind === "company" ? "company" : "adult") : "youth") : null,
     fullName: initialProfile?.full_name ?? "",
     birthdate: initialProfile?.birthdate ?? "",
     city: initialProfile?.city ?? "",
@@ -90,13 +90,19 @@ export function OnboardingFlow({
     }
     setLoading(true);
     setError(null);
+    const mapped: { account_type: AccountType; provider_kind: ProviderKind | null } =
+      data.role === "youth"
+        ? { account_type: "job_seeker", provider_kind: null }
+        : (data.role === "company"
+          ? { account_type: "job_provider", provider_kind: "company" }
+          : { account_type: "job_provider", provider_kind: "private" });
+
     const payload = {
       id: userId,
       full_name: data.fullName.trim(),
       birthdate: data.birthdate,
       city: data.city.trim(),
-      user_type: data.role,
-      is_verified: initialProfile?.is_verified ?? false,
+      ...mapped,
     };
 
     try {

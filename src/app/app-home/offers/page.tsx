@@ -15,7 +15,7 @@ export default async function OffersPage({
 }) {
     const { profile } = await requireCompleteProfile();
 
-    const viewRes = await getEffectiveView({ userId: profile.id, baseUserType: profile.user_type });
+    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
     if (!viewRes.ok) {
         return (
             <div className="container mx-auto py-8 px-4 md:px-6 max-w-6xl">

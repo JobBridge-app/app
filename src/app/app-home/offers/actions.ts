@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createJob as createJobDAL, getEffectiveView, retrySaveJobPrivateDetails } from "@/lib/dal/jobbridge";
 import type { ErrorInfo } from "@/lib/types/jobbridge";
-import type { UserType } from "@/lib/types";
+import type { AccountType } from "@/lib/types";
 
 const createJobSchema = z.object({
     title: z.string().min(5, "Titel muss mindestens 5 Zeichen lang sein."),
@@ -35,7 +35,7 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
     const existingJobId = (formData.get("job_id") as string | null) ?? null;
 
     // Get User Profile for Market ID
-    const { data: profile } = await supabase.from("profiles").select("market_id, user_type").eq("id", user.id).single();
+    const { data: profile } = await supabase.from("profiles").select("market_id, account_type").eq("id", user.id).single();
 
     let marketId = profile?.market_id;
 
@@ -51,8 +51,8 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
         return state;
     }
 
-    const baseUserType = (profile?.user_type ?? null) as unknown as UserType | null;
-    const viewRes = await getEffectiveView({ userId: user.id, baseUserType });
+    const baseAccountType = (profile as unknown as { account_type?: AccountType | null } | null)?.account_type ?? null;
+    const viewRes = await getEffectiveView({ userId: user.id, baseAccountType });
     if (!viewRes.ok) {
         const state: CreateJobActionState = { status: "error", error: viewRes.error, debug: viewRes.debug };
         return state;

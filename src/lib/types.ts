@@ -1,5 +1,10 @@
-export type UserType = "youth" | "adult" | "senior" | "company" | "admin";
+// NOTE: This is an onboarding/runtime concept (what the user picked during onboarding),
+// not a DB column anymore. DB uses `account_type` + `provider_kind`.
+export type OnboardingRole = "youth" | "adult" | "senior" | "company";
 export type AccountType = "job_seeker" | "job_provider";
+export type ProviderKind = "private" | "company";
+export type GuardianStatus = "none" | "pending" | "linked";
+export type ProviderVerificationStatus = "none" | "pending" | "verified" | "rejected";
 export type JobStatus = "draft" | "open" | "closed";
 export type ApplicationStatus = "submitted" | "withdrawn" | "accepted" | "rejected";
 export type SystemRoleType = "admin" | "moderator" | "analyst";
@@ -9,19 +14,27 @@ export type Profile = {
   full_name: string | null;
   birthdate: string | null;
   city: string | null;
-  headline: string | null;
   bio: string | null;
-  phone: string | null;
   interests: string | null;
-  website: string | null;
-  user_type: UserType | null;
-  // account_type might not be in DB yet, but we will maintain it in runtime objects
-  account_type?: AccountType;
-  is_verified: boolean | null;
+  skills: string | null;
+  availability_note: string | null;
+  account_type: AccountType | null;
+  provider_kind: ProviderKind | null;
+  provider_verification_status: ProviderVerificationStatus | null;
+  provider_verified_at: string | null;
+  email_verified_at: string | null;
+  phone_verified_at: string | null;
+  guardian_status: GuardianStatus | null;
+  guardian_id: string | null;
+  guardian_verified_at: string | null;
   market_id: string | null;
   theme_preference?: "light" | "dark" | "system";
   created_at: string | null;
+  updated_at?: string | null;
   email?: string; // Often joined from auth.users or waitlist, keeping optional
+  company_name?: string | null;
+  company_contact_email?: string | null;
+  company_message?: string | null;
 };
 
 // ... (skipping types not modified, but replace_file_content needs contiguous block)
@@ -87,16 +100,27 @@ export type Database = {
           full_name?: string | null;
           birthdate?: string | null;
           city?: string | null;
-          headline?: string | null;
           bio?: string | null;
-          phone?: string | null;
           interests?: string | null;
-          website?: string | null;
-          user_type?: UserType | null;
-          is_verified?: boolean | null;
+          skills?: string | null;
+          availability_note?: string | null;
+          account_type?: AccountType | null;
+          provider_kind?: ProviderKind | null;
+          provider_verification_status?: ProviderVerificationStatus | null;
+          provider_verified_at?: string | null;
+          email_verified_at?: string | null;
+          phone_verified_at?: string | null;
+          guardian_status?: GuardianStatus | null;
+          guardian_id?: string | null;
+          guardian_verified_at?: string | null;
           market_id?: string | null;
           theme_preference?: "light" | "dark" | "system";
           created_at?: string | null;
+          updated_at?: string | null;
+          email?: string | null;
+          company_name?: string | null;
+          company_contact_email?: string | null;
+          company_message?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
         Relationships: [];
@@ -345,7 +369,7 @@ export type Database = {
       };
     };
     Enums: {
-      user_type: UserType;
+      onboarding_role: OnboardingRole;
       job_status: JobStatus;
       application_status: ApplicationStatus;
     };
@@ -357,7 +381,8 @@ export const isProfileComplete = (profile: Profile | null) =>
   Boolean(
     profile?.full_name &&
     profile.birthdate &&
-    profile.user_type
+    profile.city &&
+    profile.account_type
   );
 
 export type Market = {

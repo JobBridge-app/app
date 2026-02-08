@@ -14,7 +14,6 @@ type UserRoleData = {
 
 export default async function ProfilePage() {
     const { profile, session } = await requireCompleteProfile();
-    const isYouth = profile.user_type === "youth";
     const supabase = await supabaseServer();
     const displayName = profile.full_name?.trim() || "Nicht hinterlegt";
 
@@ -46,12 +45,22 @@ export default async function ProfilePage() {
 
     // 3. Prepare display data
     const locationDisplay = profile.city?.trim() || "Kein Ort festgelegt";
-    const accountLabel = profile.account_type === "job_provider" || profile.user_type === "company"
-        ? "Jobanbieter"
-        : "Jobsuchend";
+    const accountLabel = profile.account_type === "job_provider" ? "Jobanbieter" : "Jobsuchend";
     const memberSince = profile.created_at ? new Date(profile.created_at).toLocaleDateString("de-DE") : "-";
     const lastLoginDisplay = lastLogin ? new Date(lastLogin.created_at).toLocaleString("de-DE") : "Noch kein Login protokolliert";
     const profileEmail = profile.email?.trim() || session.user.email || "Keine E-Mail hinterlegt";
+
+    const isVerifiedBadge =
+        profile.account_type === "job_provider"
+            ? profile.provider_verification_status === "verified" || Boolean(profile.provider_verified_at)
+            : profile.guardian_status === "linked";
+
+    const statusLabel =
+        profile.account_type === "job_provider"
+            ? (isVerifiedBadge ? "Geprüfter Anbieter" : (profile.provider_verification_status === "pending" ? "Prüfung läuft" : "Noch nicht geprüft"))
+            : (profile.guardian_status === "linked"
+                ? "Eltern bestätigt"
+                : (profile.guardian_status === "pending" ? "Elternbestätigung ausstehend" : "Elternbestätigung erforderlich"));
 
     return (
         <div className="container mx-auto max-w-6xl px-4 py-8 md:px-6">
@@ -63,9 +72,9 @@ export default async function ProfilePage() {
                 </p>
             </div>
 
-            {isYouth && (
+            {profile.account_type === "job_seeker" && (
                 <div className="mb-8">
-                    <GuardianBanner isVerified={!!profile.is_verified} />
+                    <GuardianBanner guardianStatus={profile.guardian_status ?? "none"} />
                 </div>
             )}
 
@@ -99,11 +108,11 @@ export default async function ProfilePage() {
                                 <div className="flex items-center justify-between border-t border-white/5 py-2.5 text-sm">
                                     <span className="text-slate-500">Status</span>
                                     <span
-                                        className={profile.is_verified
+                                        className={isVerifiedBadge
                                             ? "rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-300"
                                             : "rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-300"}
                                     >
-                                        {profile.is_verified ? "Verifiziert" : "Nicht verifiziert"}
+                                        {statusLabel}
                                     </span>
                                 </div>
                                 <div className="flex justify-between border-t border-white/5 py-2.5 text-sm">

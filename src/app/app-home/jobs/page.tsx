@@ -11,10 +11,21 @@ type JobRow = Database['public']['Tables']['jobs']['Row'] & {
     distance_km?: number | null;
 };
 
+function isMinor(birthdate: string | null): boolean {
+    if (!birthdate) return true;
+    const d = new Date(birthdate);
+    if (Number.isNaN(d.getTime())) return true;
+    const now = new Date();
+    let age = now.getFullYear() - d.getFullYear();
+    const m = now.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+    return age < 18;
+}
+
 export default async function JobsPage() {
     const { profile } = await requireCompleteProfile();
 
-    const viewRes = await getEffectiveView({ userId: profile.id, baseUserType: profile.user_type });
+    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
     if (!viewRes.ok) {
         return (
             <div className="container mx-auto py-12 px-4 md:px-6">
@@ -42,7 +53,8 @@ export default async function JobsPage() {
         redirect("/app-home/offers");
     }
 
-    const isVerified = !!profile.is_verified;
+    const guardianStatus = profile.guardian_status ?? "none";
+    const canApply = !isMinor(profile.birthdate ?? null) || guardianStatus === "linked";
 
     const jobsRes = await fetchJobs({
         mode: "feed",
@@ -123,7 +135,7 @@ export default async function JobsPage() {
 
                                         <div className="flex justify-end">
                                             <div className="w-full sm:w-auto">
-                                                <ApplyButton isVerified={isVerified} jobId={job.id} />
+                                                <ApplyButton canApply={canApply} guardianStatus={guardianStatus} jobId={job.id} />
                                             </div>
                                         </div>
                                     </div>

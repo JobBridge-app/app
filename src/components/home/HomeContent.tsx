@@ -11,15 +11,13 @@ type HomeContentProps = {
   profile: Profile;
 };
 
-const roleLabels: Record<string, string> = {
-  youth: "Jobsuchende/r (unter 18)",
-  adult: "Jobanbieter (ab 18)",
-  company: "Unternehmen / Organisation",
-};
-
 export function HomeContent({ profile }: HomeContentProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const roleLabel =
+    profile.account_type === "job_provider"
+      ? (profile.provider_kind === "company" ? "Unternehmen / Organisation" : "Privatperson / Eltern / Anbieter")
+      : "Jobsuchend";
 
   const handleLogout = async () => {
     setLoading(true);
@@ -47,11 +45,9 @@ export function HomeContent({ profile }: HomeContentProps) {
             <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl">
               Hallo, {profile.full_name || "Freund"}!
             </h1>
-            {profile.user_type && (
-              <p className="text-lg text-slate-300 md:text-xl">
-                {roleLabels[profile.user_type] || profile.user_type}
-              </p>
-            )}
+            <p className="text-lg text-slate-300 md:text-xl">
+              {roleLabel}
+            </p>
             {profile.city && (
               <p className="text-slate-400">
                 {profile.city}

@@ -58,7 +58,9 @@ type WorkQueueReportRow = {
 type WorkQueueProfileRow = {
   id: string;
   full_name: string | null;
-  is_verified: boolean | null;
+  account_type: string | null;
+  guardian_status: string | null;
+  provider_verification_status: string | null;
   created_at: string;
 };
 
@@ -351,7 +353,7 @@ export async function getWorkQueue(limit = 10): Promise<{ items: WorkQueueItem[]
         .limit(8),
       adminClient
         .from("profiles")
-        .select("id, full_name, is_verified, created_at")
+        .select("id, full_name, account_type, guardian_status, provider_verification_status, created_at")
         .order("created_at", { ascending: false })
         .limit(30),
       adminClient
@@ -388,16 +390,23 @@ export async function getWorkQueue(limit = 10): Promise<{ items: WorkQueueItem[]
       failedSources.push("profiles");
     } else {
       const rows = (profilesResult.data ?? []) as unknown as WorkQueueProfileRow[];
+      const needsAttention = (row: WorkQueueProfileRow) => {
+        if (row.account_type === "job_provider") return row.provider_verification_status !== "verified";
+        if (row.account_type === "job_seeker") return row.guardian_status !== "linked";
+        return false;
+      };
       items.push(
         ...rows
-          .filter((row) => row.is_verified !== true)
+          .filter(needsAttention)
           .slice(0, 8)
           .map((row) => ({
             id: row.id,
             type: "verification" as const,
-            title: `Verify account: ${row.full_name || "Unknown user"}`,
-            subtitle: "Profile not verified yet",
-            priority: "medium" as const,
+            title: `${row.account_type === "job_provider" ? "Verify provider" : "Guardian confirmation"}: ${row.full_name || "Unknown user"}`,
+            subtitle: row.account_type === "job_provider"
+              ? `Provider status: ${row.provider_verification_status || "none"}`
+              : `Guardian status: ${row.guardian_status || "none"}`,
+            priority: row.account_type === "job_provider" ? ("medium" as const) : ("low" as const),
             created_at: row.created_at,
             link: `/staff/users?userId=${row.id}`,
           })),

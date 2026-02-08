@@ -19,6 +19,14 @@ export default async function UserDetailPage({ params }: { params: { userId: str
     if (!profile) return <div className="text-white">User not found</div>;
 
     const roleEntries = (profile.roles ?? []).map((name) => ({ role: { name } })) as UserRoleEntry[];
+    const verifiedBadge =
+        profile.account_type === "job_provider"
+            ? profile.provider_verification_status === "verified"
+            : profile.guardian_status === "linked";
+    const typeLabel =
+        profile.account_type === "job_provider"
+            ? (profile.provider_kind === "company" ? "Unternehmen" : "Privat")
+            : "Jobsuchend";
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
@@ -36,13 +44,13 @@ export default async function UserDetailPage({ params }: { params: { userId: str
                 <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-3">
                         <h1 className="text-3xl font-bold text-white">{profile.full_name}</h1>
-                        {profile.is_verified && (
+                        {verifiedBadge && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
                                 <CheckCircle size={12} /> Verified
                             </span>
                         )}
                         <span className="inline-flex px-2 py-0.5 rounded-full bg-white/10 text-slate-300 text-xs font-medium capitalize border border-white/10">
-                            {profile.user_type}
+                            {typeLabel}
                         </span>
                     </div>
 

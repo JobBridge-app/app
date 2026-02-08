@@ -1,5 +1,5 @@
 import { supabaseServer } from "@/lib/supabaseServer";
-import type { AccountType, UserType } from "@/lib/types";
+import type { AccountType } from "@/lib/types";
 import type { Database } from "@/lib/types/supabase";
 import type { EffectiveViewSnapshot, ErrorInfo, JobsListItem } from "@/lib/types/jobbridge";
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
@@ -62,7 +62,7 @@ export async function getSessionUser(): Promise<Result<{ userId: string }>> {
 
 export async function getEffectiveView(opts?: {
   userId?: string;
-  baseUserType?: UserType | null;
+  baseAccountType?: AccountType | null;
 }): Promise<Result<EffectiveViewSnapshot>> {
   const supabase = await supabaseServer();
 
@@ -140,17 +140,17 @@ export async function getEffectiveView(opts?: {
     return { ok: false, error: toErrorInfo(overrideRes.error, { status: overrideRes.status, statusText: overrideRes.statusText }), debug };
   }
 
-  let baseUserType = opts?.baseUserType ?? null;
-  if (typeof opts?.baseUserType === "undefined") {
+  let baseAccountType = opts?.baseAccountType ?? null;
+  if (typeof opts?.baseAccountType === "undefined") {
     const profileRes = await supabase
       .from("profiles")
-      .select("user_type")
+      .select("account_type")
       .eq("id", resolvedUserId)
       .maybeSingle();
 
     debug.profiles = {
       hasRow: Boolean(profileRes.data),
-      user_type: profileRes.data?.user_type ?? null,
+      account_type: (profileRes.data as { account_type?: string | null } | null)?.account_type ?? null,
       status: profileRes.status,
       error: profileRes.error ? toErrorInfo(profileRes.error, { status: profileRes.status, statusText: profileRes.statusText }) : null,
     };
@@ -159,10 +159,10 @@ export async function getEffectiveView(opts?: {
       return { ok: false, error: toErrorInfo(profileRes.error, { status: profileRes.status, statusText: profileRes.statusText }), debug };
     }
 
-    baseUserType = (profileRes.data?.user_type as UserType | null | undefined) ?? null;
+    baseAccountType = ((profileRes.data as { account_type?: AccountType | null } | null)?.account_type as AccountType | null | undefined) ?? null;
   }
 
-  const baseRole: AccountType = baseUserType === "youth" || baseUserType === null ? "job_seeker" : "job_provider";
+  const baseRole: AccountType = baseAccountType === "job_provider" ? "job_provider" : "job_seeker";
   const overrideRole: AccountType | null = override?.view_as ?? null;
 
   const result: EffectiveViewSnapshot = {

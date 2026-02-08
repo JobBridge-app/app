@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Calendar, Mail, MapPin, Shield, User, X } from "lucide-react";
+import { Calendar, Mail, MapPin, Shield, X } from "lucide-react";
 import { type AdminUserDetail, type AdminUserListItem } from "@/lib/data/adminTypes";
 
 type UsersTableProps = {
@@ -65,21 +65,31 @@ export function UsersTable({ users, selectedUser, query }: UsersTableProps) {
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex px-2 py-1 rounded-md text-xs font-medium capitalize border ${
-                        user.user_type === "company"
+                        user.account_type === "job_provider"
                           ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                          : user.user_type === "youth"
-                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                            : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                          : "bg-blue-500/10 text-blue-400 border-blue-500/20"
                       }`}
                     >
-                      {user.user_type || "N/A"}
+                      {user.account_type === "job_provider"
+                        ? (user.provider_kind === "company" ? "Unternehmen" : "Privat")
+                        : "Jobsuchend"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
-                      {user.is_verified && (
+                      {user.email_verified_at && (
+                        <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] items-center gap-1 bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                          Email verified
+                        </span>
+                      )}
+                      {user.account_type === "job_seeker" && user.guardian_status === "linked" && (
                         <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          Verified
+                          Guardian linked
+                        </span>
+                      )}
+                      {user.account_type === "job_provider" && user.provider_verification_status === "verified" && (
+                        <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Provider verified
                         </span>
                       )}
                       {user.roles.map((role) => (
@@ -153,9 +163,6 @@ export function UsersTable({ users, selectedUser, query }: UsersTableProps) {
               <div className="rounded-xl border border-white/5 bg-black/20 p-4 space-y-2">
                 <p className="text-xs uppercase tracking-wider text-slate-500">Identity</p>
                 <p className="text-sm text-slate-200 flex items-center gap-2">
-                  <User size={14} /> {selectedUser.user_type || "unknown"}
-                </p>
-                <p className="text-sm text-slate-200 flex items-center gap-2">
                   <Mail size={14} /> {selectedUser.email || "No email"}
                 </p>
                 <p className="text-sm text-slate-200 flex items-center gap-2">
@@ -168,7 +175,16 @@ export function UsersTable({ users, selectedUser, query }: UsersTableProps) {
                   <span className="text-slate-500">Account type:</span> {selectedUser.account_type || "—"}
                 </p>
                 <p className="text-sm text-slate-300">
-                  <span className="text-slate-500">Verified:</span> {selectedUser.is_verified ? "Yes" : "No"}
+                  <span className="text-slate-500">Provider kind:</span> {selectedUser.provider_kind || "—"}
+                </p>
+                <p className="text-sm text-slate-300">
+                  <span className="text-slate-500">Guardian:</span> {selectedUser.guardian_status || "—"}
+                </p>
+                <p className="text-sm text-slate-300">
+                  <span className="text-slate-500">Provider verification:</span> {selectedUser.provider_verification_status || "—"}
+                </p>
+                <p className="text-sm text-slate-300">
+                  <span className="text-slate-500">Email verified:</span> {selectedUser.email_verified_at ? "Yes" : "No"}
                 </p>
               </div>
 

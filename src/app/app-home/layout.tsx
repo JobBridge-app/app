@@ -19,7 +19,7 @@ export default async function AppHomeLayout({
         redirect("/");
     }
 
-    const viewRes = await getEffectiveView({ userId: profile.id, baseUserType: profile.user_type });
+    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
     const view = viewRes.ok
         ? viewRes.data
         : { isDemoEnabled: false, viewRole: profile.account_type ?? "job_seeker", source: "live" as const, overrideExpiresAt: null };

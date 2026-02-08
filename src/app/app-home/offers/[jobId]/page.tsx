@@ -12,7 +12,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
     const { jobId } = await params;
     const { profile } = await requireCompleteProfile();
 
-    const viewRes = await getEffectiveView({ userId: profile.id, baseUserType: profile.user_type });
+    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
     const viewRole = viewRes.ok ? viewRes.data.viewRole : (profile.account_type ?? "job_seeker");
     const isDemo = viewRes.ok ? (viewRes.data.source === "demo") : false;
 

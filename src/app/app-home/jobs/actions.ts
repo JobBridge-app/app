@@ -5,6 +5,17 @@ import { revalidatePath } from "next/cache";
 import { Profile } from "@/lib/types";
 import { getEffectiveView } from "@/lib/dal/jobbridge";
 
+function isMinor(birthdate: string | null): boolean {
+    if (!birthdate) return true;
+    const d = new Date(birthdate);
+    if (Number.isNaN(d.getTime())) return true;
+    const now = new Date();
+    let age = now.getFullYear() - d.getFullYear();
+    const m = now.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+    return age < 18;
+}
+
 export async function applyToJob(jobId: string) {
     const supabase = await supabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
@@ -15,13 +26,17 @@ export async function applyToJob(jobId: string) {
 
     // Double check profile/verification
     const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single<Profile>();
-    const viewRes = await getEffectiveView({ userId: user.id, baseUserType: profile?.user_type ?? null });
+    const viewRes = await getEffectiveView({ userId: user.id, baseAccountType: profile?.account_type ?? null });
     if (!viewRes.ok) {
         return { error: `${viewRes.error.code ? `${viewRes.error.code}: ` : ""}${viewRes.error.message}` };
     }
     const view = viewRes.data;
 
-    if (!profile || !profile.is_verified || view.viewRole !== "job_seeker") {
+    if (!profile || view.viewRole !== "job_seeker") {
+        return { error: "Du bist nicht berechtigt, dich zu bewerben." };
+    }
+
+    if (isMinor(profile.birthdate ?? null) && profile.guardian_status !== "linked") {
         return { error: "Du bist nicht berechtigt, dich zu bewerben (Elternbestätigung fehlt)." };
     }
 

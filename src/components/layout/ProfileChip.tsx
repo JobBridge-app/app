@@ -77,11 +77,14 @@ export function ProfileChip({ profile, className, isDemo }: ProfileChipProps) {
         );
     }
 
-    const isProvider = profile.account_type === "job_provider" || profile.user_type === "company";
+    const isProvider = profile.account_type === "job_provider";
     const label = isProvider ? "Jobanbieter" : "Jobsuchend";
     const RoleIcon = isProvider ? Building2 : User;
 
-    const isVerified = profile.is_verified;
+    const isVerified =
+        profile.account_type === "job_provider"
+            ? profile.provider_verification_status === "verified" || Boolean(profile.provider_verified_at)
+            : profile.guardian_status === "linked";
 
     const handleLogout = async () => {
         await supabaseBrowser.auth.signOut();

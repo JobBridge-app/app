@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { UserType } from "@/lib/types";
+import { OnboardingRole } from "@/lib/types";
 
 type StepProfileProps = {
-  role: UserType | null;
+  role: OnboardingRole | null;
   fullName: string;
   birthdate: string;
   city: string;
@@ -13,7 +13,7 @@ type StepProfileProps = {
   onBack: () => void;
 };
 
-const roleNotes: Record<UserType, string> = {
+const roleNotes: Record<OnboardingRole, string> = {
   youth:
     "Für Jugendliche: Wir achten besonders auf Sicherheit und Jugendschutz.",
   adult:
@@ -22,7 +22,6 @@ const roleNotes: Record<UserType, string> = {
     "Für Seniorinnen und Senioren: Wir halten alles besonders gut lesbar und einfach.",
   company:
     "Für Unternehmen: Diese Angaben erscheinen in Ihrem Profil und Jobs.",
-  admin: "Für Administratoren: Verwalten Sie die Plattform.",
 };
 
 export function StepProfile({

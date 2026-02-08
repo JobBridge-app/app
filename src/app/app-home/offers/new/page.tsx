@@ -15,7 +15,7 @@ type DefaultLocation = {
 export default async function NewOfferPage() {
     const { profile } = await requireCompleteProfile();
 
-    const viewRes = await getEffectiveView({ userId: profile.id, baseUserType: profile.user_type });
+    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
     const viewRole = viewRes.ok ? viewRes.data.viewRole : (profile.account_type ?? "job_seeker");
 
     // Server-side guard to avoid "kurz sichtbar, dann weg" client redirects.

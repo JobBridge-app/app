@@ -20,15 +20,19 @@ export const saveProfile = async (
   supabase: SupabaseClient<Database>,
   payload: Partial<Profile> & { id: string }
 ) => {
-  // Cast to any to bypass outdated Database['public']['Tables']['profiles']['Insert'] type missing birthdate
+  // Cast to any because our local TS types can drift from the DB until we regenerate them.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const insertPayload: any = {
     id: payload.id,
     full_name: payload.full_name ?? "",
     birthdate: payload.birthdate ?? null,
     city: payload.city ?? null,
-    user_type: (payload.user_type as any) ?? null,
-    is_verified: payload.is_verified ?? null,
+    market_id: payload.market_id ?? null,
+    account_type: payload.account_type ?? null,
+    provider_kind: payload.provider_kind ?? null,
+    company_name: payload.company_name ?? null,
+    company_contact_email: payload.company_contact_email ?? null,
+    company_message: payload.company_message ?? null,
     // Add email if provided, otherwise rely on existing or DB trigger
     ...(payload.email ? { email: payload.email } : {}),
   };

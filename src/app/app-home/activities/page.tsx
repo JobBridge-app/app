@@ -11,7 +11,7 @@ type ApplicationWithRelations = Database['public']['Tables']['applications']['Ro
 
 export default async function ActivitiesPage() {
     const { profile } = await requireCompleteProfile();
-    const viewRes = await getEffectiveView({ userId: profile.id, baseUserType: profile.user_type });
+    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
     const viewRole = viewRes.ok ? viewRes.data.viewRole : (profile.account_type ?? "job_seeker");
     const source = viewRes.ok ? viewRes.data.source : "live";
 

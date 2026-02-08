@@ -17,7 +17,7 @@ DECLARE
     base_type text;
 BEGIN
     -- Priority 1: Demo Mode
-    SELECT enabled, demo_views
+    SELECT enabled, demo_view
     INTO is_demo, demo_view
     FROM demo_sessions
     WHERE user_id = target_user_id;
@@ -38,15 +38,13 @@ BEGIN
     END IF;
 
     -- Priority 3: Base Profile Type
-    SELECT user_type INTO base_type FROM profiles WHERE id = target_user_id;
-    
-    IF base_type = 'youth' THEN
-        RETURN 'job_seeker';
-    ELSIF base_type = 'company' THEN
+    SELECT account_type::text INTO base_type FROM profiles WHERE id = target_user_id;
+
+    IF base_type = 'job_provider' THEN
         RETURN 'job_provider';
-    ELSE
-        RETURN 'job_seeker'; -- Default fallback
     END IF;
+
+    RETURN 'job_seeker'; -- Default fallback
 END;
 $$;
 

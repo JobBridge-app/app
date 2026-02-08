@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Briefcase, Activity, Settings, Users } from "lucide-react";
+import { Briefcase, Activity, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Profile } from "@/lib/types";
 import { motion } from "framer-motion";
@@ -31,8 +31,7 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
 
     let navItems: NavItem[] = [];
 
-    const isProvider = profile?.account_type === "job_provider" || profile?.user_type === "company" || profile?.user_type === "adult" || profile?.user_type === "senior";
-    const isAdmin = profile?.user_type === "admin";
+    const isProvider = profile?.account_type === "job_provider";
 
     if (isProvider) {
         navItems = [
@@ -47,22 +46,6 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                 icon: Activity,
                 href: "/app-home/activities",
                 activePattern: /^\/app-home\/activities/,
-            },
-            ...commonItems
-        ];
-    } else if (isAdmin) {
-        navItems = [
-            {
-                label: "Dashboard",
-                icon: Activity,
-                href: "/app-home/admin",
-                activePattern: /^\/app-home\/admin$|^\/app-home\/admin\/dashboard/,
-            },
-            {
-                label: "User",
-                icon: Users,
-                href: "/app-home/admin/users",
-                activePattern: /^\/app-home\/admin\/users/,
             },
             ...commonItems
         ];

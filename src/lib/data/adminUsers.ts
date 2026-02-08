@@ -8,9 +8,11 @@ export type AdminUserListItem = {
   full_name: string | null;
   email: string | null;
   city: string | null;
-  user_type: string | null;
   account_type: string | null;
-  is_verified: boolean;
+  provider_kind: string | null;
+  guardian_status: string | null;
+  provider_verification_status: string | null;
+  email_verified_at: string | null;
   created_at: string;
   roles: string[];
 };
@@ -22,9 +24,11 @@ type ProfileRow = {
   full_name: string | null;
   email: string | null;
   city: string | null;
-  user_type: string | null;
   account_type: string | null;
-  is_verified: boolean | null;
+  provider_kind: string | null;
+  guardian_status: string | null;
+  provider_verification_status: string | null;
+  email_verified_at: string | null;
   created_at: string;
 };
 
@@ -121,7 +125,7 @@ export async function getAdminUsers(params: {
     const adminClient = getSupabaseAdminClient();
     let query = adminClient
       .from("profiles")
-      .select("id, full_name, email, city, user_type, account_type, is_verified, created_at")
+      .select("id, full_name, email, city, account_type, provider_kind, guardian_status, provider_verification_status, email_verified_at, created_at")
       .order("created_at", { ascending: false })
       .range(safeOffset, safeOffset + safeLimit - 1);
 
@@ -148,9 +152,11 @@ export async function getAdminUsers(params: {
       full_name: row.full_name,
       email: row.email,
       city: row.city,
-      user_type: row.user_type,
       account_type: row.account_type,
-      is_verified: row.is_verified === true,
+      provider_kind: row.provider_kind,
+      guardian_status: row.guardian_status,
+      provider_verification_status: row.provider_verification_status,
+      email_verified_at: row.email_verified_at,
       created_at: row.created_at,
       roles: roleResult.rolesByUser[row.id] ?? [],
     }));
@@ -177,7 +183,7 @@ export async function getAdminUser(userId: string): Promise<{ item: AdminUserDet
     const [profileResult, roleResult] = await Promise.all([
       adminClient
         .from("profiles")
-        .select("id, full_name, email, city, user_type, account_type, is_verified, created_at")
+        .select("id, full_name, email, city, account_type, provider_kind, guardian_status, provider_verification_status, email_verified_at, created_at")
         .eq("id", userId)
         .maybeSingle(),
       adminClient
@@ -216,9 +222,11 @@ export async function getAdminUser(userId: string): Promise<{ item: AdminUserDet
         full_name: row.full_name,
         email: row.email,
         city: row.city,
-        user_type: row.user_type,
         account_type: row.account_type,
-        is_verified: row.is_verified === true,
+        provider_kind: row.provider_kind,
+        guardian_status: row.guardian_status,
+        provider_verification_status: row.provider_verification_status,
+        email_verified_at: row.email_verified_at,
         created_at: row.created_at,
         roles,
       },

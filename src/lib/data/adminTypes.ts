@@ -52,9 +52,11 @@ export type AdminUserListItem = {
   full_name: string | null;
   email: string | null;
   city: string | null;
-  user_type: string | null;
   account_type: string | null;
-  is_verified: boolean;
+  provider_kind: string | null;
+  guardian_status: string | null;
+  provider_verification_status: string | null;
+  email_verified_at: string | null;
   created_at: string;
   roles: string[];
 };

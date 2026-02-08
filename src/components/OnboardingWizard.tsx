@@ -12,7 +12,7 @@ import { Toast } from "./ui/Toast";
 import { signUpWithEmail, signInWithEmail } from "@/lib/authClient";
 import { saveProfile } from "@/lib/profile";
 import { supabaseBrowser } from "@/lib/supabaseClient";
-import { UserType, Profile } from "@/lib/types";
+import { type AccountType, type OnboardingRole, type Profile, type ProviderKind } from "@/lib/types";
 import { getRegions, type Region } from "@/lib/regions";
 import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2 } from "lucide-react";
@@ -32,13 +32,28 @@ type OnboardingWizardProps = {
 
 const isProfileComplete = (profile: Profile | null | undefined) => {
   return Boolean(
-    profile?.full_name && profile.birthdate && profile.city && profile.user_type
+    profile?.full_name && profile.birthdate && profile.city && profile.account_type
   );
 };
 
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || BRAND_EMAIL;
 const getErrorMessage = (err: unknown, fallback: string) =>
   err instanceof Error ? err.message : fallback;
+
+function inferOnboardingRole(profile: Profile | null | undefined): OnboardingRole | null {
+  if (!profile?.account_type) return null;
+  if (profile.account_type === "job_seeker") return "youth";
+  if (profile.account_type === "job_provider") {
+    return profile.provider_kind === "company" ? "company" : "adult";
+  }
+  return null;
+}
+
+function mapOnboardingRoleToAccount(role: OnboardingRole): { account_type: AccountType; provider_kind: ProviderKind | null } {
+  if (role === "youth") return { account_type: "job_seeker", provider_kind: null };
+  if (role === "company") return { account_type: "job_provider", provider_kind: "company" };
+  return { account_type: "job_provider", provider_kind: "private" };
+}
 
 export function OnboardingWizard({
   initialProfile,
@@ -76,10 +91,11 @@ export function OnboardingWizard({
   const [regions, setRegions] = useState<Region[]>([]);
   const [regionsLoading, setRegionsLoading] = useState(true);
   const [profileData, setProfileData] = useState({
-    role: (initialProfile?.user_type as UserType) || null,
+    role: inferOnboardingRole(initialProfile),
     fullName: initialProfile?.full_name || "",
     birthdate: initialProfile?.birthdate || "",
     region: initialProfile?.city || initialRegion || "",
+    marketId: initialProfile?.market_id || null,
     companyName: "",
     companyEmail: "",
     companyMessage: "",
@@ -151,23 +167,16 @@ export function OnboardingWizard({
         .maybeSingle();
 
       const profileTyped = profile as Profile | null;
-      // We consider verified if email is confirmed OR profile says so
-      // Supabase email_confirmed_at is the source of truth for email.
-      const verified = isConfirmed || Boolean(profileTyped?.is_verified);
-
-      // Update profile if inconsistent
-      if (isConfirmed && !profileTyped?.is_verified && profileTyped) {
-        await supabaseBrowser.from("profiles").update({ is_verified: true }).eq("id", user.id);
-      }
+      // Email confirmation is handled by Supabase Auth; profile does not store a boolean for it.
 
       const isComplete = isProfileComplete(profileTyped);
 
-      if (verified && isComplete) {
+      if (isConfirmed && isComplete) {
         router.push("/app-home");
         return true;
       }
 
-      if (verified) {
+      if (isConfirmed) {
         setStep("role");
       } else {
         // Should not happen if isConfirmed is true
@@ -179,10 +188,11 @@ export function OnboardingWizard({
       if (profileTyped) {
         setProfileData((prev) => ({
           ...prev,
-          role: profileTyped.user_type as UserType,
+          role: inferOnboardingRole(profileTyped),
           fullName: profileTyped.full_name || "",
           birthdate: profileTyped.birthdate || "",
           region: profileTyped.city || user.user_metadata?.city || "",
+          marketId: profileTyped.market_id || null,
         }));
       }
       return true;
@@ -317,10 +327,6 @@ export function OnboardingWizard({
       if (!res.ok) throw new Error(res.error!);
       setCodeMessage("Code erfolgreich bestätigt. Session wird geprüft...");
       try {
-        const { data: { session } } = await supabaseBrowser.auth.getSession();
-        if (session?.user?.id) {
-          await supabaseBrowser.from("profiles").update({ is_verified: true }).eq("id", session.user.id);
-        }
         await supabaseBrowser.auth.refreshSession();
       } catch { }
       const ok = await checkSessionAfterEmailConfirm();
@@ -396,9 +402,13 @@ export function OnboardingWizard({
         id: session.user.id,
         full_name: profileData.fullName.trim(),
         birthdate: profileData.birthdate,
-        city: profileData.companyName,
-        user_type: "company",
-        is_verified: false,
+        city: profileData.region.trim(),
+        market_id: profileData.marketId,
+        account_type: "job_provider",
+        provider_kind: "company",
+        company_name: profileData.companyName.trim(),
+        company_contact_email: profileData.companyEmail.trim(),
+        company_message: profileData.companyMessage.trim(),
       });
 
       router.push("/info");
@@ -426,13 +436,14 @@ export function OnboardingWizard({
         throw new Error("Keine aktive Session gefunden. Bitte melde dich erneut an.");
       }
 
+      const mapped = mapOnboardingRoleToAccount(profileData.role);
       await saveProfile(supabaseBrowser, {
         id: session.user.id,
         full_name: profileData.fullName.trim(),
         birthdate: profileData.birthdate,
         city: profileData.region.trim(),
-        user_type: profileData.role,
-        is_verified: false,
+        market_id: profileData.marketId,
+        ...mapped,
       });
 
       router.push("/app-home");
@@ -646,6 +657,7 @@ export function OnboardingWizard({
                     setProfileData((prev) => ({
                       ...prev,
                       region: regionData.city,
+                      marketId: regionData.region_live_id ?? null,
                     }));
                     setStep("auth");
                   }}
@@ -908,19 +920,19 @@ export function OnboardingWizard({
                 <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2">
                   {[
                     {
-                      value: "youth" as UserType,
+                      value: "youth" as OnboardingRole,
                       title: "Jugendliche/r",
                       description: "Ich suche Taschengeldjobs",
                       icon: <Sparkles className="h-6 w-6 text-amber-300" />,
                     },
                     {
-                      value: "adult" as UserType,
+                      value: "adult" as OnboardingRole,
                       title: "Privatperson / Eltern / Anbieter",
                       description: "Ich möchte Aufträge vergeben",
                       icon: <HandHeart className="h-6 w-6 text-cyan-300" />,
                     },
                     {
-                      value: "company" as UserType,
+                      value: "company" as OnboardingRole,
                       title: "Organisation / Unternehmen",
                       description: "Ich vertrete ein Unternehmen",
                       icon: <Building2 className="h-6 w-6 text-indigo-300" />,

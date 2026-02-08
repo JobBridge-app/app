@@ -341,52 +341,95 @@ export interface Database {
                 Row: {
                     bio: string | null
                     city: string | null
+                    company_contact_email: string | null
+                    company_message: string | null
+                    company_name: string | null
+                    country: string | null
                     created_at: string
-                    email: string
-                    full_name: string
-                    headline: string | null
+                    email: string | null
+                    email_verified_at: string | null
+                    full_name: string | null
                     id: string
                     interests: string | null
-                    is_verified: boolean | null
+                    skills: string | null
+                    availability_note: string | null
+                    guardian_id: string | null
+                    guardian_status: Database["public"]["Enums"]["guardian_status"]
+                    guardian_verified_at: string | null
+                    account_type: Database["public"]["Enums"]["account_type"] | null
                     market_id: string | null
-                    phone: string | null
-                    user_type: Database["public"]["Enums"]["user_role"]
+                    phone_verified_at: string | null
+                    provider_kind: Database["public"]["Enums"]["provider_kind"] | null
+                    provider_verification_status: Database["public"]["Enums"]["provider_verification_status"]
+                    provider_verified_at: string | null
+                    birthdate: string | null
+                    updated_at: string | null
                     theme_preference?: "light" | "dark" | "system"
-                    website: string | null
                 }
                 Insert: {
                     bio?: string | null
                     city?: string | null
+                    company_contact_email?: string | null
+                    company_message?: string | null
+                    company_name?: string | null
+                    country?: string | null
                     created_at?: string
-                    email: string
-                    full_name: string
-                    headline?: string | null
+                    email?: string | null
+                    email_verified_at?: string | null
+                    full_name?: string | null
                     id: string
                     interests?: string | null
-                    is_verified?: boolean | null
+                    skills?: string | null
+                    availability_note?: string | null
+                    guardian_id?: string | null
+                    guardian_status?: Database["public"]["Enums"]["guardian_status"]
+                    guardian_verified_at?: string | null
+                    account_type?: Database["public"]["Enums"]["account_type"] | null
                     market_id?: string | null
-                    phone?: string | null
-                    user_type: Database["public"]["Enums"]["user_role"]
+                    phone_verified_at?: string | null
+                    provider_kind?: Database["public"]["Enums"]["provider_kind"] | null
+                    provider_verification_status?: Database["public"]["Enums"]["provider_verification_status"]
+                    provider_verified_at?: string | null
+                    birthdate?: string | null
+                    updated_at?: string | null
                     theme_preference?: "light" | "dark" | "system"
-                    website?: string | null
                 }
                 Update: {
                     bio?: string | null
                     city?: string | null
+                    company_contact_email?: string | null
+                    company_message?: string | null
+                    company_name?: string | null
+                    country?: string | null
                     created_at?: string
-                    email?: string
-                    full_name?: string
-                    headline?: string | null
+                    email?: string | null
+                    email_verified_at?: string | null
+                    full_name?: string | null
                     id?: string
                     interests?: string | null
-                    is_verified?: boolean | null
+                    skills?: string | null
+                    availability_note?: string | null
+                    guardian_id?: string | null
+                    guardian_status?: Database["public"]["Enums"]["guardian_status"]
+                    guardian_verified_at?: string | null
+                    account_type?: Database["public"]["Enums"]["account_type"] | null
                     market_id?: string | null
-                    phone?: string | null
-                    user_type?: Database["public"]["Enums"]["user_role"]
+                    phone_verified_at?: string | null
+                    provider_kind?: Database["public"]["Enums"]["provider_kind"] | null
+                    provider_verification_status?: Database["public"]["Enums"]["provider_verification_status"]
+                    provider_verified_at?: string | null
+                    birthdate?: string | null
+                    updated_at?: string | null
                     theme_preference?: "light" | "dark" | "system"
-                    website?: string | null
                 }
                 Relationships: [
+                    {
+                        foreignKeyName: "profiles_guardian_id_fkey"
+                        columns: ["guardian_id"]
+                        isOneToOne: false
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
                     {
                         foreignKeyName: "profiles_market_id_fkey"
                         columns: ["market_id"]
@@ -661,8 +704,24 @@ export interface Database {
                 }
                 Returns: unknown
             }
+            create_guardian_invitation: {
+                Args: {
+                    p_invited_email?: string | null
+                }
+                Returns: Json
+            }
+            redeem_guardian_invitation: {
+                Args: {
+                    token_input: string
+                }
+                Returns: Json
+            }
         }
         Enums: {
+            account_type: "job_seeker" | "job_provider"
+            guardian_status: "none" | "pending" | "linked"
+            provider_kind: "private" | "company"
+            provider_verification_status: "none" | "pending" | "verified" | "rejected"
             application_status: "submitted" | "accepted" | "rejected" | "hired"
             job_category:
             | "gardening"

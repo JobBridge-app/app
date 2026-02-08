@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { UserType } from "@/lib/types";
+import { OnboardingRole } from "@/lib/types";
 
 type StepSummaryProps = {
-  role: UserType;
+  role: OnboardingRole;
   fullName: string;
   birthdate: string;
   city: string;
@@ -15,12 +15,11 @@ type StepSummaryProps = {
   loading?: boolean;
 };
 
-const roleLabel: Record<UserType, string> = {
+const roleLabel: Record<OnboardingRole, string> = {
   youth: "Jugendliche/r Jobsuchende/r",
   adult: "Privatperson (ich biete Jobs an)",
   senior: "Senior/in – ich suche Unterstützung",
   company: "Unternehmen / Organisation",
-  admin: "Administrator",
 };
 
 export function StepSummary({

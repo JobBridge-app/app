@@ -97,14 +97,14 @@ CREATE POLICY "Public and Seekers can view open jobs, Providers see own" ON "pub
         -- OR User is NOT logged in (Anon feed is allowed? Assuming yes for SEO/Landing)
         (auth.role() = 'anon')
         OR
-        -- OR User is logged in BUT is NOT a company
+        -- OR User is logged in BUT is NOT a job provider
         (
              auth.role() = 'authenticated' 
              AND 
              NOT EXISTS (
                  SELECT 1 FROM profiles 
                  WHERE id = auth.uid() 
-                 AND user_type = 'company'
+                 AND account_type = 'job_provider'::public.account_type
              )
         )
     );

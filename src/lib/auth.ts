@@ -1,7 +1,7 @@
 import type { Session } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "./supabaseServer";
-import { Profile, isProfileComplete, UserType, SystemRoleType, AccountType } from "./types";
+import { Profile, isProfileComplete, SystemRoleType, AccountType } from "./types";
 
 export type AuthState =
   | { state: "no-session" }
@@ -27,33 +27,6 @@ export async function getDataSource(userId: string) {
     };
   }
   return { mode: 'live' as const };
-}
-
-/**
- * Returns the effective role for the user, considering any active overrides.
- * This does NOT modify the DB, just returns the runtime value.
- */
-export async function getEffectiveRole(userId: string, baseUserType: UserType | null): Promise<AccountType> {
-  const supabase = await supabaseServer();
-
-  // 1. Check for active override
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: override } = await supabase
-    .from("role_overrides" as any)
-    .select("view_as, expires_at")
-    .eq("user_id", userId)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle() as any;
-
-  if (override) {
-    return override.view_as as AccountType;
-  }
-
-  // 2. Fallback to base user type mapping
-  if (baseUserType === 'youth') return 'job_seeker';
-  return 'job_provider';
-  if (baseUserType === 'youth') return 'job_seeker';
-  return 'job_provider';
 }
 
 export async function getActiveOverride(userId: string) {
@@ -108,8 +81,6 @@ export const getCurrentSessionAndProfile = async (): Promise<{
     // Priority 1: Demo Mode (highest priority for view)
     if (demoResult.data?.enabled) {
       accountType = demoResult.data.demo_view as AccountType;
-      // We also patch user_type for legacy checks if needed, but be careful not to confuse UI
-      // mostly we just rely on profile.account_type
     }
     // Priority 2: Override (if not in demo, allows testing logic on real data)
     else if (overrideResult.data) {
@@ -117,7 +88,7 @@ export const getCurrentSessionAndProfile = async (): Promise<{
     }
     // Priority 3: Base Profile
     else {
-      accountType = (profile.user_type === 'youth') ? 'job_seeker' : 'job_provider';
+      accountType = (profile.account_type as AccountType | null) ?? "job_seeker";
     }
 
     profile.account_type = accountType;

@@ -3,10 +3,10 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Building2, HandHeart, Sparkles, UserRound } from "lucide-react";
-import { UserType } from "@/lib/types";
+import { OnboardingRole } from "@/lib/types";
 
 const roles: Array<{
-  value: UserType;
+  value: OnboardingRole;
   title: string;
   description: string;
   icon: ReactNode;
@@ -38,8 +38,8 @@ const roles: Array<{
 ];
 
 type StepRoleProps = {
-  selectedRole: UserType | null;
-  onSelect: (role: UserType) => void;
+  selectedRole: OnboardingRole | null;
+  onSelect: (role: OnboardingRole) => void;
   onNext: () => void;
   onBack?: () => void;
 };
