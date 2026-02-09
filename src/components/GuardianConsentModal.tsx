@@ -9,9 +9,10 @@ import { Copy, X, CheckCircle, ShieldCheck } from "lucide-react";
 interface GuardianConsentModalProps {
     isOpen: boolean;
     onClose: () => void;
+    variant?: "initial" | "add"; // "initial" = mandatory first consent, "add" = adding additional guardian
 }
 
-export function GuardianConsentModal({ isOpen, onClose }: GuardianConsentModalProps) {
+export function GuardianConsentModal({ isOpen, onClose, variant = "initial" }: GuardianConsentModalProps) {
     const [step, setStep] = useState<"initial" | "generated">("initial");
     const [isLoading, setIsLoading] = useState(false);
     const [link, setLink] = useState("");
@@ -96,7 +97,9 @@ export function GuardianConsentModal({ isOpen, onClose }: GuardianConsentModalPr
                     <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
                         <ShieldCheck className="w-5 h-5" />
                     </div>
-                    <span className="font-semibold text-white">Jugendschutz & Datenschutz</span>
+                    <span className="font-semibold text-white">
+                        {variant === "initial" ? "Jugendschutz & Datenschutz" : "Elternteil hinzufügen"}
+                    </span>
                 </div>
             }
         >
@@ -109,9 +112,13 @@ export function GuardianConsentModal({ isOpen, onClose }: GuardianConsentModalPr
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="text-white font-medium">Einverständnis erforderlich</h3>
+                                    <h3 className="text-white font-medium">
+                                        {variant === "initial" ? "Einverständnis erforderlich" : "Weiteren Erziehungsberechtigten einladen"}
+                                    </h3>
                                     <p className="text-sm text-slate-400 leading-relaxed">
-                                        Um deine Sicherheit zu gewährleisten und den gesetzlichen Anforderungen (DSGVO & Jugendschutz) zu entsprechen, benötigen wir vor deiner ersten Bewerbung eine einmalige Bestätigung durch deine Eltern.
+                                        {variant === "initial"
+                                            ? "Um deine Sicherheit zu gewährleisten und den gesetzlichen Anforderungen (DSGVO & Jugendschutz) zu entsprechen, benötigen wir vor deiner ersten Bewerbung eine einmalige Bestätigung durch deine Eltern."
+                                            : "Möchtest du einen weiteren Elternteil oder Erziehungsberechtigten hinzufügen? Erstelle hier einen Link und sende ihn an die entsprechende Person."}
                                     </p>
                                 </div>
                             </div>
@@ -140,7 +147,9 @@ export function GuardianConsentModal({ isOpen, onClose }: GuardianConsentModalPr
                     <>
                         <div className="space-y-4">
                             <p className="text-sm text-slate-400">
-                                Bitte sende den folgenden Link an deine Eltern. Sobald sie bestätigt haben, kannst du dich bewerben.
+                                {variant === "initial"
+                                    ? "Bitte sende den folgenden Link an deine Eltern. Sobald sie bestätigt haben, kannst du dich bewerben."
+                                    : "Bitte sende diesen Link an deinen Elternteil. Nach der Bestätigung wird die Person deinem Profil hinzugefügt."}
                             </p>
 
                             <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 space-y-3">

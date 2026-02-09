@@ -1,6 +1,7 @@
 import { requireCompleteProfile } from "@/lib/auth";
 import { GuardianBanner } from "@/components/profile/GuardianBanner";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
+import { AddGuardianButton } from "@/components/profile/AddGuardianButton";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { Clock3, Mail, ShieldCheck } from "lucide-react";
 
@@ -62,6 +63,37 @@ export default async function ProfilePage() {
                 ? "Eltern bestätigt"
                 : (profile.guardian_status === "pending" ? "Bestätigung ausstehend" : "Bestätigung erforderlich"));
 
+    // 4. Fetch Guardian Profiles via Relationships
+    // Note: We use a raw select and cast because types might not yet reflect the new table
+    let guardians: Array<{ id: string; full_name: string | null; email: string | null }> = [];
+
+    // First try the new relationship table
+    const { data: relationships, error: relError } = await supabase
+        .from("guardian_relationships" as any)
+        .select(`
+            guardian_id,
+            guardian:profiles!guardian_id (
+                id,
+                full_name,
+                email
+            )
+        `)
+        .eq("child_id", profile.id);
+
+    if (!relError && relationships && relationships.length > 0) {
+        guardians = relationships.map((r: any) => r.guardian).filter(Boolean);
+    } else if (profile.guardian_id) {
+        // Fallback to legacy single guardian_id column if table empty or error
+        const { data: legacyGuardian } = await supabase
+            .from("profiles")
+            .select("full_name, id, email")
+            .eq("id", profile.guardian_id)
+            .single();
+        if (legacyGuardian) {
+            guardians.push(legacyGuardian);
+        }
+    }
+
     return (
         <div className="container mx-auto max-w-6xl px-4 py-8 md:px-6">
             <div className="mb-8">
@@ -115,6 +147,28 @@ export default async function ProfilePage() {
                                         {statusLabel}
                                     </span>
                                 </div>
+
+                                {guardians.length > 0 && (
+                                    <div className="border-t border-white/5 py-2.5">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm text-slate-500">Erziehungsberechtigte</span>
+                                            <AddGuardianButton />
+                                        </div>
+                                        <div className="space-y-2">
+                                            {guardians.map((g) => (
+                                                <div key={g.id} className="flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5">
+                                                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                        {(g.full_name || "G").charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <span className="text-sm text-slate-300 font-medium truncate" title={g.full_name || ""}>
+                                                        {g.full_name || "Unbekannt"}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between border-t border-white/5 py-2.5 text-sm">
                                     <span className="text-slate-500">Standort</span>
                                     <span className="truncate text-slate-300 max-w-[140px]" title={locationDisplay}>

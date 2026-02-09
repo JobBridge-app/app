@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Moon, Shield, ChevronRight, Laptop, Smartphone } from "lucide-react";
+import { Bell, Moon, Shield, ChevronRight, Laptop, Smartphone, User } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
@@ -14,6 +14,23 @@ export default function SettingsPage() {
 
             <div className="space-y-6">
 
+                {/* 0. Profile Edit Shortcut */}
+                <section className="bg-slate-900/40 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
+                    <Link href="/app-home/profile" className="block hover:bg-white/5 transition-colors">
+                        <div className="px-6 py-6 flex items-center justify-between group">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
+                                    <User size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors">Profil bearbeiten</h2>
+                                    <p className="text-sm text-slate-400">Persönliche Daten, Lebenslauf & Erziehungsberechtigte</p>
+                                </div>
+                            </div>
+                            <ChevronRight className="text-slate-600 group-hover:text-white transition-colors" />
+                        </div>
+                    </Link>
+                </section>
                 {/* 1. App Settings (Theme) */}
                 <section className="bg-slate-900/40 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
                     <div className="px-6 py-4 border-b border-white/5">
