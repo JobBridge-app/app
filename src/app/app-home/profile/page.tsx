@@ -51,17 +51,7 @@ export default async function ProfilePage() {
     const lastLoginDisplay = lastLogin ? new Date(lastLogin.created_at).toLocaleString("de-DE") : "Noch kein Login protokolliert";
     const profileEmail = profile.email?.trim() || session.user.email || "Keine E-Mail hinterlegt";
 
-    const isVerifiedBadge =
-        profile.account_type === "job_provider"
-            ? profile.provider_verification_status === "verified" || Boolean(profile.provider_verified_at)
-            : profile.guardian_status === "linked";
 
-    const statusLabel =
-        profile.account_type === "job_provider"
-            ? (isVerifiedBadge ? "Geprüfter Anbieter" : (profile.provider_verification_status === "pending" ? "Prüfung läuft" : "Noch nicht geprüft"))
-            : (profile.guardian_status === "linked"
-                ? "Eltern bestätigt"
-                : (profile.guardian_status === "pending" ? "Bestätigung ausstehend" : "Bestätigung erforderlich"));
 
     // 4. Fetch Guardian Profiles via Relationships
     // Note: We use a raw select and cast because types might not yet reflect the new table
@@ -93,7 +83,22 @@ export default async function ProfilePage() {
             guardians.push(legacyGuardian);
         }
     }
+    // 5. Determine effective status (Self-healing)
+    // If we found guardians in the relationship table, we consider the user "linked"
+    // even if the profile status says "pending" (which might happen during 2nd invite).
+    const effectiveGuardianStatus = guardians.length > 0 ? "linked" : (profile.guardian_status ?? "none");
 
+    const isVerifiedBadge =
+        profile.account_type === "job_provider"
+            ? profile.provider_verification_status === "verified" || Boolean(profile.provider_verified_at)
+            : effectiveGuardianStatus === "linked";
+
+    const statusLabel =
+        profile.account_type === "job_provider"
+            ? (isVerifiedBadge ? "Geprüfter Anbieter" : (profile.provider_verification_status === "pending" ? "Prüfung läuft" : "Noch nicht geprüft"))
+            : (effectiveGuardianStatus === "linked"
+                ? "Eltern bestätigt"
+                : (effectiveGuardianStatus === "pending" ? "Bestätigung ausstehend" : "Bestätigung erforderlich"));
     return (
         <div className="container mx-auto max-w-6xl px-4 py-8 md:px-6">
             <div className="mb-8">
@@ -106,7 +111,7 @@ export default async function ProfilePage() {
 
             {profile.account_type === "job_seeker" && (
                 <div className="mb-8">
-                    <GuardianBanner guardianStatus={profile.guardian_status ?? "none"} />
+                    <GuardianBanner guardianStatus={effectiveGuardianStatus} />
                 </div>
             )}
 

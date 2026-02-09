@@ -11,9 +11,14 @@ export async function createGuardianInvitation() {
         return { error: "Nicht authentifiziert" };
     }
 
-    // Check if minor
-    // We trust usage of this action is gated by UI, but good to check DB too if we had birthdate handy.
-    // For now, just create the invitation.
+    // Check current profile status
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("guardian_status")
+        .eq("id", user.id)
+        .single();
+
+    const isAlreadyLinked = profile?.guardian_status === "linked";
 
     // Check for existing active invitation
     const { data: existing } = await supabase
@@ -25,8 +30,12 @@ export async function createGuardianInvitation() {
         .single();
 
     if (existing) {
-        // Ensure status is pending even if reusing token
-        await supabase.from("profiles").update({ guardian_status: "pending" }).eq("id", user.id);
+        // Only set to pending if NOT already verifying/linked to someone else
+        // Actually, if they are already linked, we don't want to revert to pending globally.
+        // We just return the token.
+        if (!isAlreadyLinked) {
+            await supabase.from("profiles").update({ guardian_status: "pending" }).eq("id", user.id);
+        }
         return { success: true, token: existing.token, expires_at: existing.expires_at };
     }
 
@@ -46,8 +55,10 @@ export async function createGuardianInvitation() {
         return { error: "Einladungslink konnte nicht erstellt werden." };
     }
 
-    // Update profile status
-    await supabase.from("profiles").update({ guardian_status: "pending" }).eq("id", user.id);
+    // Update profile status ONLY if not already linked
+    if (!isAlreadyLinked) {
+        await supabase.from("profiles").update({ guardian_status: "pending" }).eq("id", user.id);
+    }
 
     return { success: true, token, expires_at: expiresAt };
 }
