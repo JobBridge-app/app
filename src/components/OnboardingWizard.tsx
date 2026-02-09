@@ -8,15 +8,14 @@ import { ChoiceTile } from "./ui/ChoiceTile";
 import { ButtonPrimary } from "./ui/ButtonPrimary";
 import { ButtonSecondary } from "./ui/ButtonSecondary";
 import { Loader } from "./ui/Loader";
-import { Toast } from "./ui/Toast";
+// import { Toast } from "./ui/Toast";
 import { signUpWithEmail, signInWithEmail } from "@/lib/authClient";
 import { saveProfile } from "@/lib/profile";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { type AccountType, type OnboardingRole, type Profile, type ProviderKind } from "@/lib/types";
-import { getRegions, type Region } from "@/lib/regions";
+// import { getRegions, type Region } from "@/lib/regions";
 import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2 } from "lucide-react";
-import { verifySignupCode } from "@/lib/verify";
 import { LocationStep } from "./onboarding/LocationStep";
 
 type Step = "location" | "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
@@ -76,16 +75,17 @@ export function OnboardingWizard({
   const [password, setPassword] = useState("");
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [codeMessage, setCodeMessage] = useState<string | null>(null);
-  const [toastOpen, setToastOpen] = useState(false);
-  const [toastMsg, setToastMsg] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
+  // Unused state variables removed for linting
+  // const [toastMsg, setToastMsg] = useState("");
+  // const [toastType, setToastType] = useState<"success" | "error">("success");
 
   const [resendCooldown, setResendCooldown] = useState(0);
   const [showCodeForm, setShowCodeForm] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string | null>(null);
-  const [codeLocked, setCodeLocked] = useState(false);
-  const [emailStatus, setEmailStatus] = useState<"pending" | "sent" | "error">("pending");
+
+  // const [codeLocked, setCodeLocked] = useState(false);
+  // const [emailStatus, setEmailStatus] = useState<"pending" | "sent" | "error">("pending");
   const [resendMessage, setResendMessage] = useState("");
 
   useEffect(() => {
@@ -95,8 +95,8 @@ export function OnboardingWizard({
     }
   }, [resendCooldown]);
 
-  const [regions, setRegions] = useState<Region[]>([]);
-  const [regionsLoading, setRegionsLoading] = useState(true);
+  // const [regions, setRegions] = useState<Region[]>([]);
+  // const [regionsLoading, setRegionsLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     role: inferOnboardingRole(initialProfile),
     fullName: initialProfile?.full_name || "",
@@ -108,19 +108,15 @@ export function OnboardingWizard({
     companyMessage: "",
   });
 
-  // Load regions (reconstructed based on likely usage)
-  useEffect(() => {
-    getRegions().then((data) => {
-      setRegions(data);
-      setRegionsLoading(false);
-    });
-  }, []);
+  // Regions fetch removed as unused
+
 
   // Make sure we jump to auth mode Step if initialMode is set
   useEffect(() => {
     if (initialMode && step === "welcome") {
       setStep("mode");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMode]);
 
   const handleResendConfirmation = async (e?: React.MouseEvent | React.FormEvent) => {
@@ -130,12 +126,29 @@ export function OnboardingWizard({
     setResendMessage("");
     setError(null);
     try {
-      const { error } = await supabaseBrowser.auth.resend({ type: 'signup', email });
+      const { error } = await supabaseBrowser.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
       if (error) throw error;
+
       setResendMessage("E-Mail wurde erneut gesendet.");
       setResendCooldown(60);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Fehler beim Senden."));
+      console.error("Resend error:", err);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorObj = err as any;
+      // Check for rate limit error specifically
+      if (errorObj?.status === 429 || errorObj?.message?.includes("security purposes")) {
+        setError("Bitte warte einen Moment, bevor du es erneut versuchst (" + (errorObj?.message || "Rate Limit") + ").");
+        setResendCooldown(60); // Force cooldown on rate limit
+      } else {
+        setError(getErrorMessage(err, "Fehler beim Senden."));
+      }
     } finally {
       setLoading(false);
     }
@@ -147,7 +160,7 @@ export function OnboardingWizard({
     setLoading(true);
     setCodeError(null);
     try {
-      const { data, error } = await supabaseBrowser.auth.verifyOtp({
+      const { error } = await supabaseBrowser.auth.verifyOtp({
         email,
         token: code,
         type: 'signup'
@@ -162,25 +175,30 @@ export function OnboardingWizard({
   };
 
   const checkSessionAfterEmailConfirm = useCallback(async () => {
-    const { data: { session } } = await supabaseBrowser.auth.getSession();
-    if (!session) return false;
+    const { data: { user } } = await supabaseBrowser.auth.getUser();
+    if (!user) return false;
 
     const { data: profile } = await supabaseBrowser
       .from("profiles")
       .select("*")
-      .eq("id", session.user.id)
+      .eq("id", user.id)
       .maybeSingle();
 
     const profileTyped = profile as Profile | null;
     const isComplete = isProfileComplete(profileTyped);
-    const isConfirmed = !!session.user.email_confirmed_at; // Or checking session status
+    const isConfirmed = !!user.email_confirmed_at; // Or checking session status
 
     if (isConfirmed && isComplete) {
-      router.push(redirectTo || "/app-home");
+      setEmailConfirmed(true);
+      setTimeout(() => {
+        router.push(redirectTo || "/app-home");
+      }, 1000); // Give user a moment to see success
       return true;
     }
 
     if (isConfirmed) {
+      setEmailConfirmed(true);
+      // Small delay before moving on? Or immediate
       if (profileTyped && !profileData.role) {
         const inferred = inferOnboardingRole(profileTyped);
         if (inferred) setStep("role"); // Or directly to profile?
@@ -248,14 +266,14 @@ export function OnboardingWizard({
     setIsSaving(true);
     setError(null);
     try {
-      const { data: { session } } = await supabaseBrowser.auth.getSession();
-      if (!session) throw new Error("Keine aktive Session gefunden.");
+      const { data: { user } } = await supabaseBrowser.auth.getUser();
+      if (!user) throw new Error("Keine aktive Session gefunden.");
 
       if (!profileData.role) throw new Error("Keine Rolle ausgewählt.");
       const mapped = mapOnboardingRoleToAccount(profileData.role);
 
       await saveProfile(supabaseBrowser, {
-        id: session.user.id,
+        id: user.id,
         full_name: profileData.fullName.trim(),
         birthdate: profileData.birthdate,
         city: profileData.region.trim(),
@@ -342,7 +360,8 @@ export function OnboardingWizard({
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#07090f]">
-      <Toast open={toastOpen} message={toastMsg} type={toastType} onClose={() => setToastOpen(false)} />
+      {/* Toast removed as unused */}
+
 
       {/* Glass Card Container */}
       <div className="relative z-10 max-w-2xl w-full">
@@ -630,11 +649,7 @@ export function OnboardingWizard({
                           </ButtonSecondary>
                         </div>
                       </div>
-                      {emailStatus && (
-                        <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm">
-                          {emailStatus}
-                        </div>
-                      )}
+                      {/* emailStatus removed */}
                       {resendMessage && (
                         <p className="text-sm text-cyan-200/90 mt-2 font-medium">{resendMessage}</p>
                       )}
@@ -668,12 +683,12 @@ export function OnboardingWizard({
                               placeholder="12345678"
                               value={code}
                               autoFocus
-                              disabled={codeLocked}
+                            // disabled={codeLocked}
                             />
                             <ButtonSecondary
                               onClick={handleVerifyCode}
                               className="w-full sm:w-auto flex-shrink-0 h-14 px-6 font-medium whitespace-nowrap"
-                              disabled={loading || code.length < 8 || codeLocked}
+                              disabled={loading || code.length < 8 /* || codeLocked */}
                             >
                               Code prüfen
                             </ButtonSecondary>
