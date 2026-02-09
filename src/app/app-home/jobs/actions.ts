@@ -16,7 +16,21 @@ function isMinor(birthdate: string | null): boolean {
     return age < 18;
 }
 
-export async function applyToJob(jobId: string) {
+export async function applyToJob(formData: FormData | string) {
+    // Determine if input is formData or just ID (legacy support/direct call)
+    let jobId: string;
+    let message: string = "Ich habe Interesse!";
+
+    if (typeof formData === 'string') {
+        jobId = formData;
+    } else {
+        jobId = formData.get("jobId") as string;
+        const msgInput = formData.get("message") as string;
+        if (msgInput && msgInput.trim().length > 0) {
+            message = msgInput.trim();
+        }
+    }
+
     const supabase = await supabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -36,7 +50,20 @@ export async function applyToJob(jobId: string) {
         return { error: "Du bist nicht berechtigt, dich zu bewerben." };
     }
 
-    if (isMinor(profile.birthdate ?? null) && profile.guardian_status !== "linked") {
+    // Check effective guardian status (Self-healing)
+    // We do a direct check on relationships to be safe, mimicking ProfilePage logic
+    let isLinked = profile.guardian_status === "linked";
+    if (!isLinked) {
+        const { count } = await (supabase as any)
+            .from("guardian_relationships")
+            .select("*", { count: 'exact', head: true })
+            .eq("child_id", user.id)
+            .eq("status", "active");
+
+        if (count && count > 0) isLinked = true;
+    }
+
+    if (isMinor(profile.birthdate ?? null) && !isLinked) {
         return { error: "Du bist nicht berechtigt, dich zu bewerben (Elternbestätigung fehlt)." };
     }
 
@@ -54,7 +81,7 @@ export async function applyToJob(jobId: string) {
         job_id: jobId,
         user_id: user.id,
         status: "submitted",
-        message: "Ich habe Interesse!" // Hardcoded for now, can be expandable
+        message: message
     });
 
     if (error) {

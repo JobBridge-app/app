@@ -22,6 +22,7 @@ export default async function ActivityPage() {
 
     type ActivityApp = Database["public"]["Tables"]["applications"]["Row"] & {
         job: { title: string; description: string; status: Database["public"]["Enums"]["job_status"] } | null;
+        message?: string | null;
     };
 
     const { data } = await supabase
@@ -72,27 +73,40 @@ export default async function ActivityPage() {
                 ) : (
                     <div className="grid gap-4">
                         {applications.map((app) => (
-                            <div key={app.id} className="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm hover:bg-white/8 transition-colors">
-                                <div className="flex justify-between items-start mb-4">
+                            <div key={app.id} className="rounded-2xl border border-white/10 bg-[#121217] p-6 backdrop-blur-sm hover:bg-white/5 transition-colors group">
+                                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-white mb-1">
+                                        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors">
                                             {app.job?.title || "Unbekannter Job"}
                                         </h3>
-                                        <p className="text-xs text-slate-500">
-                                            Beworben am {new Date(app.created_at).toLocaleDateString()}
-                                        </p>
+                                        <div className="flex gap-3 text-xs text-slate-500">
+                                            <span>Beworben am {new Date(app.created_at).toLocaleDateString()}</span>
+                                            {app.message && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span className="text-slate-400">Mit Nachricht</span>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div>
-                                        {app.status === 'submitted' && <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">Offen</span>}
-                                        {app.status === 'accepted' && <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded-full border border-emerald-500/30">Zusage</span>}
-                                        {app.status === 'rejected' && <span className="px-3 py-1 bg-red-500/20 text-red-300 text-xs rounded-full border border-red-500/30">Absage</span>}
+                                    <div className="shrink-0">
+                                        {app.status === 'submitted' && <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-medium rounded-full border border-blue-500/30">Offen</span>}
+                                        {app.status === 'accepted' && <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-medium rounded-full border border-emerald-500/30">Zusage</span>}
+                                        {app.status === 'rejected' && <span className="px-3 py-1 bg-red-500/20 text-red-300 text-xs font-medium rounded-full border border-red-500/30">Absage</span>}
                                     </div>
                                 </div>
 
+                                {app.message && (
+                                    <div className="mb-5 p-4 rounded-xl bg-white/5 border border-white/5 text-sm text-slate-300 italic relative">
+                                        <span className="absolute top-2 left-2 text-white/10 text-4xl font-serif">"</span>
+                                        <p className="relative z-10 px-4">{app.message}</p>
+                                    </div>
+                                )}
+
                                 {app.status === 'accepted' && (
-                                    <div className="flex justify-end">
+                                    <div className="flex justify-end pt-2 border-t border-white/5">
                                         <Link href="/app-home/messages">
-                                            <button className="text-sm bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white transition-colors">
+                                            <button className="text-sm bg-indigo-600 hover:bg-indigo-500 px-6 py-2.5 rounded-xl text-white transition-all font-medium shadow-lg shadow-indigo-900/20">
                                                 Chat öffnen
                                             </button>
                                         </Link>

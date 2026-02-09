@@ -1,12 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import { ReactNode, MouseEventHandler } from "react";
 import clsx from "clsx";
 
 type ButtonPrimaryProps = {
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
   type?: "button" | "submit";
   className?: string;
