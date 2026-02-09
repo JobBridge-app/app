@@ -2,7 +2,7 @@
 
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { GuardianStatus } from "@/lib/types";
 import { GuardianConsentModal } from "@/components/GuardianConsentModal";
 
@@ -13,11 +13,26 @@ type GuardianBannerProps = {
 
 
 export function GuardianBanner({ guardianStatus }: GuardianBannerProps) {
+    const [isDismissed, setIsDismissed] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    useEffect(() => {
+        const dismissed = localStorage.getItem("guardian_banner_dismissed");
+        if (dismissed === "true") {
+            setIsDismissed(true);
+        }
+    }, []);
+
+    const handleDismiss = () => {
+        localStorage.setItem("guardian_banner_dismissed", "true");
+        setIsDismissed(true);
+    };
+
     if (guardianStatus === "linked") {
+        if (isDismissed) return null;
+
         return (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 flex items-start gap-4 mb-8">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 flex items-start gap-4 mb-8 relative group">
                 <div className="p-2 bg-emerald-500/20 rounded-full text-emerald-400">
                     <CheckCircle2 size={24} />
                 </div>
@@ -29,6 +44,13 @@ export function GuardianBanner({ guardianStatus }: GuardianBannerProps) {
                         Dein Konto wurde von einem Elternteil bestätigt. Du kannst Jobs annehmen.
                     </p>
                 </div>
+                <button
+                    onClick={handleDismiss}
+                    className="absolute top-4 right-4 p-2 text-emerald-400/50 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-full transition-colors"
+                    title="Hinweis ausblenden"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                </button>
             </div>
         );
     }
