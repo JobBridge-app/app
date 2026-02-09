@@ -51,19 +51,18 @@ export async function applyToJob(formData: FormData | string) {
     }
 
     // Check effective guardian status (Self-healing)
-    // We do a direct check on relationships to be safe, mimicking ProfilePage logic
-    let isLinked = profile.guardian_status === "linked";
-    if (!isLinked) {
-        const { count } = await (supabase as any)
-            .from("guardian_relationships")
-            .select("*", { count: 'exact', head: true })
-            .eq("child_id", user.id)
-            .eq("status", "active");
+    // CRITICAL: We enforce that an ACTUAL relationship exists.
+    // If the profile says "linked" but no relationship is found, we deny the application.
+    const { count } = await (supabase as any)
+        .from("guardian_relationships")
+        .select("*", { count: 'exact', head: true })
+        .eq("child_id", user.id)
+        .eq("status", "active");
 
-        if (count && count > 0) isLinked = true;
-    }
+    const hasActiveGuardian = count !== null && count > 0;
 
-    if (isMinor(profile.birthdate ?? null) && !isLinked) {
+    // If minor and no active guardian, block
+    if (isMinor(profile.birthdate ?? null) && !hasActiveGuardian) {
         return { error: "Du bist nicht berechtigt, dich zu bewerben (Elternbestätigung fehlt)." };
     }
 

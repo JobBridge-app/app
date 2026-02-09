@@ -28,6 +28,7 @@ type OnboardingWizardProps = {
   initialRegion?: string;
   redirectTo?: string;
   initialMode?: AuthMode;
+  isJustVerified?: boolean;
 };
 
 const getErrorMessage = (err: unknown, fallback: string) =>
@@ -50,11 +51,7 @@ function inferOnboardingRole(profile: Profile | null | undefined): OnboardingRol
   return null;
 }
 
-function mapOnboardingRoleToAccount(role: OnboardingRole): { account_type: AccountType; provider_kind: ProviderKind | null } {
-  if (role === "youth") return { account_type: "job_seeker", provider_kind: null };
-  if (role === "company") return { account_type: "job_provider", provider_kind: "company" };
-  return { account_type: "job_provider", provider_kind: "private" };
-}
+// mapOnboardingRoleToAccount removed as logic moved to server action
 
 export function OnboardingWizard({
   initialProfile,
@@ -63,6 +60,7 @@ export function OnboardingWizard({
   initialRegion = "",
   redirectTo,
   initialMode = null,
+  isJustVerified = false,
 }: OnboardingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(forcedStep || "welcome");
@@ -72,7 +70,8 @@ export function OnboardingWizard({
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
-  const [emailConfirmed, setEmailConfirmed] = useState(false);
+  // If just verified, assume email is confirmed initially to show UI feedback
+  const [emailConfirmed, setEmailConfirmed] = useState(isJustVerified);
   const [codeMessage, setCodeMessage] = useState<string | null>(null);
   // Unused state variables removed for linting
   // const [toastMsg, setToastMsg] = useState("");
@@ -87,6 +86,8 @@ export function OnboardingWizard({
 
   // const [regions, setRegions] = useState<Region[]>([]);
   // const [regionsLoading, setRegionsLoading] = useState(true);
+
+  // Initialize profile data. Important: prefer initialRegion/initialProfile city to ensure persistence.
   const [profileData, setProfileData] = useState({
     role: inferOnboardingRole(initialProfile),
     fullName: initialProfile?.full_name || "",
@@ -108,6 +109,23 @@ export function OnboardingWizard({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMode]);
+
+  // If just verified, we may want to auto-advance after a short delay if profile is not complete
+  useEffect(() => {
+    if (isJustVerified && step === "email-confirm") {
+      const timer = setTimeout(() => {
+        // If profile is already complete, checkSessionAfterEmailConfirm (called by effect or manually) handles it.
+        // But if we are just verifying, we likely need to fill profile.
+        // Check if role is inferred, else go to role
+        if (!initialProfile?.account_type) {
+          setStep("role");
+          setEmailConfirmed(false); // Clear the big success banner to focus on next step
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isJustVerified, step, initialProfile]);
+
 
   // handleResendConfirmation is now provided by useEmailResend hook
 
@@ -156,27 +174,38 @@ export function OnboardingWizard({
     if (isConfirmed) {
       setEmailConfirmed(true);
       // Small delay before moving on? Or immediate
-      if (profileTyped && !profileData.role) {
-        const inferred = inferOnboardingRole(profileTyped);
-        if (inferred) setStep("role"); // Or directly to profile?
-        else setStep("role");
-      } else {
-        setStep("role");
-      }
+      const timer = setTimeout(() => {
+        if (profileTyped && !profileData.role) {
+          const inferred = inferOnboardingRole(profileTyped);
+          // Preserve existing state if present, only update if we got better data
+          setProfileData((prev) => ({
+            ...prev,
+            role: inferred || prev.role,
+            fullName: profileTyped.full_name || prev.fullName,
+            birthdate: profileTyped.birthdate || prev.birthdate,
+            region: profileTyped.city || prev.region, // Important: Don't overwrite with null if we have it locally
+            marketId: profileTyped.market_id || prev.marketId,
+          }));
+          setStep("role");
+        } else {
+          setStep("role");
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
     }
 
     if (profileTyped) {
       setProfileData((prev) => ({
         ...prev,
-        role: inferOnboardingRole(profileTyped),
-        fullName: profileTyped.full_name || "",
-        birthdate: profileTyped.birthdate || "",
-        region: profileTyped.city || "",
-        marketId: profileTyped.market_id || null,
+        role: inferOnboardingRole(profileTyped) || prev.role,
+        fullName: profileTyped.full_name || prev.fullName,
+        birthdate: profileTyped.birthdate || prev.birthdate,
+        region: profileTyped.city || prev.region,
+        marketId: profileTyped.market_id || prev.marketId,
       }));
     }
     return true;
-  }, [router, redirectTo, profileData.role]);
+  }, [router, redirectTo, profileData.role]); // Removed profileData dependency from callback to identify logic loop, but re-added safely
 
 
   const handleSignIn = async () => {
@@ -219,27 +248,44 @@ export function OnboardingWizard({
     setStep("summary");
   };
 
+  // Import server action dynamically or at top-level. 
+  // We need to move the import to top level in real code, but for this edit block i'll assume it's imported or I add it.
+  // Actually, I cannot easily add imports at the top with this tool if I'm targeting this block.
+  // I will use `require` or assume I need to do a separate edit for imports if strict ESM.
+  // OR better: I will replace the whole file content in 2 chunks if needed, or 
+  // I will just add the import in a separate tool call. 
+  // Wait, I can't add imports easily without touching top of file.
+  // I will use a multi-replace to add the import and update the component.
+
   const handleCompleteOnboarding = async () => {
     setIsSaving(true);
     setError(null);
+
+    // Lazy import or assume it handles it? Next.js server actions can be imported.
+    // I will need to make sure the import is present at the top of the file.
+    // For now, I will use the standard import in standard way.
+    // I'll rely on a second edit to add the import if I can't fit it here.
+
     try {
-      const { data: { user } } = await supabaseBrowser.auth.getUser();
-      if (!user) throw new Error("Keine aktive Session gefunden.");
-
       if (!profileData.role) throw new Error("Keine Rolle ausgewählt.");
-      const mapped = mapOnboardingRoleToAccount(profileData.role);
 
-      await saveProfile(supabaseBrowser, {
-        id: user.id,
+      const { completeOnboarding } = await import("@/app/onboarding/actions");
+
+      const result = await completeOnboarding({
         full_name: profileData.fullName.trim(),
         birthdate: profileData.birthdate,
         city: profileData.region.trim(),
         market_id: profileData.marketId,
-        ...mapped,
-        company_name: profileData.role === "company" ? profileData.companyName : null,
-        company_contact_email: profileData.role === "company" ? profileData.companyEmail : null,
-        company_message: profileData.role === "company" ? profileData.companyMessage : null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        role: profileData.role as any,
+        company_name: profileData.role === "company" ? profileData.companyName : undefined,
+        company_email: profileData.role === "company" ? profileData.companyEmail : undefined,
+        company_message: profileData.role === "company" ? profileData.companyMessage : undefined,
       });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
       router.push(redirectTo || "/app-home");
     } catch (err: unknown) {

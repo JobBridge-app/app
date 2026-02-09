@@ -40,8 +40,6 @@ export default async function JobDetailPage({ params }: { params: Promise<{ jobI
     const appRes = await fetchJobApplications(jobId, profile.id);
     const applications = appRes.ok ? appRes.data : [];
 
-
-
     return (
         <div className="container mx-auto py-8 px-4 md:px-6 max-w-4xl">
             <Link href="/app-home/offers" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors">

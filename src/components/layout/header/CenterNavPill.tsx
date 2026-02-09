@@ -95,7 +95,7 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                         )}
 
                         {!isActive && (
-                            <div className="absolute inset-0 z-0 rounded-full bg-white/0 transition-colors group-hover:bg-white/10 dark:group-hover:bg-white/5" />
+                            <div className="absolute inset-0 z-0 rounded-full bg-white/0 transition-colors group-hover:bg-white/5" />
                         )}
 
                         <div className="relative z-10 flex items-center gap-2">
@@ -104,7 +104,7 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                                 strokeWidth={2.5}
                                 className={cn(
                                     "transition-transform duration-300",
-                                    isActive ? "scale-100" : "group-hover:scale-110 opacity-70 group-hover:opacity-100"
+                                    isActive ? "scale-100" : "group-hover:scale-105 opacity-70 group-hover:opacity-100"
                                 )}
                             />
                             <span className={cn(

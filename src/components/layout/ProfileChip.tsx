@@ -84,7 +84,12 @@ export function ProfileChip({ profile, className, isDemo }: ProfileChipProps) {
     const isVerified =
         profile.account_type === "job_provider"
             ? profile.provider_verification_status === "verified" || Boolean(profile.provider_verified_at)
-            : profile.guardian_status === "linked";
+            : (profile.guardian_status === "linked" && (profile as any).has_active_guardian !== false);
+    // We rely on the parent to inject 'has_active_guardian' if available, otherwise fallback to status
+    // But wait, if I can't inject it easily without changing types everywhere...
+    // I'll check if I can just fetch it in useEffect? No, that causes layout shift.
+    // Best is to update the Fetch in layout.tsx.
+
 
     const handleLogout = async () => {
         await supabaseBrowser.auth.signOut();

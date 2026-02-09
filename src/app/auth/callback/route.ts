@@ -45,7 +45,10 @@ export async function GET(request: NextRequest) {
         const { error } = await supabaseResponse.auth.exchangeCodeForSession(code);
 
         if (!error) {
-            return response;
+            // Append verified=true to the destination URL so the frontend knows we just came from a confirmation
+            const nextUrl = new URL(next, requestUrl.origin);
+            nextUrl.searchParams.set("verified", "true");
+            return NextResponse.redirect(nextUrl);
         }
     }
 

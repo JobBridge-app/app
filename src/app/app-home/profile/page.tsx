@@ -74,6 +74,12 @@ export default async function ProfilePage() {
         guardians = relationships.map((r: any) => r.guardian).filter(Boolean);
     } else if (profile.guardian_id) {
         // Fallback to legacy single guardian_id column if table empty or error
+        // FIX: We disable this fallback for now because it causes stale data to be shown
+        // if the relationship was deleted in the new table but the ID remains here.
+        // To properly support legacy, we would need to check if this ID is valid/active,
+        // but for this specific bug (deleted relationship), we want to trust the relationship table.
+
+        /* 
         const { data: legacyGuardian } = await supabase
             .from("profiles")
             .select("full_name, id, email")
@@ -82,11 +88,15 @@ export default async function ProfilePage() {
         if (legacyGuardian) {
             guardians.push(legacyGuardian);
         }
+        */
     }
     // 5. Determine effective status (Self-healing)
     // If we found guardians in the relationship table, we consider the user "linked"
     // even if the profile status says "pending" (which might happen during 2nd invite).
-    const effectiveGuardianStatus = guardians.length > 0 ? "linked" : (profile.guardian_status ?? "none");
+    // CRITICAL FIX: If status is 'linked' but we found NO guardians, reset to 'none' (broken link).
+    const effectiveGuardianStatus = guardians.length > 0
+        ? "linked"
+        : (profile.guardian_status === "pending" ? "pending" : "none");
 
     const isVerifiedBadge =
         profile.account_type === "job_provider"
