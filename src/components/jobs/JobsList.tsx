@@ -57,56 +57,144 @@ export function JobsList({ activeJobs, waitlistedJobs, appliedJobs, isDemo, canA
     );
 
     return (
+
         <>
-            {/* Mobile Tab Navigation */}
-            <div className="lg:hidden bg-white/5 rounded-2xl border border-white/10 p-1 mb-6">
-                <div className="flex items-center justify-between gap-1">
-                    <button
-                        onClick={() => setActiveTab('active')}
-                        className={cn(
-                            "flex-1 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5",
-                            activeTab === 'active' ? "bg-indigo-500/10 text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-300"
-                        )}
-                    >
-                        <Briefcase size={14} /> Aktuell
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('waitlist')}
-                        className={cn(
-                            "flex-1 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5",
-                            activeTab === 'waitlist' ? "bg-amber-500/10 text-amber-400 shadow-sm" : "text-slate-500 hover:text-slate-300"
-                        )}
-                    >
-                        <Clock size={14} /> Warteliste
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('applied')}
-                        className={cn(
-                            "flex-1 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5",
-                            activeTab === 'applied' ? "bg-emerald-500/10 text-emerald-400 shadow-sm" : "text-slate-500 hover:text-slate-300"
-                        )}
-                    >
-                        <CheckCircle2 size={14} /> Beworben
-                    </button>
+            {/* --- Mobile Navigation (Rounded Card "Job Card Style") --- */}
+            <div className="flex justify-center mb-6 md:hidden w-full">
+                {/* Background matches JobCard: bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] */}
+                <div className="flex items-center justify-between w-full bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border border-white/[0.08] rounded-2xl p-1 shadow-sm">
+                    {/* Tabs (Optimized for space) */}
+                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar mask-gradient-right flex-1 min-w-0">
+                        <button
+                            onClick={() => setActiveTab('active')}
+                            className={cn(
+                                "relative px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap",
+                                activeTab === 'active'
+                                    ? "bg-indigo-500/10 text-indigo-400 shadow-sm border border-indigo-500/20"
+                                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                            )}
+                        >
+                            <Briefcase size={15} />
+                            <span>Aktuell</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('waitlist')}
+                            className={cn(
+                                "relative px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap",
+                                activeTab === 'waitlist'
+                                    ? "bg-amber-500/10 text-amber-400 shadow-sm border border-amber-500/20"
+                                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                            )}
+                        >
+                            <Clock size={15} />
+                            <span>Warteliste</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('applied')}
+                            className={cn(
+                                "relative px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 whitespace-nowrap",
+                                activeTab === 'applied'
+                                    ? "bg-emerald-500/10 text-emerald-400 shadow-sm border border-emerald-500/20"
+                                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                            )}
+                        >
+                            <CheckCircle2 size={15} />
+                            <span>Beworben</span>
+                        </button>
+                    </div>
 
-                    <div className="w-px h-6 bg-white/10 mx-1" />
+                    {/* Vertical Separator */}
+                    <div className="w-px h-8 bg-white/10 mx-0.5 shrink-0" />
 
-                    {/* Filter Button */}
+                    {/* Filter Icon */}
                     <button
                         onClick={() => setShowFilterModal(true)}
                         className={cn(
-                            "p-2.5 rounded-xl text-slate-500 hover:text-indigo-400 hover:bg-white/5 transition-all",
-                            showFilterModal && "bg-indigo-500/10 text-indigo-400"
+                            "h-full aspect-square flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all shrink-0 ml-0.5",
+                            showFilterModal && "text-indigo-400 bg-white/5"
                         )}
+                        style={{ height: '36px', width: '36px' }}
                     >
                         <ListFilter size={18} />
                     </button>
                 </div>
             </div>
 
+            {/* --- Desktop Navigation (Integrated) --- */}
+            <div className="hidden md:flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+                {/* Scrollable Tabs Container */}
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar mask-gradient-right pr-4 -mr-4 md:mr-0 md:pr-0 md:mask-none">
+                    <button
+                        onClick={() => setActiveTab('active')}
+                        className={cn(
+                            "py-2 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center gap-2 whitespace-nowrap",
+                            activeTab === 'active'
+                                ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
+                                : "text-slate-400 hover:text-white hover:bg-white/5"
+                        )}
+                    >
+                        <Briefcase size={16} className={cn(activeTab === 'active' ? "text-indigo-400" : "text-slate-500")} />
+                        Aktuell
+                        {activeJobs.length > 0 && (
+                            <span className="bg-white/10 text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full ml-1">
+                                {activeJobs.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('waitlist')}
+                        className={cn(
+                            "py-2 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center gap-2 whitespace-nowrap",
+                            activeTab === 'waitlist'
+                                ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
+                                : "text-slate-400 hover:text-white hover:bg-white/5"
+                        )}
+                    >
+                        <Clock size={16} className={cn(activeTab === 'waitlist' ? "text-amber-400" : "text-slate-500")} />
+                        Warteliste
+                        {waitlistedJobs.length > 0 && (
+                            <span className="bg-white/10 text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full ml-1">
+                                {waitlistedJobs.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('applied')}
+                        className={cn(
+                            "py-2 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center gap-2 whitespace-nowrap",
+                            activeTab === 'applied'
+                                ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
+                                : "text-slate-400 hover:text-white hover:bg-white/5"
+                        )}
+                    >
+                        <CheckCircle2 size={16} className={cn(activeTab === 'applied' ? "text-emerald-400" : "text-slate-500")} />
+                        Beworben
+                        {appliedJobs.length > 0 && (
+                            <span className="bg-white/10 text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full ml-1">
+                                {appliedJobs.length}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
+                {/* Filter Button (Right Aligned) */}
+                <button
+                    onClick={() => setShowFilterModal(true)}
+                    className={
+                        cn(
+                            "ml-4 py-2 px-3 sm:px-4 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2 whitespace-nowrap border border-transparent hover:border-white/10",
+                            showFilterModal && "bg-white/10 text-indigo-400 border-indigo-500/20"
+                        )}
+                    title="Filter & Sortierung"
+                >
+                    <ListFilter size={18} />
+                    <span className="hidden sm:inline text-xs sm:text-sm font-medium">Filter</span>
+                </button>
+            </div>
+
             <div className="space-y-16 pb-20">
                 {/* Active Jobs Section */}
-                <div className={cn("animate-in fade-in slide-in-from-bottom-4 duration-500", activeTab === 'active' ? "block" : "hidden lg:block")}>
+                <div className={cn("animate-in fade-in slide-in-from-bottom-4 duration-500", activeTab === 'active' ? "block" : "hidden")}>
                     <Section
                         title="Aktuelle Angebote"
                         icon={Briefcase}
@@ -118,7 +206,7 @@ export function JobsList({ activeJobs, waitlistedJobs, appliedJobs, isDemo, canA
                 </div>
 
                 {/* Waitlist Section */}
-                <div className={cn("animate-in fade-in slide-in-from-bottom-4 duration-500 lg:animate-none", activeTab === 'waitlist' ? "block" : "hidden lg:block")}>
+                <div className={cn("animate-in fade-in slide-in-from-bottom-4 duration-500", activeTab === 'waitlist' ? "block" : "hidden")}>
                     <Section
                         title="Warteliste"
                         icon={Clock}
@@ -129,7 +217,7 @@ export function JobsList({ activeJobs, waitlistedJobs, appliedJobs, isDemo, canA
                 </div>
 
                 {/* Applied Section */}
-                <div className={cn("animate-in fade-in slide-in-from-bottom-4 duration-500 lg:animate-none", activeTab === 'applied' ? "block" : "hidden lg:block")}>
+                <div className={cn("animate-in fade-in slide-in-from-bottom-4 duration-500", activeTab === 'applied' ? "block" : "hidden")}>
                     <Section
                         title="Bereits Beworben"
                         icon={CheckCircle2}
