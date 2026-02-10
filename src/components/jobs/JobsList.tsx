@@ -58,46 +58,48 @@ export function JobsList({ activeJobs, waitlistedJobs, appliedJobs, isDemo, canA
 
     return (
         <>
-            {/* Mobile Tab Navigation (Sticky) */}
-            <div className="lg:hidden sticky top-20 z-30 bg-[#09090b]/95 backdrop-blur-xl border-b border-white/10 -mx-4 px-4 pb-0 mb-6 pt-2">
-                <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pb-0">
+            {/* Mobile Tab Navigation */}
+            <div className="lg:hidden bg-white/5 rounded-2xl border border-white/10 p-1 mb-6">
+                <div className="flex items-center justify-between gap-1">
                     <button
                         onClick={() => setActiveTab('active')}
                         className={cn(
-                            "flex-1 min-w-[30%] pb-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-2",
-                            activeTab === 'active' ? "border-indigo-500 text-indigo-400" : "border-transparent text-slate-500"
+                            "flex-1 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5",
+                            activeTab === 'active' ? "bg-indigo-500/10 text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-300"
                         )}
                     >
-                        <Briefcase size={16} /> Aktuell
+                        <Briefcase size={14} /> Aktuell
                     </button>
                     <button
                         onClick={() => setActiveTab('waitlist')}
                         className={cn(
-                            "flex-1 min-w-[30%] pb-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-2",
-                            activeTab === 'waitlist' ? "border-amber-500 text-amber-400" : "border-transparent text-slate-500"
+                            "flex-1 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5",
+                            activeTab === 'waitlist' ? "bg-amber-500/10 text-amber-400 shadow-sm" : "text-slate-500 hover:text-slate-300"
                         )}
                     >
-                        <Clock size={16} /> Warteliste
+                        <Clock size={14} /> Warteliste
                     </button>
                     <button
                         onClick={() => setActiveTab('applied')}
                         className={cn(
-                            "flex-1 min-w-[30%] pb-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-2",
-                            activeTab === 'applied' ? "border-emerald-500 text-emerald-400" : "border-transparent text-slate-500"
+                            "flex-1 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5",
+                            activeTab === 'applied' ? "bg-emerald-500/10 text-emerald-400 shadow-sm" : "text-slate-500 hover:text-slate-300"
                         )}
                     >
-                        <CheckCircle2 size={16} /> Beworben
+                        <CheckCircle2 size={14} /> Beworben
                     </button>
+
+                    <div className="w-px h-6 bg-white/10 mx-1" />
 
                     {/* Filter Button */}
                     <button
                         onClick={() => setShowFilterModal(true)}
                         className={cn(
-                            "pb-3 px-2 text-slate-500 hover:text-indigo-400 transition-colors border-b-2 border-transparent active:border-indigo-500 active:text-indigo-400 -mb-[2px]",
-                            showFilterModal && "border-indigo-500 text-indigo-400"
+                            "p-2.5 rounded-xl text-slate-500 hover:text-indigo-400 hover:bg-white/5 transition-all",
+                            showFilterModal && "bg-indigo-500/10 text-indigo-400"
                         )}
                     >
-                        <ListFilter size={20} />
+                        <ListFilter size={18} />
                     </button>
                 </div>
             </div>
