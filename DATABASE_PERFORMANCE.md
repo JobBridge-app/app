@@ -134,6 +134,9 @@ CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications (job_id);
 4. **Page Load Time**: Measure improvement in job feed and dashboard loads
 
 ### Expected Improvements
+
+**Note**: These are estimated improvements based on performance analysis. Actual improvements should be validated with real-world metrics after deployment using monitoring tools.
+
 - **Job Feed Load Time**: ~30-50% reduction (N+1 elimination + caching)
 - **Protected Route Response**: ~80-95% reduction (role caching)
 - **Admin Dashboard Load**: ~20-30% reduction (query optimizations)

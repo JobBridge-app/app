@@ -3,6 +3,10 @@ import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { Database } from "@/lib/types";
 
+// Role cache TTL: 5 minutes
+const ROLE_CACHE_TTL_MS = 5 * 60 * 1000;
+const ROLE_CACHE_TTL_SECONDS = 5 * 60;
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -87,17 +91,17 @@ export async function middleware(request: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       userRoles = (rolesData || []).map((r: any) => r.role?.name).filter(Boolean);
 
-      // Cache roles in cookie for 5 minutes
+      // Cache roles in cookie with configured TTL
       const cacheData = {
         userId: session.user.id,
         roles: userRoles,
-        exp: Date.now() + 5 * 60 * 1000 // 5 minutes
+        exp: Date.now() + ROLE_CACHE_TTL_MS
       };
       response.cookies.set('user_roles', JSON.stringify(cacheData), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 5 * 60 // 5 minutes
+        maxAge: ROLE_CACHE_TTL_SECONDS
       });
     }
 

@@ -81,6 +81,8 @@ export async function searchAdminEntities(query: string, limit = 8): Promise<{ i
       );
     }
 
+    const jobItemsStartIdx = items.length; // Mark where job items start for efficient merging
+
     if (jobsResult.error) {
       console.error("search:jobs", { term, error: jobsResult.error.message });
       failedSources.push("jobs");
@@ -106,26 +108,24 @@ export async function searchAdminEntities(query: string, limit = 8): Promise<{ i
 
     // Both sources are already sorted by created_at DESC from the database
     // Use merge algorithm for O(n) instead of sorting for O(n log n)
+    // Items array is [all users, all jobs] for efficient indexing without extra filter passes
     const mergedItems: AdminSearchResult[] = [];
     let userIdx = 0;
-    let jobIdx = 0;
-    
-    const userItems = items.filter(i => i.entity_type === "user");
-    const jobItems = items.filter(i => i.entity_type === "job");
+    let jobIdx = jobItemsStartIdx;
 
-    while (mergedItems.length < safeLimit && (userIdx < userItems.length || jobIdx < jobItems.length)) {
-      if (userIdx >= userItems.length) {
-        mergedItems.push(jobItems[jobIdx++]);
-      } else if (jobIdx >= jobItems.length) {
-        mergedItems.push(userItems[userIdx++]);
+    while (mergedItems.length < safeLimit && (userIdx < jobItemsStartIdx || jobIdx < items.length)) {
+      if (userIdx >= jobItemsStartIdx) {
+        mergedItems.push(items[jobIdx++]);
+      } else if (jobIdx >= items.length) {
+        mergedItems.push(items[userIdx++]);
       } else {
         // Both available, pick the more recent one
-        const userTime = toTimestamp(userItems[userIdx].created_at);
-        const jobTime = toTimestamp(jobItems[jobIdx].created_at);
+        const userTime = toTimestamp(items[userIdx].created_at);
+        const jobTime = toTimestamp(items[jobIdx].created_at);
         if (userTime >= jobTime) {
-          mergedItems.push(userItems[userIdx++]);
+          mergedItems.push(items[userIdx++]);
         } else {
-          mergedItems.push(jobItems[jobIdx++]);
+          mergedItems.push(items[jobIdx++]);
         }
       }
     }
