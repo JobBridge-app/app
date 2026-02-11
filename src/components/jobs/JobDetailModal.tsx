@@ -2,7 +2,7 @@
 
 import { Fragment, useState, memo, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { X, MapPin, Euro, Calendar, ShieldCheck, Clock, Building2, Briefcase, ArrowRight, CheckCircle2 } from "lucide-react";
+import { X, MapPin, Euro, Calendar, ShieldCheck, Clock, Building2, Briefcase, ArrowRight, CheckCircle2, MessageSquare } from "lucide-react";
 import type { Database } from "@/lib/types/supabase";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { VerificationRequiredModal } from "@/components/auth/VerificationRequiredModal";
@@ -47,6 +47,21 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
             }, 50);
         };
     }, []);
+
+    // Delayed Unmount for Map to prevent "Close Freeze"
+    const [shouldRenderMap, setShouldRenderMap] = useState(false);
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
+        if (isOpen) {
+            setShouldRenderMap(true);
+        } else {
+            // Wait for close animation + user scroll start before destroying map (500ms)
+            timeout = setTimeout(() => {
+                setShouldRenderMap(false);
+            }, 500);
+        }
+        return () => clearTimeout(timeout);
+    }, [isOpen]);
 
     // If no job is selected and we are not open, don't render.
     // However, if we are open (animating out), we might still have job=null if handled poorly, 
@@ -202,11 +217,11 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                     <MapPin size={16} /> Standort
                                                 </h4>
                                                 <div className="rounded-2xl border border-white/5 bg-[#121217] p-1 flex-1 min-h-[160px] relative flex items-center justify-center overflow-hidden group">
-                                                    {isOpen && (
+                                                    {shouldRenderMap && (
                                                         <LeafletMap
                                                             center={[50.6256, 6.9493]}
                                                             zoom={14}
-                                                            className="rounded-xl"
+                                                            className={`rounded-xl transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
                                                         />
                                                     )}
 
@@ -221,73 +236,86 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
 
                                     {/* Action Footer */}
                                     <div className="bg-[#111116] px-8 py-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-                                        <div className="text-center md:text-left">
-                                            {job.is_applied ? (
-                                                <>
-                                                    <p className="text-sm text-slate-400">
-                                                        {job.application_status === 'withdrawn' ? "Bewerbung zurückgezogen" :
-                                                            job.application_status === 'rejected' ? "Bewerbung abgelehnt" :
-                                                                "Bewerbung läuft"}
-                                                    </p>
-                                                    {context === 'feed' && (
-                                                        <p className="text-xs text-slate-600 mt-0.5">
-                                                            Status: <span className="uppercase">{job.application_status}</span>
-                                                        </p>
-                                                    )}
-                                                </>
+                                        {job.is_applied ? (
+                                            ['submitted', 'waitlisted', 'negotiating', 'accepted'].includes(job.application_status || '') ? (
+                                                <div className="w-full flex flex-col items-end gap-2">
+                                                    <div className="w-full">
+                                                        <a
+                                                            href="/app-home/activities"
+                                                            className="group relative w-full overflow-hidden rounded-2xl p-[1px] transition-all hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 block"
+                                                        >
+                                                            {/* Gradient Border Animation */}
+                                                            <span className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#4f46e5_0%,#0f172a_50%,#4f46e5_100%)] opacity-70 group-hover:opacity-100 transition-opacity" />
+
+                                                            {/* Card Content */}
+                                                            <span className="relative flex h-full w-full flex-col justify-between rounded-2xl bg-[#0f1115] p-5">
+
+
+                                                                <div className="flex items-center justify-between gap-4 mt-2">
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                                                                            Zum Dashboard
+                                                                        </span>
+                                                                        <span className="text-xs text-slate-400">
+                                                                            Chat, Details & Optionen
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 transition-transform duration-300 group-hover:translate-x-1 group-hover:bg-indigo-500">
+                                                                        <ArrowRight size={20} />
+                                                                    </div>
+                                                                </div>
+                                                            </span>
+                                                        </a>
+                                                    </div>
+                                                    {context !== 'feed' && <div className="text-right w-full"><WithdrawButton applicationId={job.application_id!} /></div>}
+                                                </div>
                                             ) : (
-                                                <>
+                                                <div className="w-full px-6 py-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 font-medium flex items-center justify-center gap-2">
+                                                    <Briefcase size={20} />
+                                                    {job.application_status === 'withdrawn' ? "Zurückgezogen" : "Abgeschlossen"}
+                                                </div>
+                                            )
+                                        ) : (
+                                            <>
+                                                <div className="text-center md:text-left">
                                                     <p className="text-sm text-slate-400">
                                                         Interesse geweckt?
                                                     </p>
                                                     <p className="text-xs text-slate-600 mt-0.5">
                                                         Mit der Bewerbung akzeptierst du die Nutzungsbedingungen.
                                                     </p>
-                                                </>
-                                            )}
-                                        </div>
-                                        {job.is_applied ? (
-                                            ['submitted', 'waitlisted', 'negotiating', 'accepted'].includes(job.application_status || '') ? (
-                                                <div className="flex gap-2">
-                                                    <a href="/app-home/activities" className="px-6 py-3 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 transition-colors font-medium">
-                                                        Ansehen
-                                                    </a>
-                                                    <WithdrawButton applicationId={job.application_id!} />
                                                 </div>
-                                            ) : (
-                                                <div className="px-6 py-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 font-medium flex items-center gap-2">
-                                                    <Briefcase size={20} />
-                                                    {job.application_status === 'withdrawn' ? "Zurückgezogen" : "Abgeschlossen"}
-                                                </div>
-                                            )
-                                        ) : (
-                                            !canApply ? (
-                                                <ButtonPrimary
-                                                    onClick={() => setIsVerificationModalOpen(true)}
-                                                    className="w-full md:w-auto px-10 py-4 text-lg shadow-xl shadow-slate-900/20 hover:shadow-slate-800/30 hover:scale-[1.02] transition-all bg-slate-800 hover:bg-slate-700 text-slate-200 border-white/10"
-                                                >
-                                                    <span className="flex items-center gap-3 font-bold">
-                                                        <Lock size={20} /> Freischalten
-                                                    </span>
-                                                </ButtonPrimary>
-                                            ) : (
-                                                <ButtonPrimary
-                                                    onClick={() => setIsApplicationModalOpen(true)}
-                                                    className="w-full md:w-auto px-10 py-4 text-lg shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.02] transition-all"
-                                                >
-                                                    <span className="flex items-center gap-3 font-bold">
-                                                        Jetzt bewerben <ArrowRight size={20} />
-                                                    </span>
-                                                </ButtonPrimary>
-                                            )
+                                                {/* Button Logic for Non-Applied Jobs */}
+                                                {!canApply ? (
+                                                    <ButtonPrimary
+                                                        onClick={() => setIsVerificationModalOpen(true)}
+                                                        className="w-full md:w-auto px-10 py-4 text-lg shadow-xl shadow-slate-900/20 hover:shadow-slate-800/30 hover:scale-[1.02] transition-all bg-slate-800 hover:bg-slate-700 text-slate-200 border-white/10"
+                                                    >
+                                                        <span className="flex items-center gap-3 font-bold">
+                                                            <Lock size={20} /> Freischalten
+                                                        </span>
+                                                    </ButtonPrimary>
+                                                ) : (
+                                                    <ButtonPrimary
+                                                        onClick={() => setIsApplicationModalOpen(true)}
+                                                        className="w-full md:w-auto px-10 py-4 text-lg shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.02] transition-all"
+                                                    >
+                                                        <span className="flex items-center gap-3 font-bold">
+                                                            Jetzt bewerben <ArrowRight size={20} />
+                                                        </span>
+                                                    </ButtonPrimary>
+                                                )}
+                                            </>
                                         )}
                                     </div>
+
+
                                 </Dialog.Panel>
                             </Transition.Child>
                         </div>
                     </div>
                 </Dialog>
-            </Transition>
+            </Transition >
 
             <JobApplicationModal
                 isOpen={isApplicationModalOpen}

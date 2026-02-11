@@ -33,8 +33,14 @@ export default async function OnboardingPage(props: {
     authState.state === "incomplete-profile" ? authState.profile : null;
 
   // If just verified, force the step to email-confirm (which will show success state)
-  // OR if the user is incomplete, determine step.
-  let forcedStep = authState.state === "email-unconfirmed" ? "email-confirm" : undefined;
+  // OR if the user is incomplete, force them to the role/profile step to prevent "Welcome/Login" loop.
+  let forcedStep: string | undefined = authState.state === "email-unconfirmed" ? "email-confirm" : undefined;
+
+  if (authState.state === "incomplete-profile" && !forcedStep) {
+    // If we know the profile is incomplete, skip the welcome screen.
+    // We can refine this to check specific fields if needed, but "role" is the safest start.
+    forcedStep = !initialProfile?.account_type ? "role" : "profile";
+  }
 
   if (isJustVerified) {
     forcedStep = "email-confirm";

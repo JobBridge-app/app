@@ -110,21 +110,7 @@ export function OnboardingWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMode]);
 
-  // If just verified, we may want to auto-advance after a short delay if profile is not complete
-  useEffect(() => {
-    if (isJustVerified && step === "email-confirm") {
-      const timer = setTimeout(() => {
-        // If profile is already complete, checkSessionAfterEmailConfirm (called by effect or manually) handles it.
-        // But if we are just verifying, we likely need to fill profile.
-        // Check if role is inferred, else go to role
-        if (!initialProfile?.account_type) {
-          setStep("role");
-          setEmailConfirmed(false); // Clear the big success banner to focus on next step
-        }
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isJustVerified, step, initialProfile]);
+
 
 
   // handleResendConfirmation is now provided by useEmailResend hook
@@ -205,7 +191,18 @@ export function OnboardingWizard({
       }));
     }
     return true;
-  }, [router, redirectTo, profileData.role]); // Removed profileData dependency from callback to identify logic loop, but re-added safely
+  }, [router, redirectTo, profileData.role]);
+
+  // If just verified, we auto-advance after a short delay
+  // Moved here to be after checkSessionAfterEmailConfirm declaration
+  useEffect(() => {
+    if (isJustVerified && step === "email-confirm") {
+      const timer = setTimeout(() => {
+        checkSessionAfterEmailConfirm();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isJustVerified, step, checkSessionAfterEmailConfirm]);
 
 
   const handleSignIn = async () => {
@@ -625,8 +622,18 @@ export function OnboardingWizard({
                     spacing="compact"
                   />
                   {emailConfirmed && (
-                    <div className="rounded-2xl border border-green-400/50 bg-green-500/20 px-5 py-4 text-green-100">
-                      E-Mail erfolgreich bestätigt! Du wirst weitergeleitet...
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-green-400/50 bg-green-500/20 px-5 py-4 text-green-100">
+                        E-Mail erfolgreich bestätigt! Du wirst weitergeleitet...
+                      </div>
+                      {/* Fallback button if redirect hangs */}
+                      <ButtonPrimary
+                        onClick={() => checkSessionAfterEmailConfirm()}
+                        loading={loading}
+                        className="w-full h-12 bg-green-600 hover:bg-green-500 text-white"
+                      >
+                        Weiter
+                      </ButtonPrimary>
                     </div>
                   )}
                   {!emailConfirmed && (

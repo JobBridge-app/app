@@ -19,7 +19,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
     return (
         <div
             onClick={() => onSelect(job)}
-            className={`group relative overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-all duration-300 hover:-translate-y-1 cursor-pointer
+            className={`group relative overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer
                 ${isApplied
                     ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
                     : isLocked
