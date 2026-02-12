@@ -61,23 +61,26 @@ export async function getEffectiveView(opts?: {
   const userId = typeof userResult === "string" ? userResult : userResult.data.userId;
   if (!userId) return { ok: false, error: { message: "Missing userId" } };
 
-  // 1) Demo session — the only switch for demo_* tables
-  const demoRes = await supabase
-    .from("demo_sessions" as any)
-    .select("enabled, demo_view")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const [profileResult, rolesResult, demoResult, overrideResult] = await Promise.all([
+    supabase.from("profiles").select("account_type").eq("id", userId).maybeSingle(),
+    supabase.from("user_system_roles").select("role:system_roles(name)").eq("user_id", userId),
+    supabase.from("demo_sessions" as any).select("enabled, demo_view").eq("user_id", userId).maybeSingle(),
+    supabase.from("role_overrides" as never).select("view_as, expires_at").eq("user_id", userId).gt("expires_at", new Date().toISOString()).maybeSingle()
+  ]);
 
-  if (demoRes.error) return { ok: false, error: toErrorInfo(demoRes.error) };
+  if (demoResult.error) return { ok: false, error: toErrorInfo(demoResult.error) };
 
-  if ((demoRes.data as any)?.enabled === true) {
-    const demoView = ((demoRes.data as any).demo_view as AccountType | null) ?? null;
+  const systemRoles = rolesResult.data ? (rolesResult.data as any[]).map((r) => r.role?.name).filter(Boolean) : [];
+
+  if ((demoResult.data as any)?.enabled === true) {
+    const demoView = ((demoResult.data as any).demo_view as AccountType | null) ?? null;
     return {
       ok: true,
       data: {
         isDemoEnabled: true,
         viewRole: demoView ?? "job_seeker",
         source: "demo",
+        roles: systemRoles,
         demoView,
         overrideExpiresAt: null,
       },
@@ -85,30 +88,14 @@ export async function getEffectiveView(opts?: {
   }
 
   // 2) Role override (live mode only)
-  // Note: `role_overrides` is not in the generated Supabase types — cast required.
   type RoleOverrideRow = { view_as: AccountType; expires_at: string };
-  const overrideRes = await supabase
-    .from("role_overrides" as never)
-    .select("view_as, expires_at")
-    .eq("user_id", userId)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
-
-  if (overrideRes.error) return { ok: false, error: toErrorInfo(overrideRes.error) };
-  const override = (overrideRes.data ?? null) as unknown as RoleOverrideRow | null;
+  const override = (overrideResult.data ?? null) as unknown as RoleOverrideRow | null;
 
   // 3) Base account type
   let baseAccountType = opts?.baseAccountType ?? null;
   if (baseAccountType === undefined || baseAccountType === null) {
     if (opts?.baseAccountType === undefined) {
-      const profileRes = await supabase
-        .from("profiles")
-        .select("account_type")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (profileRes.error) return { ok: false, error: toErrorInfo(profileRes.error) };
-      baseAccountType = (profileRes.data?.account_type as AccountType | null) ?? null;
+      baseAccountType = (profileResult.data?.account_type as AccountType | null) ?? null;
     }
   }
 
@@ -120,6 +107,7 @@ export async function getEffectiveView(opts?: {
       isDemoEnabled: false,
       viewRole: override?.view_as ?? baseRole,
       source: "live",
+      roles: systemRoles,
       overrideExpiresAt: override?.expires_at ?? null,
     },
   };

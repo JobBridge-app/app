@@ -37,15 +37,16 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
     const intent = (formData.get("intent") as string | null) ?? "create";
     const existingJobId = (formData.get("job_id") as string | null) ?? null;
 
-    // Get User Profile for Market ID
-    const { data: profile } = await supabase.from("profiles").select("market_id, account_type").eq("id", user.id).single();
+    // Get User Profile for Market ID (and Address Fallback v13)
+    // We cast to any to get address fields that might be missing in strict types but exist in DB
+    const { data: profile } = await supabase.from("profiles").select("market_id, account_type, street, house_number, zip, city, postal_code").eq("id", user.id).single();
 
     let marketId = profile?.market_id;
 
     if (!marketId) {
-        // Fallback: Fetch "Rheinbach" market
-        const { data: defaultMarket } = await supabase.from("markets" as never).select("id").ilike("name", "%Rheinbach%").maybeSingle();
-        marketId = (defaultMarket as unknown as { id?: string } | null)?.id;
+        // Fallback: Fetch "Rheinbach" market from regions_live (v13 fix)
+        const { data: defaultMarket } = await supabase.from("regions_live").select("id").ilike("city", "%Rheinbach%").maybeSingle();
+        marketId = (defaultMarket as any)?.id;
     }
 
     if (!marketId) {
@@ -64,7 +65,9 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
     const view = viewRes.data;
     const isDemo = view.source === "demo";
 
-    if (view.viewRole !== "job_provider") {
+    // Permission Check: Allow Providers OR Admins (v14 fix)
+    const isAdmin = view.roles.includes("admin");
+    if (view.viewRole !== "job_provider" && !isAdmin) {
         const state: CreateJobActionState = { status: "error", error: { message: "Nicht berechtigt: Nur Jobanbieter können Jobs erstellen." } };
         return state;
     }
@@ -94,8 +97,20 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
             locationId = defLoc.id;
             publicLabel = defLoc.public_label || publicLabel;
         } else {
-            const state: CreateJobActionState = { status: "error", error: { message: "Kein Standard-Ort gefunden. Bitte Adresse eingeben." } };
-            return state;
+            // Fallback: Check Profile Address (v13)
+            const p = profile as any;
+            // Note: 'zip' vs 'postal_code' -> DB usually has one or other, we select both to be safe
+            const zip = p.zip || p.postal_code;
+
+            if (p.street && p.city && zip) {
+                // Use Profile Address
+                addressFull = `${p.street} ${p.house_number || ""}, ${zip} ${p.city}`.trim();
+                locationId = null; // No specific provider_location ID, forcing atomic action to handle null p_location_id
+                publicLabel = "Privatadresse";
+            } else {
+                const state: CreateJobActionState = { status: "error", error: { message: "Kein Standard-Ort gefunden. Bitte Adresse im Profil vervollständigen." } };
+                return state;
+            }
         }
     } else {
         if (!addressFull || addressFull.length < 5) {
@@ -104,13 +119,16 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
         }
     }
 
+    const latInput = formData.get("public_lat") as string;
+    const lngInput = formData.get("public_lng") as string;
+
     const rawData = {
         title: (formData.get("title") as string)?.trim(),
         description: (formData.get("description") as string)?.trim(),
         address_full: addressFull,
         wage: parseFloat(formData.get("wage") as string) || 12.00,
-        lat: "50.625",
-        lng: "6.945",
+        lat: latInput,
+        lng: lngInput,
     };
 
     const validated = createJobSchema.safeParse(rawData);
@@ -122,8 +140,8 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
 
     const privateDetails = {
         address_full: validated.data.address_full || null,
-        private_lat: 50.6255,
-        private_lng: 6.9455,
+        private_lat: validated.data.lat ? parseFloat(validated.data.lat) : null,
+        private_lng: validated.data.lng ? parseFloat(validated.data.lng) : null,
         notes: "Private Access Only",
         location_id: locationId
     };
@@ -148,6 +166,10 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
 
     const jobStatus: Database["public"]["Enums"]["job_status"] = intent === "draft" ? "draft" : "open";
 
+    // Use default coordinates if none provided (Rheinbach center)
+    const finalLat = validated.data.lat ? parseFloat(validated.data.lat) : 50.625;
+    const finalLng = validated.data.lng ? parseFloat(validated.data.lng) : 6.945;
+
     const res = await createJobDAL({
         view,
         userId: user.id,
@@ -160,8 +182,8 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
             status: jobStatus,
             category: "other",
             public_location_label: publicLabel,
-            public_lat: 50.63,
-            public_lng: 6.95,
+            public_lat: finalLat,
+            public_lng: finalLng,
             address_reveal_policy: "after_accept"
         },
         privateDetails,

@@ -16,6 +16,7 @@ export type EffectiveViewSnapshot = {
   isDemoEnabled: boolean;
   viewRole: AccountType;
   source: DataSource;
+  roles: string[];
   // Only present when role override is active (and demo is disabled).
   overrideExpiresAt?: string | null;
   // Only present when demo is enabled.

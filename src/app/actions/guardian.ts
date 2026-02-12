@@ -110,3 +110,35 @@ export async function getActiveGuardianInvitation() {
 
     return { success: false };
 }
+
+export async function getWards() {
+    const supabase = await supabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Nicht authentifiziert" };
+
+    // Fetch invitations redeemed BY the current user (so they are the guardian)
+    const { data: wards } = await supabase
+        .from("guardian_invitations")
+        .select(`
+            child_id,
+            updated_at,
+            child_profile:child_id (
+                full_name,
+                email
+            )
+        `)
+        .eq("redeemed_by", user.id)
+        .eq("status", "redeemed");
+
+    if (!wards) return { wards: [] };
+
+    return {
+        wards: wards.map((w: any) => ({
+            id: w.child_id,
+            full_name: w.child_profile?.full_name || "Unbekannt",
+            email: w.child_profile?.email || "",
+            linked_at: w.updated_at
+        }))
+    };
+}

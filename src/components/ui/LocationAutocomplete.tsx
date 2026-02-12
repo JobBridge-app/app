@@ -1,163 +1,173 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Check, Search, MapPin, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { MapPin, Search, Loader2, X, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export interface OpenPlzLocality {
-  key: string;
-  name: string;
-  postalcode: string;
-  municipality: {
-    key: string;
-    name: string;
-    type: string;
-  };
-  district?: {
-    key: string;
-    name: string;
-    type: string;
-  };
-  federalState: {
-    key: string;
-    name: string;
-  };
-}
+export type LocationDetails = {
+  address_line1: string;
+  city: string;
+  postal_code: string;
+  lat: number;
+  lng: number;
+  public_label: string;
+};
 
 interface LocationAutocompleteProps {
-  onSelect: (locality: OpenPlzLocality | null) => void;
-  selectedLocality: OpenPlzLocality | null;
+  onSelect: (location: LocationDetails) => void;
+  defaultValue?: string;
+  className?: string;
+  placeholder?: string;
 }
 
-export function LocationAutocomplete({ onSelect, selectedLocality }: LocationAutocompleteProps) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<OpenPlzLocality[]>([]);
+export function LocationAutocomplete({ onSelect, defaultValue = "", className, placeholder }: LocationAutocompleteProps) {
+  const [query, setQuery] = useState(defaultValue);
+  const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Debounce logic
+  // Close on click outside
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (query.trim().length >= 2) {
-        searchLocation(query);
-      } else {
-        setResults([]);
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
-    }, 300);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Debounced Search
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (query.length < 3) {
+        setResults([]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        // Priority to Rheinbach/Meckenheim/Bonn (Radius/Viewbox)
+        // We use 'viewbox' to prioritize but not strictly restrict (unless bounded=1).
+        // User wants "Proposals in Rheinbach only if possible".
+        // viewbox: left,top,right,bottom -> roughly 6.8,50.8,7.2,50.5
+        // &dedupe=1 removes duplicates
+
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&countrycodes=de&viewbox=6.80,50.75,7.10,50.55&dedupe=1`
+        );
+        const data = await response.json();
+        setResults(data);
+        setIsOpen(true);
+      } catch (error) {
+        console.error("Location search failed", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [query]);
 
-  const searchLocation = async (searchTerm: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `https://openplzapi.org/de/Localities?name=${encodeURIComponent(
-          searchTerm
-        )}&page=1&pageSize=10`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setResults(data);
-        setIsOpen(true);
-      } else {
-        console.error("Failed to fetch locations");
-        setResults([]);
-      }
-    } catch (error) {
-      console.error("Error searching locations:", error);
-      setResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleSelect = (item: any) => {
+    const addr = item.address || {};
+    let street = addr.road || addr.pedestrian || addr.footway || "";
+    let houseNumber = addr.house_number ? `${addr.house_number}` : "";
 
-  const handleSelect = (locality: OpenPlzLocality) => {
-    onSelect(locality);
-    setQuery(locality.name); // keep name in input? or clear? prompt says "show what is selected" below input.
-    // Let's keep the query as the name for now, but valid selection is separate.
+    // Smart Extraction: If API didn't return a house number, check if user typed one in the query
+    if (!houseNumber && query) {
+      // Regex to find trailing number (e.g. "Hauptstr 12", "Hauptstr. 12a")
+      // Matches: space + digits + optional letter at end of string
+      const match = query.match(/\s(\d+[a-zA-Z]?)$/);
+      if (match) {
+        houseNumber = match[1];
+      }
+    }
+
+    const fullStreet = street + (houseNumber ? ` ${houseNumber}` : "");
+    const city = addr.city || addr.town || addr.village || "Rheinbach";
+    const zip = addr.postcode || "";
+
+    // Construct a nice label
+    const start = fullStreet ? `${fullStreet}, ` : "";
+    const label = `${start}${zip} ${city}`;
+
+    const details: LocationDetails = {
+      address_line1: street, // Just street name
+      city: city,
+      postal_code: zip,
+      lat: parseFloat(item.lat),
+      lng: parseFloat(item.lon),
+      public_label: label,
+      // Pass raw house number for parent to use
+      ...({ house_number: houseNumber } as any)
+    };
+
+    setQuery(label);
+    onSelect(details);
     setIsOpen(false);
   };
 
-  const handleClear = () => {
-    setQuery("");
-    onSelect(null);
-    setResults([]);
-  };
-
   return (
-    <div className="w-full space-y-4">
-      <div className="relative">
-        <label htmlFor="location-input" className="sr-only">
-          Stadt oder PLZ eingeben
-        </label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <input
-            id="location-input"
-            type="text"
-            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium"
-            placeholder="Stadt oder PLZ eingeben..."
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              if (e.target.value === "") {
-                onSelect(null);
-              }
-            }}
-            onFocus={() => {
-              if (results.length > 0) setIsOpen(true);
-            }}
-          />
-          {isLoading && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-            </div>
-          )}
+    <div ref={wrapperRef} className={cn("relative", className)}>
+      <div className="relative flex items-center">
+        <div className="absolute left-4 text-slate-400 pointer-events-none z-10">
+          {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
         </div>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => query.length >= 3 && setIsOpen(true)}
+          placeholder={placeholder || "Adresse suchen (z.B. Hauptstraße 12)..."}
+          className="w-full pl-12 pr-10 h-14 rounded-2xl bg-[#0F0F12] border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all text-base font-medium shadow-sm"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              setIsOpen(false);
+            }}
+            className="absolute right-4 text-slate-500 hover:text-white transition-colors p-1"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
 
-        {isOpen && results.length > 0 && (
-          <div className="absolute z-50 w-full mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] max-h-64 overflow-y-auto backdrop-blur-xl">
-            {results.map((locality, index) => (
+      {isOpen && results.length > 0 && (
+        <div className="absolute z-50 mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A20] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="max-h-[280px] overflow-y-auto p-2 space-y-1">
+            {results.map((item, index) => (
               <button
-                // Use a composite key plus index to ensure uniqueness as requested
-                key={`${locality.key || 'loc'}-${locality.name}-${locality.postalcode}-${index}`}
-                className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0"
-                onClick={() => handleSelect(locality)}
+                key={index}
+                type="button"
+                onClick={() => handleSelect(item)}
+                className="w-full text-left flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group"
               >
-                <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">
-                    {locality.name} {locality.postalcode}
-                  </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {locality.municipality.name}, {locality.federalState.name}
-                  </p>
+                <div className="mt-1 p-2 rounded-full bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                  <MapPin size={16} />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
+                    {item.address?.road || item.display_name.split(",")[0]}
+                    {item.address?.house_number && <span className="text-indigo-400"> {item.address.house_number}</span>}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1 font-medium group-hover:text-slate-400">
+                    {item.address?.postcode} {item.address?.city || item.address?.town || item.address?.village}, {item.address?.country}
+                  </div>
                 </div>
               </button>
             ))}
           </div>
-        )}
-      </div>
-
-      {selectedLocality && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-              <Check className="h-4 w-4 text-blue-400" />
-            </div>
-            <div>
-              <div className="text-sm text-blue-200">Ausgewählt</div>
-              <div className="text-white font-medium">
-                {selectedLocality.name}, {selectedLocality.federalState.name}, Deutschland
-              </div>
-            </div>
+          <div className="px-4 py-2 bg-black/20 border-t border-white/5 text-[10px] uppercase tracking-wider text-slate-600 font-bold flex justify-between items-center">
+            Rheinbach & Umgebung
           </div>
-          <button
-            onClick={handleClear}
-            className="text-xs text-blue-300/60 hover:text-blue-200 transition-colors px-2 py-1"
-          >
-            Ändern
-          </button>
         </div>
       )}
     </div>

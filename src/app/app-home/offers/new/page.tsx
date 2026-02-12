@@ -36,7 +36,24 @@ export default async function NewOfferPage() {
         .eq("provider_id", profile.id)
         .eq("is_default", true)
         .maybeSingle();
-    const defaultLocation = (defaultLocationRaw ?? null) as unknown as DefaultLocation | null;
+
+    let defaultLocation = (defaultLocationRaw ?? null) as unknown as DefaultLocation | null;
+
+    // Fallback: If no provider_location found, use the Profile Address (v13)
+    if (!defaultLocation) {
+        // We cast profile to any because 'street'/'house_number' might be missing from the strict type definition
+        // but we confirmed they exist in the DB and are used in ProfileEditForm.
+        const p = profile as any;
+        if (p.street && p.city) {
+            defaultLocation = {
+                id: "profile-default",
+                public_label: "Privatadresse",
+                address_line1: `${p.street} ${p.house_number || ""}`.trim(),
+                postal_code: p.zip || p.postal_code || "",
+                city: p.city
+            };
+        }
+    }
 
     return (
         <div className="container mx-auto py-8 px-4 md:px-6 max-w-2xl">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Profile } from "@/lib/types";
 import { BRAND_EMAIL } from "@/lib/constants";
 import { LockKeyhole, Building2, User, MapPin, Briefcase, Sparkles, Clock, ShieldCheck, ShieldAlert, ArrowRight, Plus, Users, Calendar, Fingerprint } from "lucide-react";
@@ -10,7 +10,7 @@ import { UserProfileModal } from "@/components/profile/UserProfileModal";
 import { ProviderVerificationModal } from "@/components/profile/ProviderVerificationModal";
 import { GuardianBanner } from "./GuardianBanner";
 import { GuardianConsentModal } from "@/components/GuardianConsentModal";
-import { getGuardians } from "@/app/actions/guardian";
+import { getGuardians, getWards } from "@/app/actions/guardian";
 
 // Add type for Guardian display
 type GuardianDisplay = {
@@ -70,6 +70,19 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
             setGuardiansList(res.guardians);
         }
     };
+
+    // Wards (Children) Management
+    const [wardsList, setWardsList] = useState<GuardianDisplay[]>([]);
+
+    useEffect(() => {
+        const fetchWards = async () => {
+            const res = await getWards();
+            if (res.wards) {
+                setWardsList(res.wards);
+            }
+        };
+        fetchWards();
+    }, []);
 
     const savePayload = useMemo(() => {
         const toNull = (v: string) => {
@@ -289,44 +302,46 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
 
                     {/* LEFT COL: DIGITAL ID (Stammdaten) */}
-                    <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-8 z-20">
+                    <div className="lg:col-span-4 lg:sticky lg:top-8 z-20 space-y-8">
 
-                        {/* HOLOGRAPHIC ID CARD */}
+                        {/* HOLOGRAPHIC ID CARD (Wrapper) */}
                         <div className="relative group perspective-1000">
-                            {/* Glow behind card */}
-                            <div className="absolute -inset-0.5 bg-gradient-to-b from-indigo-500/20 to-purple-500/20 rounded-[2.2rem] blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-700" />
+                            {/* Ambient Glow */}
+                            <div className="absolute -inset-1 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-[2.2rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
                             <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#0A0A0C] shadow-2xl transition-transform duration-500 hover:scale-[1.005]">
 
-                                {/* Top "Hole" for Lanyard Effect (Optional Visual Detail) */}
-                                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-black/50 border border-white/5" />
+                                {/* Top Lanyard Hanger (Visual Polish) */}
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-[1px]" />
+                                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-1 rounded-full bg-black/40 border border-white/5" />
 
                                 {/* Card Header */}
-                                <div className="relative p-6 pb-2 border-b border-white/[0.03]">
+                                <div className="relative px-6 pt-8 pb-4 border-b border-white/[0.03]">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-[#15151A] border border-white/5 flex items-center justify-center">
-                                                <Building2 size={14} className="text-indigo-400" />
+                                            <div className="w-9 h-9 rounded-xl bg-[#15151A] border border-white/5 flex items-center justify-center shadow-inner">
+                                                <Building2 size={16} className="text-indigo-400" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-[9px] uppercase tracking-[0.25em] font-bold text-slate-500">Digital ID</span>
-                                                <span className="text-[10px] font-mono text-indigo-400/80">ID-{profile.id.substring(0, 6)}</span>
+                                                <span className="text-[10px] uppercase tracking-[0.25em] font-extrabold text-slate-500">Digital ID</span>
+                                                <span className="text-[11px] font-mono text-indigo-400/80 tracking-wide">ID-{profile.id.substring(0, 8).toUpperCase()}</span>
                                             </div>
                                         </div>
-                                        <div className="w-8 h-8 rounded-full bg-[#15151A] border border-white/5 flex items-center justify-center group-hover:bg-white/5 transition-colors" title={lastLogin ? `Letzter Login: ${new Date(lastLogin.created_at).toLocaleString("de-DE")}` : "Noch nie eingeloggt"}>
-                                            <LockKeyhole size={12} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
+                                        <div className="w-8 h-8 rounded-full bg-[#15151A] border border-white/5 flex items-center justify-center group-hover:bg-white/5 transition-colors cursor-help" title={lastLogin ? `Letzter Login: ${new Date(lastLogin.created_at).toLocaleString("de-DE")}` : "Noch nie eingeloggt"}>
+                                            <LockKeyhole size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Card Body */}
-                                <div className="p-6 pt-8 relative">
+                                <div className="p-6 relative">
+                                    {/* Avatar Section */}
                                     <div className="flex flex-col items-center text-center mb-8">
-                                        <div className="relative w-24 h-24 mb-4">
+                                        <div className="relative w-28 h-28 mb-5 group/avatar">
                                             {/* Avatar Glow */}
-                                            <div className="absolute inset-0 rounded-full bg-indigo-500 blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
+                                            <div className="absolute inset-0 rounded-full bg-indigo-500 blur-[40px] opacity-10 group-hover/avatar:opacity-20 transition-opacity duration-700" />
 
-                                            <div className="relative w-full h-full rounded-full border border-white/10 bg-[#121215] p-1 shadow-2xl">
+                                            <div className="relative w-full h-full rounded-full border-[3px] border-[#18181B] bg-[#121215] p-1 shadow-2xl">
                                                 <div className="w-full h-full rounded-full bg-[#1A1A20] flex items-center justify-center overflow-hidden">
                                                     {profile.avatar_url ? (
                                                         <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -337,208 +352,174 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                     )}
                                                 </div>
 
-                                                {/* NEW: Avatar Plus Button (Overlay - DIRECTLY ON AVATAR) */}
+                                                {/* Edit Button */}
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); showDevToast(); }}
-                                                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#4F46E5] border-2 border-[#121215] flex items-center justify-center text-white hover:bg-[#4338CA] transition-all shadow-lg z-20 group/plus"
+                                                    className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#4F46E5] border-[3px] border-[#18181B] flex items-center justify-center text-white hover:bg-[#4338CA] transition-all shadow-lg z-20 hover:scale-110 active:scale-90"
                                                     title="Profilbild ändern"
                                                 >
-                                                    <Plus size={14} />
+                                                    <Plus size={16} />
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
-                                    {/* Status Indicator Dot - RED BADGE REMOVED (Blue or Green Only) */}
-                                    <div className={cn(
-                                        "absolute bottom-0 right-0 w-6 h-6 rounded-full border-[3px] border-[#0A0A0C] flex items-center justify-center shadow-sm z-10",
-                                        isVerified ? "bg-emerald-500" : "bg-indigo-500"
-                                    )} title={verificationStatusLabel}>
-                                        {isVerified ? <Sparkles size={10} className="text-white fill-current" /> : <User size={10} className="text-white" />}
-                                    </div>
 
+                                        <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{profile.full_name || "Unbekannt"}</h3>
 
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="px-3 py-1 rounded-full bg-white/5 border border-white/5 flex items-center gap-1.5">
+                                                <MapPin size={10} className="text-slate-400" />
+                                                <span className="text-xs font-semibold text-slate-300">{profile.city || "Kein Ort"}</span>
+                                            </div>
 
-
-
-
-                                    <h3 className="text-xl font-bold text-white mb-1 tracking-tight">{profile.full_name}</h3>
-                                    <div className="flex items-center justify-center gap-2 mt-1">
-                                        <div className="flex items-center justify-center gap-2 mt-1">
-                                            <p className="text-xs font-medium text-slate-500 flex items-center gap-1">
-                                                <MapPin size={10} /> {profile.city || "Unbekannt"}
-                                            </p>
-
-                                            {/* MOVED: JobBridge Team Badge */}
                                             {isStaff && (
-                                                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#15151A] border border-indigo-500/30 shadow-sm">
+                                                <div className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center gap-1.5">
                                                     <ShieldCheck size={10} className="text-indigo-400" />
-                                                    <span className="text-[8px] font-black text-indigo-100 tracking-wider">
-                                                        JOBBRIDGE TEAM
-                                                    </span>
+                                                    <span className="text-[10px] font-black text-indigo-300 tracking-wide uppercase">TEAM</span>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Data Grid */}
-                                    <div className="space-y-3">
-                                        <div className="grid grid-cols-2 gap-2 mb-2">
-                                            <div className="p-2.5 rounded-xl bg-[#121215] border border-white/[0.03] flex flex-col items-center justify-center gap-1 text-center">
-                                                <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
-                                                    <Calendar size={8} /> Mitglied seit
+                                    <div className="space-y-4">
+                                        {/* Status Row */}
+                                        <div className="p-1 rounded-2xl bg-[#121215] border border-white/[0.04] p-4 flex items-center justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-1">Status</span>
+                                                {isProvider ? (
+                                                    isVerified ? (
+                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                                                            <ShieldCheck size={14} /> Verifiziert
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-indigo-400">
+                                                            <User size={14} /> Basis
+                                                        </span>
+                                                    )
+                                                ) : (
+                                                    // Seeker Logic
+                                                    profile.guardian_status === "linked" ? (
+                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                                                            <ShieldCheck size={14} /> Verifiziert
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                                                            <User size={14} /> Standard
+                                                        </span>
+                                                    )
+                                                )}
+                                            </div>
+                                            <div className="h-8 w-px bg-white/5 mx-2" />
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-1">Rolle</span>
+                                                <span className={cn("text-xs font-bold", isProvider ? "text-amber-500" : "text-sky-400")}>
+                                                    {isProvider ? "ANBIETER" : "SUCHEND"}
                                                 </span>
-                                                <span className="text-[10px] font-bold text-slate-300">
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="p-3 rounded-2xl bg-[#121215] border border-white/[0.04] flex flex-col items-center justify-center text-center gap-1 hover:bg-white/[0.02] transition-colors">
+                                                <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
+                                                    <Calendar size={10} /> Seit
+                                                </span>
+                                                <span className="text-xs font-bold text-slate-300">
                                                     {profile.created_at ? new Date(profile.created_at).toLocaleDateString("de-DE", { month: 'short', year: 'numeric' }) : "-"}
                                                 </span>
                                             </div>
-                                            <div className="p-2.5 rounded-xl bg-[#121215] border border-white/[0.03] flex flex-col items-center justify-center gap-1 text-center">
+                                            <div className="p-3 rounded-2xl bg-[#121215] border border-white/[0.04] flex flex-col items-center justify-center text-center gap-1 hover:bg-white/[0.02] transition-colors">
                                                 <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
-                                                    <Fingerprint size={8} /> Geburtsdatum
+                                                    <Fingerprint size={10} /> Geboren
                                                 </span>
-                                                <span className="text-[10px] font-bold text-slate-300">
+                                                <span className="text-xs font-bold text-slate-300">
                                                     {profile.birthdate ? new Date(profile.birthdate).toLocaleDateString("de-DE") : "-"}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between p-3 rounded-xl bg-[#121215] border border-white/[0.03]">
-                                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Rolle</span>
-                                            <span className={cn(
-                                                "text-[10px] font-bold px-2 py-1 rounded-md border uppercase",
-                                                isProvider
-                                                    ? "bg-amber-950/30 text-amber-500 border-amber-500/20"
-                                                    : "bg-indigo-950/30 text-indigo-400 border-indigo-500/20"
-                                            )}>
-                                                {isProvider
-                                                    ? (profile.company_name ? "JOBANBIETER (ORG)" : "JOBANBIETER (PRIVAT)")
-                                                    : "JOBSUCHEND"}
-                                            </span>
-                                        </div>
-
-                                        {/* Status Row: Provider (Verified/Basic) OR Seeker (Guardian Status) */}
-                                        <div className="flex items-center justify-between p-3 rounded-xl bg-[#121215] border border-white/[0.03]">
-                                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Status</span>
-
-                                            {isProvider ? (
-                                                // Provider Status
-                                                isVerified ? (
-                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-400">
-                                                        <ShieldCheck size={12} />
-                                                        VERIFIZIERT
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-indigo-400">
-                                                        <ShieldCheck size={12} />
-                                                        BASIS
-                                                    </span>
-                                                )
-                                            ) : (
-                                                // Seeker Status (Guardian)
-                                                profile.guardian_status === "linked" ? (
-                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-400">
-                                                        <ShieldCheck size={12} />
-                                                        VERIFIZIERT
-                                                    </span>
-                                                ) : profile.guardian_status === "pending" ? (
-                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-500">
-                                                        <Clock size={12} />
-                                                        AUSSTEHEND
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                                                        NICHT ERFORDERLICH
-                                                    </span>
-                                                )
-                                            )}
-                                        </div>
-
                                         {/* Guardians List for Seekers */}
                                         {!isProvider && (
-                                            <div className="p-3 rounded-xl bg-[#121215] border border-white/[0.03] space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
-                                                        <Users size={10} /> Erziehungsberechtigte
+                                            <div className="mt-4 pt-4 border-t border-white/5">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                                        <Users size={12} /> Erziehungsberechtigte
                                                     </span>
                                                     <button
-                                                        onClick={() => setShowAddGuardianModal(true)}
-                                                        className="w-5 h-5 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition-colors"
-                                                        title="Weiteren hinzufügen"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowAddGuardianModal(true);
+                                                        }}
+                                                        className="w-5 h-5 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors border border-white/5"
+                                                        title="Weiteren Erziehungsberechtigten hinzufügen"
                                                     >
-                                                        <Plus size={12} />
+                                                        <Plus size={10} />
                                                     </button>
                                                 </div>
-
                                                 {guardiansList.length > 0 ? (
                                                     <div className="space-y-2">
                                                         {guardiansList.map(g => (
-                                                            <div key={g.id} className="flex items-center gap-2 group/g">
-                                                                <div className="w-6 h-6 rounded-full bg-indigo-500/10 flex items-center justify-center text-[10px] font-bold text-indigo-400 border border-indigo-500/20">
+                                                            <div key={g.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                                                                <div className="w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center text-[10px] font-bold text-indigo-400 border border-indigo-500/20">
                                                                     {(g.full_name || "G").charAt(0)}
                                                                 </div>
-                                                                <div className="flex flex-col overflow-hidden">
-                                                                    <span className="text-[10px] text-slate-300 font-bold truncate leading-none mb-0.5">{g.full_name}</span>
+                                                                <div className="flex flex-1 flex-col overflow-hidden">
+                                                                    <span className="text-[11px] text-slate-200 font-bold truncate leading-none mb-0.5">{g.full_name}</span>
                                                                     <span className="text-[9px] text-slate-600 truncate leading-none">{g.email}</span>
                                                                 </div>
-                                                                <div className="ml-auto opacity-0 group-hover/g:opacity-100 transition-opacity">
-                                                                    <ShieldCheck size={10} className="text-emerald-500" />
-                                                                </div>
+                                                                <ShieldCheck size={12} className="text-emerald-500" />
                                                             </div>
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <p className="text-[10px] text-slate-500 font-medium italic">Noch keine Bestätigung.</p>
+                                                    <div className="text-[10px] text-slate-600 italic px-1">
+                                                        Keine verknüpft.
+                                                    </div>
                                                 )}
                                             </div>
                                         )}
                                     </div>
-
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* NEW: GUARDIAN CONTROL CARD (Left Column) */}
-                    {!isProvider && (profile.guardian_status === 'linked' || profile.guardian_status === 'pending') && (
-                        <div className="relative group overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#0A0A0C] shadow-2xl p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-                                    <Users size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-bold text-white">Erziehungsberechtigte</h4>
-                                    <p className="text-[10px] text-slate-400">Verwaltung & Freigaben</p>
-                                </div>
-                            </div>
 
-                            <div className="space-y-3">
-                                {guardiansList.length > 0 ? (
-                                    guardiansList.map(g => (
-                                        <div key={g.id} className="flex items-center gap-3 p-3 rounded-xl bg-[#15151A] border border-white/5">
-                                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300">
-                                                {g.full_name?.charAt(0) || "G"}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-slate-200 truncate">{g.full_name || "Unbekannt"}</p>
-                                                <p className="text-[10px] text-slate-500 truncate">{g.email}</p>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-                                        <p className="text-[10px] font-bold text-amber-500">Verknüpfung ausstehend</p>
+
+                        {/* WARDS CARD (Erziehungsberechtigter für...) */}
+                        {wardsList.length > 0 && (
+                            <div className="relative group overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#0A0A0C] shadow-2xl p-6 hover:border-indigo-500/20 transition-colors">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-inner ring-1 ring-white/5">
+                                        <Users size={24} />
                                     </div>
-                                )}
+                                    <div>
+                                        <h4 className="text-base font-bold text-white tracking-tight">Erziehungsberechtigung</h4>
+                                        <p className="text-xs text-slate-400 font-medium mt-0.5">Verknüpfte Kinder</p>
+                                    </div>
+                                </div>
 
-                                <button
-                                    onClick={showDevToast}
-                                    className="w-full py-3 rounded-xl bg-[#15151A] hover:bg-[#1A1A20] border border-white/5 text-xs font-bold text-indigo-400 transition-colors flex items-center justify-center gap-2 group/btn"
-                                >
-                                    <span>Verwaltung öffnen</span>
-                                    <ArrowRight size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />
-                                </button>
+                                <div className="space-y-3">
+                                    {wardsList.map(ward => (
+                                        <button
+                                            key={ward.id}
+                                            onClick={showDevToast}
+                                            className="w-full p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3 hover:bg-white/5 transition-colors text-left group/ward"
+                                        >
+                                            <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-xs font-bold text-indigo-400 border border-indigo-500/20 group-hover/ward:border-indigo-500/40 transition-colors">
+                                                {(ward.full_name || "K").charAt(0)}
+                                            </div>
+                                            <div className="flex-1 overflow-hidden">
+                                                <div className="text-xs font-bold text-slate-200 truncate group-hover/ward:text-white transition-colors">{ward.full_name}</div>
+                                                <div className="text-[10px] text-slate-500 truncate">{ward.email}</div>
+                                            </div>
+                                            <div className="text-emerald-500" title="Verifiziert">
+                                                <ShieldCheck size={14} />
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* RIGHT COL: EDITABLE FORM */}
                     <div className="lg:col-span-8 space-y-8 pb-12">
