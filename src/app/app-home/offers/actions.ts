@@ -48,8 +48,8 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
 
     if (!marketId) {
         // Fallback: Fetch "Rheinbach" market from regions_live (v13 fix)
-        const { data: defaultMarket } = await supabase.from("regions_live").select("id").ilike("city", "%Rheinbach%").maybeSingle();
-        marketId = (defaultMarket as any)?.id;
+        const { data: defaultMarkets } = await supabase.from("regions_live").select("id").ilike("city", "%Rheinbach%").limit(1);
+        marketId = (defaultMarkets?.[0] as any)?.id;
     }
 
     if (!marketId) {
@@ -82,11 +82,13 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
 
     if (useDefault) {
         // Fetch default location
-        const { data: defLocRaw } = await supabase.from("provider_locations" as never)
+        const { data: defLocsRaw } = await supabase.from("provider_locations" as never)
             .select("id, address_line1, postal_code, city, public_label")
             .eq("provider_id", user.id)
             .eq("is_default", true)
-            .maybeSingle();
+            .limit(1);
+
+        const defLocRaw = defLocsRaw?.[0];
         const defLoc = defLocRaw as unknown as {
             id: string;
             address_line1: string;

@@ -60,7 +60,7 @@ export default function JuryPage() {
 
                     <NavGroup title="Deep Dive" collapsed={!sidebarOpen}>
                         <NavItem id="security" icon={ShieldCheck} label="Sicherheit & Trust" active={activeTab} set={setActiveTab} collapsed={!sidebarOpen} />
-                        <NavItem id="qa" icon={HelpCircle} label="Killer Q&A" active={activeTab} set={setActiveTab} collapsed={!sidebarOpen} />
+                        <NavItem id="qa" icon={HelpCircle} label="Experten Q&A" active={activeTab} set={setActiveTab} collapsed={!sidebarOpen} />
                         <NavItem id="legal" icon={Scale} label="Recht & DSGVO" active={activeTab} set={setActiveTab} collapsed={!sidebarOpen} />
                         <NavItem id="tech" icon={Server} label="Tech Stack" active={activeTab} set={setActiveTab} collapsed={!sidebarOpen} />
                         <NavItem id="roadmap" icon={Rocket} label="Roadmap" active={activeTab} set={setActiveTab} collapsed={!sidebarOpen} />
@@ -185,7 +185,7 @@ function DashboardView({ setTab }: { setTab: (t: TabId) => void }) {
                     onClick={() => setTab('script')}
                 />
                 <StatCard
-                    title="Killer Fragen"
+                    title="Experten Fragen"
                     value={`${JURY_DATA.qa.length}`}
                     subtitle="Vorbereitet"
                     icon={HelpCircle}

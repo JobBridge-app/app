@@ -31,11 +31,13 @@ export default async function NewOfferPage() {
     }
 
     const supabase = await supabaseServer();
-    const { data: defaultLocationRaw } = await supabase.from("provider_locations" as never)
+    const { data: defaultLocations } = await supabase.from("provider_locations" as never)
         .select("*")
         .eq("provider_id", profile.id)
         .eq("is_default", true)
-        .maybeSingle();
+        .limit(1);
+
+    const defaultLocationRaw = defaultLocations?.[0];
 
     let defaultLocation = (defaultLocationRaw ?? null) as unknown as DefaultLocation | null;
 
