@@ -193,8 +193,33 @@ export function OnboardingWizard({
     return true;
   }, [router, redirectTo, profileData.role]);
 
+  // Listen for Auth State Changes (Magic Link Clicked in another tab/window)
+  useEffect(() => {
+    if (step !== "email-confirm") return;
+
+    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        if (session?.user.email_confirmed_at) {
+          await checkSessionAfterEmailConfirm();
+        }
+      }
+    });
+
+    // Polling as backup (every 3s)
+    const interval = setInterval(async () => {
+      const { data: { session } } = await supabaseBrowser.auth.getSession();
+      if (session?.user.email_confirmed_at) {
+        await checkSessionAfterEmailConfirm();
+      }
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(interval);
+    };
+  }, [step, checkSessionAfterEmailConfirm]);
+
   // If just verified, we auto-advance after a short delay
-  // Moved here to be after checkSessionAfterEmailConfirm declaration
   useEffect(() => {
     if (isJustVerified && step === "email-confirm") {
       const timer = setTimeout(() => {
@@ -649,7 +674,7 @@ export function OnboardingWizard({
                             loading={loading}
                             className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white"
                           >
-                            Jetzt weiter
+                            Ich habe bestätigt
                           </ButtonPrimary>
                         </div>
                         <div className="flex flex-col gap-3">

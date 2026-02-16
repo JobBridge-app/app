@@ -62,3 +62,13 @@ body {
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(12px);
 }
+
+/* Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

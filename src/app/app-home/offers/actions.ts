@@ -20,12 +20,12 @@ const createJobSchema = z.object({
     lng: z.string().optional(),
 });
 
-type CreateJobActionState =
+export type CreateJobActionState =
     | null
     | { status: "error"; error: ErrorInfo }
     | { status: "partial"; jobId: string; error: ErrorInfo };
 
-export async function createJob(_prevState: CreateJobActionState, formData: FormData) {
+export async function createJob(_prevState: CreateJobActionState, formData: FormData): Promise<CreateJobActionState> {
     const supabase = await supabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
 

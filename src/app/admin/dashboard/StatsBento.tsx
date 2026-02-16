@@ -138,7 +138,7 @@ export function StatsBento({
             ) : activity.length === 0 ? (
               <p className="text-slate-500 text-sm">No recent activity.</p>
             ) : (
-              activity.map((item, index) => {
+              activity.slice(0, 5).map((item, index) => {
                 const Icon = getActivityIcon(item.type);
                 return (
                   <Link
@@ -199,7 +199,7 @@ export function StatsBento({
                 <p className="text-slate-500 text-sm">All caught up!</p>
               </div>
             ) : (
-              workQueue.map((item) => (
+              workQueue.slice(0, 5).map((item) => (
                 <Link
                   href={item.link || "/staff"}
                   key={item.id}

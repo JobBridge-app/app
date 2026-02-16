@@ -21,15 +21,18 @@ export default async function AdminUsersPage({
   const query = readString(params.q).trim();
   const userId = readString(params.userId);
 
-  const [usersResult, selectedUserResult] = await Promise.all([
+  /* const [usersResult, selectedUserResult] = await Promise.all([
     getAdminUsers({ limit: 100, search: query }),
     userId ? getAdminUser(userId) : Promise.resolve({ item: null, error: null }),
-  ]);
+  ]);*/
+
+  // Only fetch list, detail is separate page now
+  const usersResult = await getAdminUsers({ limit: 100, search: query });
 
   const users = usersResult.items;
   const error = usersResult.error;
-  const selectedUser = selectedUserResult.item;
-  const selectedError = selectedUserResult.error;
+  // const selectedUser = selectedUserResult.item;
+  // const selectedError = selectedUserResult.error;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -68,13 +71,14 @@ export default async function AdminUsersPage({
         </form>
       </div>
 
-      {(error || selectedError) && (
+
+      {error && (
         <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3">
-          <p className="text-sm text-rose-200">{error || selectedError}</p>
+          <p className="text-sm text-rose-200">{error}</p>
         </div>
       )}
 
-      <UsersTable users={users} selectedUser={selectedUser} query={query} />
+      <UsersTable users={users} query={query} />
     </div>
   );
 }

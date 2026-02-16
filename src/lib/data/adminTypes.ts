@@ -7,6 +7,21 @@ export type MetricWidget = {
   error: string | null;
 };
 
+export type CommunicationLogItem = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  created_at: string;
+  read_at: string | null;
+  user: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  } | null;
+};
+
 export type DashboardMetrics = {
   users: MetricWidget;
   jobs: MetricWidget;
@@ -61,7 +76,43 @@ export type AdminUserListItem = {
   roles: string[];
 };
 
-export type AdminUserDetail = AdminUserListItem;
+export type AdminUserApplication = {
+  id: string;
+  job_id: string;
+  status: string;
+  created_at: string;
+  job: {
+    title: string;
+    status: string;
+  } | null;
+};
+
+export type AdminUserJob = {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  applications_count: number;
+};
+
+export type AdminUserMessage = {
+  id: string;
+  content: string;
+  created_at: string | null;
+  sender_id: string;
+  application_id: string;
+  application: {
+    job: {
+      title: string;
+    } | null;
+  } | null;
+};
+
+export type AdminUserDetail = AdminUserListItem & {
+  applications?: AdminUserApplication[];
+  jobs?: AdminUserJob[];
+  messages?: AdminUserMessage[];
+};
 
 export type AdminJobListItem = {
   id: string;

@@ -7,6 +7,7 @@ export type AdminRoleAssignment = {
   full_name: string | null;
   email: string | null;
   city: string | null;
+  avatar_url: string | null;
   role_name: string;
   role_description: string | null;
   created_at: string;
@@ -43,7 +44,7 @@ export async function getAdminRoleAssignments(): Promise<{ items: AdminRoleAssig
     const { data, error } = await adminClient
       .from("user_system_roles")
       .select(
-        "user_id, created_at, profile:profiles!user_system_roles_user_id_fkey(full_name, email, city), role:system_roles!user_system_roles_role_id_fkey(name, description)",
+        "user_id, created_at, profile:profiles!user_system_roles_user_id_fkey(full_name, email, city, avatar_url), role:system_roles!user_system_roles_role_id_fkey(name, description)",
       )
       .order("created_at", { ascending: false });
 
@@ -62,6 +63,7 @@ export async function getAdminRoleAssignments(): Promise<{ items: AdminRoleAssig
         full_name: row.profile?.full_name || null,
         email: row.profile?.email || null,
         city: row.profile?.city || null,
+        avatar_url: (row.profile as any)?.avatar_url || null,
         role_name: row.role?.name || "unknown",
         role_description: row.role?.description || null,
         created_at: row.created_at,
@@ -136,6 +138,54 @@ export async function grantRoleToUserByEmail(email: string, roleName: string): P
       error: normalizeError(error, "Failed to initialize role assignment."),
     });
     return { error: "Failed to assign role." };
+  }
+
+}
+
+export async function setUserRole(userId: string, roleName: string): Promise<{ error: string | null }> {
+  try {
+    const trimmedRole = roleName.trim().toLowerCase();
+    const adminClient = getSupabaseAdminClient();
+
+    // 1. Get Role ID
+    const { data: role, error: roleError } = await adminClient
+      .from("system_roles")
+      .select("id")
+      .eq("name", trimmedRole)
+      .maybeSingle();
+
+    if (roleError || !role) {
+      return { error: roleError ? roleError.message : "Role not found" };
+    }
+
+    // 2. Delete ALL existing roles for this user (Enforce Single Role)
+    const { error: deleteError } = await adminClient
+      .from("user_system_roles")
+      .delete()
+      .eq("user_id", userId);
+
+    if (deleteError) {
+      console.error("roles:set:delete_existing", deleteError);
+      return { error: "Failed to clear existing roles." };
+    }
+
+    // 3. Insert New Role
+    const { error: insertError } = await adminClient
+      .from("user_system_roles")
+      .insert({
+        user_id: userId,
+        role_id: role.id,
+      });
+
+    if (insertError) {
+      console.error("roles:set:insert", insertError);
+      return { error: "Failed to assign new role." };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error("roles:set:fatal", error);
+    return { error: "Failed to set user role." };
   }
 }
 
