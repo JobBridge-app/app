@@ -56,7 +56,7 @@ export function MyJobsView({ jobs }: { jobs: JobsListItem[] }) {
                                 isDemo={false}
                                 isApplied={false}
                                 providerStatus={job.status}
-                                onSelect={(j) => router.push(`/app-home/offers/${j.id}`)}
+                                href={`/app-home/offers/${job.id}`}
                             />
                         ))}
                     </div>
@@ -78,7 +78,7 @@ export function MyJobsView({ jobs }: { jobs: JobsListItem[] }) {
                                 isDemo={false}
                                 isApplied={false}
                                 providerStatus={job.status}
-                                onSelect={(j) => router.push(`/app-home/offers/${j.id}`)}
+                                href={`/app-home/offers/${job.id}`}
                             />
                         ))}
                     </div>

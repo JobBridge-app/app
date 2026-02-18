@@ -6,6 +6,8 @@ import type { Database } from "@/lib/types/supabase";
 import { timeAgo } from "@/lib/utils";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 
+import Link from "next/link";
+
 interface JobCardProps {
     job: JobsListItem;
     isDemo?: boolean;
@@ -13,10 +15,11 @@ interface JobCardProps {
     isLocked?: boolean;
     hideStatusLabel?: boolean;
     providerStatus?: "draft" | "open" | "closed" | "reviewing" | "filled" | "reserved";
-    onSelect: (job: JobsListItem) => void;
+    onSelect?: (job: JobsListItem) => void;
+    href?: string;
 }
 
-export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked, hideStatusLabel, providerStatus, onSelect }: JobCardProps) {
+export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked, hideStatusLabel, providerStatus, onSelect, href }: JobCardProps) {
     const getStatusBadge = () => {
         if (providerStatus) {
             switch (providerStatus) {
@@ -92,9 +95,13 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
         return null;
     };
 
-    return (
+    const CardContent = (
         <div
-            onClick={() => onSelect(job)}
+            onClick={(e) => {
+                if (!href) {
+                    onSelect?.(job);
+                }
+            }}
             className={`group relative overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer
                 ${isApplied
                     ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
@@ -201,4 +208,14 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
             </div>
         </div>
     );
+
+    if (href) {
+        return (
+            <Link href={href}>
+                {CardContent}
+            </Link>
+        );
+    }
+
+    return CardContent;
 });

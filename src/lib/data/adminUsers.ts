@@ -141,8 +141,8 @@ export async function getAdminUser(userId: string): Promise<{ item: AdminUserDet
 
     // Parallel fetch for Profile, Roles, Applications, Jobs, and Messages
     const [profileResult, roleResult, applicationsResult, jobsResult, messagesResult] = await Promise.all([
-      // 1. Profile
-      supabase
+      // 1. Profile (Use Admin Client to bypass RLS)
+      admin
         .from("profiles")
         .select("id, full_name, email, city, account_type, provider_kind, guardian_status, provider_verification_status, email_verified_at, created_at")
         .eq("id", userId)
