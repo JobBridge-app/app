@@ -434,11 +434,17 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex gap-3 items-start my-4">
                                     <Clock className="text-amber-500 shrink-0 mt-0.5" size={20} />
                                     <div className="text-sm">
-                                        <h4 className="font-bold text-amber-100 mb-1">Du bist auf der Warteliste</h4>
+                                        <h4 className="font-bold text-amber-100 mb-1">
+                                            {currentUserRole === 'seeker' ? 'Du bist auf der Warteliste' : 'Bewerber auf der Warteliste'}
+                                        </h4>
                                         <p className="text-amber-200/80 leading-relaxed">
                                             {application.job?.status === 'completed'
-                                                ? "Der Job wurde mittlerweile vom Anbieter abgeschlossen. Diese Warteliste ist beendet."
-                                                : "Deine Bewerbung ist pausiert. Sollte der aktuelle Bewerber abspringen, rückst du automatisch nach und deine Nachricht wird an den Anbieter gesendet."}
+                                                ? (currentUserRole === 'seeker'
+                                                    ? "Der Job wurde mittlerweile vom Anbieter abgeschlossen. Diese Warteliste ist beendet."
+                                                    : "Dieser Job wurde erfolgreich abgeschlossen. Der Bewerber hat die Warteliste verlassen.")
+                                                : (currentUserRole === 'seeker'
+                                                    ? "Deine Bewerbung ist pausiert. Sollte der aktuelle Bewerber abspringen, rückst du automatisch nach und deine Nachricht wird an den Anbieter gesendet."
+                                                    : "Dieser Bewerber befindet sich auf der Warteliste und steht bereit, falls der primäre Kandidat abspringen sollte. Der Chat ist momentan pausiert.")}
                                         </p>
                                     </div>
                                 </div>
@@ -516,7 +522,9 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                             {!isActive && (
                                 <p className="text-center text-xs text-slate-500 mt-3">
                                     {status === 'waitlisted'
-                                        ? (application.job?.status === 'completed' ? "Der Job wurde abgeschlossen. Diese Warteliste ist beendet." : "Der Chat ist pausiert, solange du auf der Warteliste stehst.")
+                                        ? (application.job?.status === 'completed'
+                                            ? (currentUserRole === 'seeker' ? "Der Job wurde abgeschlossen. Diese Warteliste ist beendet." : "Die Warteliste ist beendet, da der Job abgeschlossen wurde.")
+                                            : (currentUserRole === 'seeker' ? "Der Chat ist pausiert, solange du auf der Warteliste stehst." : "Der Chat ist pausiert, da sich dieser Bewerber auf der Warteliste befindet."))
                                         : "Dieser Chat ist geschlossen, da die Bewerbung beendet wurde."}
                                 </p>
                             )}
