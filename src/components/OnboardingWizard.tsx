@@ -747,6 +747,9 @@ export function OnboardingWizard({
                               type="button"
                               onClick={() => {
                                 setMode("signup");
+                                setStep("mode"); // First they choose they are new, then we want them to go to the onboarding flow starting point properly.
+                                // Actually, if we just setStep("location"), it goes precisely to the "Wo möchtest du JobBridge nutzen" step.
+                                setStep("location");
                                 setErrorType(null);
                                 setErrorMsg(null);
                               }}
