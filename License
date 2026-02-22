@@ -1,0 +1,79 @@
+JOBBRIDGE PROPRIETARY LICENSE
+(ALL RIGHTS RESERVED)
+
+Copyright (c) 2026 Rezan Aaron Yalçin.
+All rights reserved.
+
+1. Definitions
+“Software” means all source code, object code, build scripts, configuration files, assets,
+and documentation contained in this repository, including any portion thereof.
+
+“Licensor” means the copyright holder named above.
+
+2. Ownership
+The Software is proprietary and owned exclusively by the Licensor. No rights are granted
+except as expressly stated in this License. All intellectual property rights in and to the
+Software remain with the Licensor.
+
+3. No License Granted
+No license is granted under any copyright, patent, trademark, trade secret, or other
+intellectual property right, whether by implication, estoppel, or otherwise, except for
+the limited permission in Section 4.
+
+4. Limited Permission to Access and View
+Permission is granted solely to access and view the Software via this repository for
+evaluation and informational purposes. This permission does not include any right to use
+the Software in any manner beyond viewing.
+
+5. Prohibited Uses
+Without the Licensor’s prior written permission, you may not, directly or indirectly:
+(a) copy, reproduce, download, clone, mirror, archive, or otherwise obtain the Software,
+    in whole or in part, except to the minimal extent technically necessary to view it
+    through the hosting platform;
+(b) modify, adapt, translate, or create derivative works based on the Software;
+(c) compile, run, execute, or otherwise use the Software (or any part of it) for any
+    purpose, including testing, benchmarking, or providing services;
+(d) distribute, publish, sublicense, sell, rent, lease, lend, or otherwise make the Software
+    available to any third party;
+(e) use the Software (or any part of it) in a commercial product or service, or to develop,
+    train, or improve any competing product or service;
+(f) remove, alter, or obscure any copyright or proprietary notices.
+
+For avoidance of doubt: the availability of “fork”, “download”, or similar functionality on
+a hosting platform does not grant permission to do any of the acts prohibited above.
+
+6. Third-Party Components
+The Software may include or depend on third-party components subject to separate licenses.
+Those components remain governed by their respective licenses. This License applies only to
+the Licensor’s rights in the Software.
+
+7. Feedback
+If you provide feedback, suggestions, or ideas regarding the Software, you grant the Licensor
+a perpetual, worldwide, irrevocable, royalty-free right to use, reproduce, modify, and
+incorporate such feedback without restriction or compensation.
+
+8. Disclaimer of Warranty
+THE SOFTWARE IS PROVIDED “AS IS” AND “AS AVAILABLE”, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+9. Limitation of Liability
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE LICENSOR BE
+LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE
+USE OF OR OTHER DEALINGS IN THE SOFTWARE.
+
+10. Termination
+Any breach of this License terminates the permission granted in Section 4 immediately and
+automatically. Upon termination, you must cease all access and viewing of the Software and
+destroy any copies in your possession or control.
+
+11. Permission Requests
+Permission requests may be made via https://www.jobbridge.app or by contacting the
+repository owner through GitHub.
+
+12. Governing Law
+This License shall be governed by the laws of the Federal Republic of Germany, excluding
+its conflict of laws rules.
+
+— End of License —
