@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { Building2, MapPin, Euro, Clock, Lock } from "lucide-react";
+import { Building2, MapPin, Euro, Clock, Lock, CheckCircle2 } from "lucide-react";
 import type { Database } from "@/lib/types/supabase";
 import { timeAgo } from "@/lib/utils";
 import type { JobsListItem } from "@/lib/types/jobbridge";
@@ -21,6 +21,9 @@ interface JobCardProps {
 }
 
 export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked, hideStatusLabel, providerStatus, isCrossRegionalBadge, onSelect, href }: JobCardProps) {
+    const isWaitlistMode = job.status === 'reserved' && !providerStatus;
+    const isUserWaitlisted = job.application_status === 'waitlisted';
+
     const getStatusBadge = () => {
         if (providerStatus) {
             switch (providerStatus) {
@@ -104,11 +107,13 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                 }
             }}
             className={`group relative overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer
-                ${isApplied
+                ${isApplied && !isUserWaitlisted
                     ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
                     : isLocked
                         ? "bg-slate-900/40 border-white/[0.05] hover:border-white/10" // Locked style
-                        : "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-indigo-500/40 hover:shadow-[0_8px_40px_-12px_rgba(99,102,241,0.25)]"
+                        : isWaitlistMode
+                            ? "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-amber-500/40 hover:shadow-[0_8px_40px_-12px_rgba(245,158,11,0.25)]"
+                            : "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-indigo-500/40 hover:shadow-[0_8px_40px_-12px_rgba(99,102,241,0.25)]"
                 }
             `}
         >
@@ -127,27 +132,54 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
             )}
 
             {/* Premium Gradient Accent Line */}
-            {!isApplied && !isLocked && (
+            {!isApplied && !isLocked && !isWaitlistMode && (
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            )}
+            {isWaitlistMode && !isLocked && (
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             )}
 
             {/* Subtle Glow at bottom */}
-            {!isApplied && !isLocked && (
+            {!isApplied && !isLocked && !isWaitlistMode && (
                 <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-indigo-900/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            )}
+            {isWaitlistMode && !isLocked && (
+                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-amber-900/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             )}
 
             <div className={`relative z-10 flex flex-col h-full ${isLocked ? 'md:opacity-50 md:blur-[1px] md:group-hover:blur-sm transition-all duration-300' : ''}`}>
                 <div className="flex justify-between items-start mb-5">
                     <div className="flex items-start gap-4">
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/15 to-violet-500/10 text-indigo-400 border border-indigo-500/10 group-hover:from-indigo-500/25 group-hover:to-violet-500/15 group-hover:border-indigo-500/25 group-hover:text-indigo-300 transition-all duration-300 shadow-inner">
-                            <Building2 size={24} className="group-hover:scale-110 transition-transform duration-500" />
+                        <div className={`p-3 rounded-xl bg-gradient-to-br transition-all duration-300 shadow-inner
+                            ${isWaitlistMode
+                                ? "from-amber-500/15 to-orange-500/10 text-amber-400 border border-amber-500/10 group-hover:from-amber-500/25 group-hover:to-orange-500/15 group-hover:border-amber-500/25 group-hover:text-amber-300"
+                                : "from-indigo-500/15 to-violet-500/10 text-indigo-400 border border-indigo-500/10 group-hover:from-indigo-500/25 group-hover:to-violet-500/15 group-hover:border-indigo-500/25 group-hover:text-indigo-300"
+                            }
+                        `}>
+                            {isWaitlistMode ? (
+                                <Clock size={24} className="group-hover:scale-110 transition-transform duration-500" />
+                            ) : (
+                                <Building2 size={24} className="group-hover:scale-110 transition-transform duration-500" />
+                            )}
                         </div>
                         <div>
                             {/* Extended Job Badge - Shows the origin market if it is an extended job */}
-                            {isCrossRegionalBadge && job.market_name && !isApplied && !isLocked && (
+                            {isCrossRegionalBadge && job.market_name && !isApplied && !isLocked && !isWaitlistMode && (
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider mb-2 animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)]">
                                     <MapPin size={10} className="animate-pulse text-violet-400" />
                                     <span>Aus {job.market_name}</span>
+                                </div>
+                            )}
+                            {isWaitlistMode && job.active_applicant && !isUserWaitlisted && (
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider mb-2 animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]">
+                                    <Clock size={10} className="text-amber-400" />
+                                    <span>Reserviert von {job.active_applicant.full_name?.split(' ')[0] || "Nutzer"}</span>
+                                </div>
+                            )}
+                            {isWaitlistMode && isUserWaitlisted && (
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider mb-2 animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]">
+                                    <CheckCircle2 size={10} className="text-emerald-400" />
+                                    <span>Du stehst auf der Warteliste</span>
                                 </div>
                             )}
                             <h3 className="text-xl font-bold text-white leading-tight mb-1 group-hover:text-indigo-100 transition-colors">

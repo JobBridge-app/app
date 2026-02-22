@@ -60,35 +60,35 @@ export default async function JobsPage() {
     const rawActiveJobs: JobsListItem[] = jobsRes.ok ? jobsRes.data : [];
     const allApps = appsRes.ok ? appsRes.data : [];
 
-    // Waitlisted Jobs: Jobs where I am applicant and status is 'waitlisted'
-    const waitlistedJobs = allApps
-        .filter(a => a.status === 'waitlisted')
-        .map(a => a.job)
-        .filter(j => !!j && (j.status === 'reserved' || j.status === 'open')); // Only relevant if job exists and is open/reserved
-
-    // Applied Jobs: 'submitted', 'pending', 'negotiating', 'accepted' (active processes)
-    // EXCLUDING waitlisted ones (handled above)
+    // Applied Jobs: 'submitted', 'pending', 'negotiating', 'accepted', AND 'waitlisted'
     const appliedJobs = allApps
-        .filter(a => ['submitted', 'pending', 'negotiating', 'accepted'].includes(a.status))
-        .map(a => a.job)
-        .filter(j => !!j); // Check existence
+        .filter(a => ['submitted', 'pending', 'negotiating', 'accepted', 'waitlisted'].includes(a.status))
+        .map(a => {
+            const richJob = rawActiveJobs.find(rj => rj.id === a.job?.id);
+            return richJob ? { ...richJob, is_applied: true, application_status: a.status } : { ...a.job, is_applied: true, application_status: a.status };
+        })
+        .filter(j => !!j) as JobsListItem[];
 
     // Rejected/Withdrawn/Archived Applications could be interesting but usually not "Active"
     // For now, we focus on Active Apps.
 
     const appliedJobIds = new Set(appliedJobs.map(j => j.id));
-    const waitlistedJobIds = new Set(waitlistedJobs.map(j => j.id));
 
-    // Active Feed: Open jobs AND Reserved jobs (for Waitlist opportunities)
+    // Active Feed: ONLY Open jobs
     // EXCLUDING any job I already have an application for (waitlist or active)
     const allActiveJobs = rawActiveJobs.filter(job =>
         !appliedJobIds.has(job.id) &&
-        !waitlistedJobIds.has(job.id) &&
-        (job.status === 'open' || job.status === 'reserved')
+        job.status === 'open'
     );
 
     const localActiveJobs = allActiveJobs.filter(job => job.market_id === profile.market_id);
     const extendedActiveJobs = allActiveJobs.filter(job => job.market_id !== profile.market_id && job.reach === 'extended');
+
+    // Waitlist Opportunities: Reserved jobs that I haven't applied to or waitlisted for
+    const waitlistedJobs = rawActiveJobs.filter(job =>
+        !appliedJobIds.has(job.id) &&
+        job.status === 'reserved'
+    );
 
     return (
         <div className="container mx-auto py-2 px-4 md:px-6">

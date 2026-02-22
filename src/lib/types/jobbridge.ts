@@ -55,6 +55,10 @@ export type JobsListItem = {
   address_reveal_policy?: string | null;
   application_status?: ApplicationStatus | null;
   application_id?: string | null;
+  active_applicant?: {
+    full_name: string | null;
+    avatar_url?: string | null;
+  } | null;
 };
 
 export type ApplicationRow = Database["public"]["Tables"]["applications"]["Row"] & {

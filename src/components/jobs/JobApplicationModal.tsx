@@ -15,9 +15,10 @@ interface JobApplicationModalProps {
     jobId: string;
     canApply: boolean;
     guardianStatus: string;
+    isWaitlistMode?: boolean;
 }
 
-export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply, guardianStatus }: JobApplicationModalProps) {
+export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply, guardianStatus, isWaitlistMode }: JobApplicationModalProps) {
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const [showGuardianModal, setShowGuardianModal] = useState(false);
@@ -94,11 +95,17 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
 
                                     {success ? (
                                         <div className="py-12 flex flex-col items-center text-center">
-                                            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4">
+                                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isWaitlistMode ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
                                                 <Send size={32} />
                                             </div>
-                                            <h3 className="text-xl font-bold text-white mb-2">Bewerbung gesendet!</h3>
-                                            <p className="text-slate-400">Viel Erfolg! Der Anbieter wird sich bald bei dir melden.</p>
+                                            <h3 className="text-xl font-bold text-white mb-2">
+                                                {isWaitlistMode ? "Erfolgreich eingetragen!" : "Bewerbung gesendet!"}
+                                            </h3>
+                                            <p className="text-slate-400">
+                                                {isWaitlistMode
+                                                    ? "Du stehst nun auf der Warteliste für diesen Job und rückst automatisch nach, falls der Platz wieder frei wird."
+                                                    : "Viel Erfolg! Der Anbieter wird sich bald bei dir melden."}
+                                            </p>
                                         </div>
                                     ) : (
                                         <>
@@ -111,6 +118,18 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                                             <p className="text-sm text-slate-400 mb-6">
                                                 Für: <span className="text-indigo-400 font-medium">{jobTitle}</span>
                                             </p>
+
+                                            {isWaitlistMode && (
+                                                <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex gap-3 items-start">
+                                                    <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
+                                                    <div className="text-sm">
+                                                        <h4 className="font-semibold text-amber-100 mb-1">Hinweis zur Warteliste</h4>
+                                                        <p className="text-amber-200/70">
+                                                            Deine Bewerbung wird sicher zurückgehalten und auf der Warteliste vermerkt. Sie wird erst gesendet, wenn der Platz wieder frei wird.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             {!canApply && (
                                                 <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex gap-3 items-start">
@@ -163,7 +182,7 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                                                         {loading ? "Wird gesendet..." : (
                                                             <>
                                                                 {canApply ? <Send size={16} className="mr-2" /> : <Lock size={16} className="mr-2" />}
-                                                                {canApply ? "Bewerbung abschicken" : "Bestätigung starten"}
+                                                                {canApply ? (isWaitlistMode ? "Auf Warteliste setzen" : "Bewerbung abschicken") : "Bestätigung starten"}
                                                             </>
                                                         )}
                                                     </ButtonPrimary>

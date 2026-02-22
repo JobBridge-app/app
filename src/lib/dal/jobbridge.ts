@@ -233,6 +233,50 @@ async function enrichWithCreators(
   });
 }
 
+/** Enrich reserved jobs with the active applicant info. */
+async function enrichWithActiveApplicants(
+  supabase: SupabaseClient<Database>,
+  items: JobsListItem[],
+): Promise<JobsListItem[]> {
+  const reservedJobIds = items.filter(j => j.status === 'reserved').map(j => j.id);
+  if (reservedJobIds.length === 0) return items;
+
+  const { data: activeApps } = await supabase
+    .from("applications")
+    .select(`
+      job_id,
+      profiles (full_name, avatar_url)
+    `)
+    .in("job_id", reservedJobIds)
+    .in("status", ["negotiating", "accepted"]);
+
+  if (!activeApps) return items;
+
+  const reserverMap = new Map();
+  for (const app of activeApps) {
+    const applicant = Array.isArray(app.profiles) ? app.profiles[0] : app.profiles;
+    if (applicant) {
+      reserverMap.set(app.job_id, applicant);
+    }
+  }
+
+  return items.map((i) => {
+    if (i.status === 'reserved') {
+      const reserver = reserverMap.get(i.id);
+      if (reserver) {
+        return {
+          ...i,
+          active_applicant: {
+            full_name: reserver.full_name,
+            avatar_url: reserver.avatar_url
+          }
+        };
+      }
+    }
+    return i;
+  });
+}
+
 export async function fetchJobs(params: FetchJobsParams): Promise<Result<JobsListItem[]>> {
   const supabase = await supabaseServer();
   const limit = params.limit ?? 50;
@@ -323,6 +367,7 @@ export async function fetchJobs(params: FetchJobsParams): Promise<Result<JobsLis
 
   items = await enrichWithMarketNames(supabase, items) as typeof items;
   items = await enrichWithCreators(supabase, items) as typeof items;
+  items = await enrichWithActiveApplicants(supabase, items) as typeof items;
 
   return { ok: true, data: items };
 }

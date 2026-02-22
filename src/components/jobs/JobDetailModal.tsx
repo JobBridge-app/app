@@ -34,6 +34,7 @@ interface JobDetailModalProps {
     context?: 'feed' | 'activity';
 }
 export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guardianStatus, context = 'feed' }: JobDetailModalProps) {
+    const isWaitlistMode = job?.status === 'reserved' && !['negotiating', 'accepted'].includes(job?.application_status || '');
     // ... component implementation ...
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
@@ -163,7 +164,19 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                 {job.title}
                                             </Dialog.Title>
 
-                                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 sm:gap-6 text-slate-300 font-medium w-full sm:w-auto">
+                                            {isWaitlistMode && (
+                                                <div className="mt-6 mb-2 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 flex gap-3 text-amber-200">
+                                                    <div className="mt-0.5 shrink-0">
+                                                        <Clock size={20} className="text-amber-400" />
+                                                    </div>
+                                                    <div className="text-sm leading-relaxed">
+                                                        <strong className="block text-amber-400 mb-1">Momentan reserviert</strong>
+                                                        Dieses Angebot ist aktuell für {job.active_applicant ? `${job.active_applicant.full_name?.split(' ')[0]} ` : 'einen anderen Nutzer '}reserviert. Trage dich unverbindlich auf die Warteliste ein, um sofort nachzurücken, falls der Platz wieder frei wird.
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 sm:gap-6 text-slate-300 font-medium w-full sm:w-auto mt-6">
                                                 <div className="flex items-center justify-center sm:justify-start gap-2 bg-white/5 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-white/5 sm:border-none">
                                                     <div className="p-1.5 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
                                                         <Euro size={18} />
@@ -326,7 +339,7 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                             <>
                                                 <div className="text-center md:text-left">
                                                     <p className="text-sm text-slate-400">
-                                                        Interesse geweckt?
+                                                        {isWaitlistMode ? "Noch Interesse?" : "Interesse geweckt?"}
                                                     </p>
                                                     <p className="text-xs text-slate-600 mt-0.5">
                                                         Mit der Bewerbung akzeptierst du die Nutzungsbedingungen.
@@ -345,10 +358,10 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                 ) : (
                                                     <ButtonPrimary
                                                         onClick={() => setIsApplicationModalOpen(true)}
-                                                        className="w-full md:w-auto px-10 py-4 text-lg shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.02] transition-all"
+                                                        className={`w-full md:w-auto px-10 py-4 text-lg shadow-xl hover:scale-[1.02] transition-all ${isWaitlistMode ? 'shadow-amber-500/20 hover:shadow-amber-500/30 bg-amber-600 hover:bg-amber-500' : 'shadow-indigo-500/20 hover:shadow-indigo-500/30'}`}
                                                     >
                                                         <span className="flex items-center gap-3 font-bold">
-                                                            Jetzt bewerben <ArrowRight size={20} />
+                                                            {isWaitlistMode ? "Auf Warteliste" : "Jetzt bewerben"} <ArrowRight size={20} />
                                                         </span>
                                                     </ButtonPrimary>
                                                 )}
@@ -371,6 +384,7 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                 jobId={job.id}
                 canApply={canApply}
                 guardianStatus={guardianStatus}
+                isWaitlistMode={isWaitlistMode}
             />
 
             <VerificationRequiredModal

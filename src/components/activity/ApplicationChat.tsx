@@ -328,11 +328,13 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                                 <p className="text-xs text-slate-500 uppercase font-bold mb-2">Status</p>
                                 <div className={cn("inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium w-full justify-center",
                                     status === 'accepted' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                                        status === 'negotiating' ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" :
-                                            status === 'rejected' ? "bg-red-500/10 text-red-400 border-red-500/20" :
-                                                "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                                        status === 'waitlisted' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                                            status === 'negotiating' ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" :
+                                                status === 'rejected' ? "bg-red-500/10 text-red-400 border-red-500/20" :
+                                                    "bg-slate-500/10 text-slate-400 border-slate-500/20"
                                 )}>
                                     {status === 'accepted' && <CheckCircle2 size={16} />}
+                                    {status === 'waitlisted' && <Clock size={16} />}
                                     {status === 'negotiating' && <MessageSquare size={16} />}
                                     {status === 'rejected' && <XCircle size={16} />}
                                     <span className="capitalize">{status}</span>
@@ -340,14 +342,14 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                             </div>
 
                             {/* Action Button (Withdraw or Reject) */}
-                            {isActive && !isWithdrawing && (
+                            {(isActive || status === 'waitlisted') && !isWithdrawing && (
                                 <div className="pt-8">
                                     <button
                                         onClick={() => setIsWithdrawing(true)}
                                         className="w-full py-3 px-4 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 border border-transparent hover:border-red-500/10"
                                     >
                                         {currentUserRole === "seeker" ? (
-                                            <> <Trash2 size={16} /> Bewerbung zurückziehen </>
+                                            <> <Trash2 size={16} /> {status === 'waitlisted' ? "Warteliste verlassen" : "Bewerbung zurückziehen"} </>
                                         ) : (
                                             <> <XCircle size={16} /> Bewerbung ablehnen </>
                                         )}
@@ -428,6 +430,20 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                         {/* Messages Area */}
                         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-gradient-to-b from-[#09090b] to-[#0c0c10]">
 
+                            {status === 'waitlisted' && (
+                                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex gap-3 items-start my-4">
+                                    <Clock className="text-amber-500 shrink-0 mt-0.5" size={20} />
+                                    <div className="text-sm">
+                                        <h4 className="font-bold text-amber-100 mb-1">Du bist auf der Warteliste</h4>
+                                        <p className="text-amber-200/80 leading-relaxed">
+                                            {application.job?.status === 'completed'
+                                                ? "Der Job wurde mittlerweile vom Anbieter abgeschlossen. Diese Warteliste ist beendet."
+                                                : "Deine Bewerbung ist pausiert. Sollte der aktuelle Bewerber abspringen, rückst du automatisch nach und deine Nachricht wird an den Anbieter gesendet."}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Initial System Message */}
                             <div className="flex justify-center my-6">
                                 <div className="bg-white/5 px-4 py-2 rounded-full text-xs text-slate-500 border border-white/5 flex items-center gap-2">
@@ -499,7 +515,9 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                             </div>
                             {!isActive && (
                                 <p className="text-center text-xs text-slate-500 mt-3">
-                                    Dieser Chat ist geschlossen, da die Bewerbung beendet wurde.
+                                    {status === 'waitlisted'
+                                        ? (application.job?.status === 'completed' ? "Der Job wurde abgeschlossen. Diese Warteliste ist beendet." : "Der Chat ist pausiert, solange du auf der Warteliste stehst.")
+                                        : "Dieser Chat ist geschlossen, da die Bewerbung beendet wurde."}
                                 </p>
                             )}
                         </div>
