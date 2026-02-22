@@ -58,16 +58,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
         // viewbox: left,top,right,bottom -> roughly 6.8,50.8,7.2,50.5
         // &dedupe=1 removes duplicates
 
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&countrycodes=de&viewbox=6.80,50.75,7.10,50.55&dedupe=1`,
-          {
-            headers: {
-              "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
-              // Nominatim requires a user agent or they might block/cors fail
-              "User-Agent": "JobBridge/1.0"
-            }
-          }
-        );
+        const response = await fetch(`/api/location/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         setResults(data);
         setIsOpen(true);
