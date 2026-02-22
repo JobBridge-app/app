@@ -937,9 +937,9 @@ export function OnboardingWizard({
                       )}
                     </>
                   )}
-                  {error && (
+                  {resendError && (
                     <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
-                      {error}
+                      {resendError}
                     </div>
                   )}
                 </div>
@@ -1000,7 +1000,7 @@ export function OnboardingWizard({
                         key={role.value}
                         onClick={() => {
                           setProfileData((prev) => ({ ...prev, role: role.value }));
-                          setError(null);
+                          setErrorMsg("");
                         }}
                         selected={active}
                         className={`h-full ${idx === 2 ? "sm:col-span-2" : ""}`}
@@ -1024,9 +1024,9 @@ export function OnboardingWizard({
                 </div>
 
                 {/* Error Display */}
-                {error && (
+                {errorMsg && (
                   <div className="mb-6 rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100 text-center">
-                    {error}
+                    {errorMsg}
                   </div>
                 )}
 
@@ -1106,9 +1106,9 @@ export function OnboardingWizard({
                   </div>
 
                   {/* Region selection removed from this step as it is handled at the start */}
-                  {error && (
+                  {errorMsg && (
                     <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
-                      {error}
+                      {errorMsg}
                     </div>
                   )}
                   <div className="flex gap-4">
@@ -1206,9 +1206,9 @@ export function OnboardingWizard({
                           required
                         />
                       </div>
-                      {error && (
+                      {errorMsg && (
                         <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
-                          {error}
+                          {errorMsg}
                           <button
                             onClick={handleCompanyContact}
                             className="mt-2 text-sm underline text-rose-200 hover:text-rose-100"
@@ -1301,9 +1301,9 @@ export function OnboardingWizard({
                           </div>
                         </div>
                       </div>
-                      {error && (
+                      {errorMsg && (
                         <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
-                          {error}
+                          {errorMsg}
                           <button
                             onClick={handleCompleteOnboarding}
                             className="mt-2 text-sm underline text-rose-200 hover:text-rose-100"

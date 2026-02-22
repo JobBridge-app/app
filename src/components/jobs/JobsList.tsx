@@ -171,7 +171,7 @@ export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, 
                     {/* Local Jobs */}
                     <div className="mb-12">
                         <JobsListSection
-                            title="Aktuelle Angebote"
+                            title="Lokale Angebote"
                             icon={Briefcase}
                             colorClass="text-indigo-400"
                             jobs={localActiveJobs}

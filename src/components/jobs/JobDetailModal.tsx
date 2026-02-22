@@ -157,11 +157,6 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                         {job.category}
                                                     </span>
                                                 )}
-                                                {job.market_name && (
-                                                    <span className="inline-flex items-center rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-400 border border-purple-500/20">
-                                                        {job.market_name}
-                                                    </span>
-                                                )}
                                             </div>
 
                                             <Dialog.Title as="h3" className="text-4xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
@@ -189,6 +184,16 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                     </span>
                                                 </div>
 
+                                                {job.distance_km != null && context !== 'activity' && (
+                                                    <>
+                                                        <div className="w-px h-8 bg-white/10 hidden sm:block" />
+                                                        <div className="col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 text-slate-300 mt-1 sm:mt-0">
+                                                            <Clock size={16} />
+                                                            <span>{`${(Math.round(job.distance_km * 10) / 10).toFixed(1).replace('.', ',')} km entfernt`}</span>
+                                                        </div>
+                                                    </>
+                                                )}
+
                                                 {job.creator && (
                                                     <>
                                                         <div className="w-px h-8 bg-white/10 hidden sm:block" />
@@ -210,12 +215,6 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                             </div>
                                                         </button>
                                                     </>
-                                                )}
-                                                {job.distance_km != null && context !== 'activity' && (
-                                                    <div className="col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 text-slate-500 mt-1 sm:mt-0">
-                                                        <Clock size={16} />
-                                                        <span>{`${(Math.round(job.distance_km * 10) / 10).toFixed(1).replace('.', ',')} km entfernt`}</span>
-                                                    </div>
                                                 )}
                                             </div>
                                         </div>

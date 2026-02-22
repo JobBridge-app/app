@@ -8,10 +8,13 @@ export type LocationDetails = {
   address_line1: string;
   city: string;
   postal_code: string;
+  postcode?: string; // Add alias for backwards compatibility
   lat: number;
   lng: number;
+  lon?: number; // Add alias for backwards compatibility
   public_label: string;
   state?: string;
+  house_number?: string;
 };
 
 interface LocationAutocompleteProps {
@@ -105,12 +108,13 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
       address_line1: street, // Just street name
       city: city,
       postal_code: zip,
+      postcode: zip,
       lat: parseFloat(item.lat),
       lng: parseFloat(item.lon),
+      lon: parseFloat(item.lon),
       public_label: label,
       state: addr.state,
-      // Pass raw house number for parent to use
-      ...({ house_number: houseNumber } as any)
+      house_number: houseNumber
     };
 
     setQuery(label);

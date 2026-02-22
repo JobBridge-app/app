@@ -41,6 +41,8 @@ export type Profile = {
   street?: string | null;
   house_number?: string | null;
   zip?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 // ... (skipping types not modified, but replace_file_content needs contiguous block)
@@ -130,6 +132,8 @@ export type Database = {
           street?: string | null;
           house_number?: string | null;
           zip?: string | null;
+          lat?: number | null;
+          lng?: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
         Relationships: [];

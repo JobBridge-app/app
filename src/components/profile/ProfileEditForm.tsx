@@ -3,9 +3,10 @@
 import { useMemo, useState, useEffect } from "react";
 import { Profile } from "@/lib/types";
 import { BRAND_EMAIL } from "@/lib/constants";
-import { LockKeyhole, Building2, User, MapPin, Briefcase, Sparkles, Clock, ShieldCheck, ShieldAlert, ArrowRight, Plus, Users, Calendar, Fingerprint } from "lucide-react";
+import { LockKeyhole, Building2, User, MapPin, Briefcase, Sparkles, Clock, ShieldCheck, ShieldAlert, ArrowRight, Plus, Users, Calendar, Fingerprint, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabaseBrowser } from "@/lib/supabaseClient";
+import { LocationAutocomplete, LocationDetails } from "@/components/ui/LocationAutocomplete";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
 import { ProviderVerificationModal } from "@/components/profile/ProviderVerificationModal";
 import { GuardianBanner } from "./GuardianBanner";
@@ -47,6 +48,14 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
     // Seeker Fields
     const [interests, setInterests] = useState(profile.interests?.trim() || "");
     const [skills, setSkills] = useState((profile.skills ?? "").trim());
+
+    // Seeker Location Fields
+    const [city, setCity] = useState(profile.city || "");
+    const [zip, setZip] = useState(profile.zip || "");
+    const [street, setStreet] = useState(profile.street || "");
+    const [houseNumber, setHouseNumber] = useState(profile.house_number || "");
+    const [lat, setLat] = useState<number | null>(profile.lat ? Number(profile.lat) : null);
+    const [lng, setLng] = useState<number | null>(profile.lng ? Number(profile.lng) : null);
 
     const [saving, setSaving] = useState(false);
     const [saveState, setSaveState] = useState<null | { type: "ok" | "error"; message: string }>(null);
@@ -107,9 +116,15 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                 ...base,
                 skills: toNull(skills),
                 interests: toNull(interests),
+                city: toNull(city),
+                zip: toNull(zip),
+                street: toNull(street),
+                house_number: toNull(houseNumber),
+                lat: lat,
+                lng: lng,
             };
         }
-    }, [bio, interests, skills, availabilityNote, isProvider]);
+    }, [bio, interests, skills, availabilityNote, isProvider, city, zip, street, houseNumber, lat, lng]);
 
     const onSave = async () => {
         setSaving(true);
@@ -127,6 +142,19 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
             setSaveState({ type: "error", message: msg });
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleLocationSelect = (loc: LocationDetails) => {
+        setStreet(loc.address_line1);
+        setCity(loc.city);
+        setZip(loc.postcode || "");
+        setLat(loc.lat || null);
+        setLng(loc.lon || null);
+        // Attempt to extract house number if provided by the autocomplete component
+        const locAny = loc as any;
+        if (locAny.house_number) {
+            setHouseNumber(locAny.house_number);
         }
     };
 
@@ -646,6 +674,94 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                 </div>
                             </div>
                         </div>
+
+                        {/* SEEKER LOCATION BLOCK */}
+                        {!isProvider && (
+                            <div className="rounded-[2.5rem] bg-[#0A0A0C] border border-white/[0.05] p-6 md:p-10 relative overflow-hidden shadow-2xl">
+                                <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-sky-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+                                <div className="relative z-10">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-6 mb-10 pb-8 border-b border-white/[0.03]">
+                                        <div className="w-16 h-16 rounded-2xl bg-[#15151A] border border-white/5 flex items-center justify-center shadow-xl">
+                                            <MapPin size={28} className="text-sky-500" />
+                                        </div>
+                                        <div className="space-y-1 flex-1">
+                                            <div className="flex items-center gap-3">
+                                                <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Wohnort & Distanz</h3>
+                                                {lat && lng && (
+                                                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                                        <ShieldCheck size={10} /> Aktiv
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-slate-400 text-sm font-medium">Dein Wohnort wird niemals öffentlich geteilt, sondern nur zur Entfernungsberechnung (z.B. "5 km entfernt") für Jobs genutzt.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-8">
+                                        {/* Address Search */}
+                                        <div className="space-y-3 group">
+                                            <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-[0.15em] ml-1 flex items-center gap-2 group-focus-within:text-sky-400 transition-colors">
+                                                <Search size={12} /> Adresse suchen
+                                            </label>
+                                            <div className="relative group/search z-20">
+                                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-sky-500 pointer-events-none z-10">
+                                                    <MapPin size={18} />
+                                                </div>
+                                                <LocationAutocomplete
+                                                    onSelect={handleLocationSelect}
+                                                    placeholder="Straße und Ort eingeben..."
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Selected Address Display */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/[0.03]">
+                                            <div className="space-y-3 group">
+                                                <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-[0.15em] ml-1 transition-colors">
+                                                    Straße & Hausnummer
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        value={street}
+                                                        onChange={(e) => setStreet(e.target.value)}
+                                                        placeholder="Straße"
+                                                        className="w-full h-14 rounded-2xl bg-[#0F0F12] border-2 border-transparent px-5 text-slate-200 placeholder:text-slate-700 focus:outline-none focus:bg-[#121216] focus:border-sky-500/20 transition-all font-medium"
+                                                    />
+                                                    <input
+                                                        value={houseNumber}
+                                                        onChange={(e) => setHouseNumber(e.target.value)}
+                                                        placeholder="Nr."
+                                                        className="w-24 h-14 rounded-2xl bg-[#0F0F12] border-2 border-transparent px-5 text-slate-200 placeholder:text-slate-700 focus:outline-none focus:bg-[#121216] focus:border-sky-500/20 transition-all font-medium text-center"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3 group">
+                                                <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-[0.15em] ml-1 transition-colors">
+                                                    PLZ & Ort
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        value={zip}
+                                                        onChange={(e) => setZip(e.target.value)}
+                                                        placeholder="PLZ"
+                                                        className="w-24 h-14 rounded-2xl bg-[#0F0F12] border-2 border-transparent px-5 text-slate-200 placeholder:text-slate-700 focus:outline-none focus:bg-[#121216] focus:border-sky-500/20 transition-all font-medium text-center"
+                                                    />
+                                                    <input
+                                                        value={city}
+                                                        onChange={(e) => setCity(e.target.value)}
+                                                        placeholder="Stadt"
+                                                        className="w-full h-14 rounded-2xl bg-[#0F0F12] border-2 border-transparent px-5 text-slate-200 placeholder:text-slate-700 focus:outline-none focus:bg-[#121216] focus:border-sky-500/20 transition-all font-medium"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                     </div>
 
