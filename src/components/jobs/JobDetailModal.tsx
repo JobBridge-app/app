@@ -182,7 +182,11 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                     <div className="p-1.5 rounded-full bg-blue-500/10 text-blue-400 shrink-0">
                                                         <MapPin size={18} />
                                                     </div>
-                                                    <span className="truncate max-w-[120px] sm:max-w-none">{job.public_location_label || "Rheinbach"}</span>
+                                                    {/* Context Check: Since we don't have direct provider checking here, if it's the provider viewing it, 
+                                                    they would be in the offers context. In the youth view, we never show exact street names. */}
+                                                    <span className="truncate max-w-[120px] sm:max-w-none">
+                                                        {context === 'activity' ? (job.public_location_label || job.market_name || "Privatadresse") : (job.market_name || "Ungefährer Standort")}
+                                                    </span>
                                                 </div>
 
                                                 {job.creator && (
@@ -207,10 +211,10 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                         </button>
                                                     </>
                                                 )}
-                                                {job.distance_km != null && (
+                                                {job.distance_km != null && context !== 'activity' && (
                                                     <div className="col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 text-slate-500 mt-1 sm:mt-0">
                                                         <Clock size={16} />
-                                                        <span>{Math.round(job.distance_km * 10) / 10} km</span>
+                                                        <span>{`${(Math.round(job.distance_km * 10) / 10).toFixed(1).replace('.', ',')} km entfernt`}</span>
                                                     </div>
                                                 )}
                                             </div>

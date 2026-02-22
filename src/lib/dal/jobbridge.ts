@@ -541,6 +541,21 @@ export async function fetchJobApplications(jobId: string, _userId: string): Prom
 export async function fetchCandidateApplications(userId: string): Promise<Result<{ job: JobsListItem; status: Database["public"]["Enums"]["application_status"] }[]>> {
   const supabase = await supabaseServer();
 
+  // Fetch user coordinates for distance calculation
+  let userLat: number | null = null;
+  let userLng: number | null = null;
+  if (userId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("lat, lng")
+      .eq("id", userId)
+      .single();
+    if (profile) {
+      userLat = profile.lat ?? null;
+      userLng = profile.lng ?? null;
+    }
+  }
+
   const { data, error } = await supabase
     .from("applications")
     .select("status, job:jobs(*)")
@@ -550,24 +565,35 @@ export async function fetchCandidateApplications(userId: string): Promise<Result
   if (error) return { ok: false, error: toErrorInfo(error) };
 
   // Map to JobsListItem
-  let items = (data ?? []).map((row: any) => ({
-    job: {
-      ...toJobsListItem(row.job),
-      is_applied: true,
-      application_status: row.status,
-      application_id: row.id
-    } as JobsListItem,
-    status: row.status as any // force cast
-  }));
+  let items = (data ?? []).map((row: any) => {
+    const rawJob = row.job;
+    let distance_km = null;
+
+    // Calculate distance if both user and public job coordinates exist
+    if (userLat != null && userLng != null && rawJob.public_lat != null && rawJob.public_lng != null) {
+      distance_km = calculateDistance(userLat, userLng, Number(rawJob.public_lat), Number(rawJob.public_lng));
+    }
+
+    return {
+      job: {
+        ...toJobsListItem(rawJob),
+        is_applied: true,
+        application_status: row.status,
+        application_id: row.id,
+        distance_km
+      } as JobsListItem,
+      status: row.status as any // force cast
+    };
+  });
 
   // Enrich with market/creator (optimization: we could batch this, but for now reuse existing)
   // We need to extract the jobs list to enrich
-  let jobsList = items.map(i => i.job);
+  let jobsList = items.map((i: any) => i.job);
   jobsList = await enrichWithMarketNames(supabase, jobsList) as JobsListItem[];
   jobsList = await enrichWithCreators(supabase, jobsList) as JobsListItem[];
 
   // Re-attach enriched jobs
-  const enrichedItems = items.map((item, index) => ({
+  const enrichedItems = items.map((item: any, index: number) => ({
     ...item,
     job: jobsList[index]
   }));

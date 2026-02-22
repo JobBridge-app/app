@@ -180,7 +180,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                         <div className="flex items-center gap-2">
                             <MapPin size={16} className="text-indigo-400" />
                             <span className="truncate max-w-[150px]">
-                                {job.public_location_label || job.market_name || "Standort unbekannt"}
+                                {job.public_location_label || job.market_name || "Privatadresse"}
                             </span>
                         </div>
                     ) : (
@@ -188,8 +188,8 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                             <MapPin size={16} className={job.distance_km != null ? "text-indigo-400" : "text-slate-500"} />
                             <span className={`truncate max-w-[150px] ${job.distance_km != null ? "text-white font-medium" : "text-slate-500 text-xs"}`}>
                                 {job.distance_km != null
-                                    ? `${job.distance_km.toFixed(1)} km entfernt`
-                                    : "Entfernung unbekannt"}
+                                    ? `${(Math.round(job.distance_km * 10) / 10).toFixed(1).replace('.', ',')} km entfernt`
+                                    : "Entfernung ausstehend"}
                             </span>
                         </div>
                     )}
