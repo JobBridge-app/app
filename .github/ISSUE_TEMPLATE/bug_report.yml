@@ -1,0 +1,207 @@
+name: Bug Report
+description: Melde einen Bug oder unerwartetes Verhalten in JobBridge
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bitte poste **keine** sensiblen Daten:
+        - keine Telefonnummern/Adressen/Klarnamen von Nutzern
+        - keine Tokens, API-Keys, Webhook-Secrets
+        - bei Security-/Abuse-Lücken: **nicht hier**, sondern über „Security issue (private)“
+
+  - type: checkboxes
+    id: existing-issue
+    attributes:
+      label: Gibt es bereits ein Issue dazu?
+      description: Bitte kurz suchen, ob der Bug schon gemeldet wurde.
+      options:
+        - label: Ich habe nach bestehenden Issues gesucht
+          required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Schweregrad (Severity)
+      description: Wähle passend — auch kleine Fehler sind ok.
+      options:
+        - "P0 – Blocker (Kernfluss unbenutzbar / Datenverlust)"
+        - "P1 – Major (Kernfunktion kaputt, Workaround schwierig)"
+        - "P2 – Minor (nicht-blockierend, Workaround vorhanden)"
+        - "P3 – Trivial (UI/Typo/kosmetisch)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-area
+    attributes:
+      label: Betroffener Bereich (Area)
+      options:
+        - "Onboarding / Registrierung"
+        - "Login / Session / Rechte"
+        - "Rollen (Jugendliche / Anbieter / Moderation)"
+        - "Profil / Verifizierung"
+        - "Job erstellen / bearbeiten"
+        - "Jobsuche / Filter / Liste"
+        - "Bewerbung / Reservierung / Status"
+        - "Chat (jobbezogen) / Moderation"
+        - "TrustScore / Meldungen / Missbrauch"
+        - "Benachrichtigungen"
+        - "Admin / Moderationsbereich"
+        - "Website / Landing"
+        - "Zahlung / Spenden"
+        - "Performance"
+        - "Andere"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: account-type
+    attributes:
+      label: Account-Typ
+      options:
+        - "Jugendlicher (Jobsuchend)"
+        - "Jobanbieter (privat)"
+        - "Jobanbieter (gewerblich)"
+        - "Moderation / Admin"
+        - "Nicht eingeloggt"
+        - "Unklar"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Plattform
+      options:
+        - "Web (Desktop Browser)"
+        - "Web (Mobile Browser)"
+        - "iOS App"
+        - "Android App"
+        - "Unklar"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser (falls Web)
+      options:
+        - "Chrome"
+        - "Safari"
+        - "Firefox"
+        - "Edge"
+        - "Andere / Unklar"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Betriebssystem
+      options:
+        - "iOS / iPadOS"
+        - "Android"
+        - "macOS"
+        - "Windows"
+        - "Linux"
+        - "Andere / Unklar"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Build (optional)
+      description: Tag, Commit oder Deploy-Zeitpunkt, falls bekannt.
+      placeholder: "z.B. v0.3.1 oder main@a1b2c3d"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug-Beschreibung (Ist-Zustand)
+      description: Was ist passiert?
+      placeholder: "Kurz, konkret: Was läuft falsch?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten (Soll-Zustand)
+      description: Was hätte passieren sollen?
+      placeholder: "Was wäre korrekt gewesen?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Reproduzieren
+      description: So kann man den Bug nachstellen.
+      placeholder: |
+        1. Gehe zu '...'
+        2. Klicke auf '...'
+        3. ...
+        4. Fehler tritt auf
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Häufigkeit
+      options:
+        - "Immer (100%)"
+        - "Oft"
+        - "Manchmal"
+        - "Selten"
+        - "Einmalig"
+        - "Unklar"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Regression?
+      description: Hat es früher funktioniert?
+      options:
+        - "Ja, hat früher funktioniert"
+        - "Nein, war schon immer so"
+        - "Unklar"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: security
+    attributes:
+      label: Security-/Abuse-Relevanz?
+      description: Wenn ja: bitte **privat** melden, keine Details hier.
+      options:
+        - "Nein"
+        - "Ja (privat melden, keine Details hier posten)"
+        - "Unklar"
+    validations:
+      required: true
+
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Screenshots / Logs (optional)
+      description: Bitte vorher prüfen, dass keine Secrets/PII enthalten sind.
+      placeholder: "Drag & Drop oder Logauszug einfügen"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Zusatzinfos (optional)
+      description: Netzwerkbedingungen, Edge Cases, Kontext.
+      placeholder: "z.B. schlechtes Netz, spezielle Filterkombination, etc."
+    validations:
+      required: false
