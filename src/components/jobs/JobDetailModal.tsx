@@ -279,7 +279,7 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                 <div className="rounded-2xl border border-white/5 bg-[#121217] p-1 flex-1 min-h-[160px] relative flex items-center justify-center overflow-hidden group">
                                                     {shouldRenderMap && (
                                                         <LeafletMap
-                                                            center={[50.6256, 6.9493]}
+                                                            center={[job?.public_lat ?? 50.6256, job?.public_lng ?? 6.9493]}
                                                             zoom={14}
                                                             className={`rounded-xl transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
                                                         />
