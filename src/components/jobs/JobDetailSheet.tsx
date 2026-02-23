@@ -11,7 +11,11 @@ type JobRow = Database['public']['Tables']['jobs']['Row'] & {
     market_name?: string | null;
     public_location_label?: string | null;
     distance_km?: number | null;
+    payment_type?: string | null;
 };
+
+import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
+import { cn } from "@/lib/utils";
 
 interface JobDetailSheetProps {
     job: JobRow | null;
@@ -70,9 +74,22 @@ export function JobDetailSheet({ job, isOpen, onClose, canApply, guardianStatus 
                                                 </div>
                                                 <div className="pr-12">
                                                     <div className="flex items-center gap-2 mb-3">
-                                                        <span className="inline-flex items-center rounded-md bg-indigo-400/10 px-2 py-1 text-xs font-medium text-indigo-400 ring-1 ring-inset ring-indigo-400/20">
-                                                            {job.category || "Allgemein"}
-                                                        </span>
+                                                        {(() => {
+                                                            const categoryData = job.category ? JOB_CATEGORIES.find(c => c.id === job.category) : undefined;
+                                                            const CategoryIcon = categoryData?.icon;
+                                                            const categoryLabel = categoryData?.label || job.category || "Allgemein";
+                                                            return (
+                                                                <span className={cn(
+                                                                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all duration-300",
+                                                                    job.status === 'reserved'
+                                                                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                                                                        : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_15px_-3px_rgba(99,102,241,0.2)]"
+                                                                )}>
+                                                                    {CategoryIcon && <CategoryIcon size={14} className={cn(job.status === 'reserved' ? "text-amber-400" : "text-indigo-400")} />}
+                                                                    {categoryLabel}
+                                                                </span>
+                                                            );
+                                                        })()}
                                                         {job.market_name && (
                                                             <span className="inline-flex items-center rounded-md bg-purple-400/10 px-2 py-1 text-xs font-medium text-purple-400 ring-1 ring-inset ring-purple-400/20">
                                                                 {job.market_name}
@@ -89,7 +106,7 @@ export function JobDetailSheet({ job, isOpen, onClose, canApply, guardianStatus 
                                                         </div>
                                                         <div className="flex items-center gap-1.5">
                                                             <Euro size={16} className="text-emerald-400" />
-                                                            {job.wage_hourly} € / Std.
+                                                            {job.wage_hourly} € {job.payment_type === 'fixed' ? 'pauschal' : '/ Std.'}
                                                         </div>
                                                         <div className="flex items-center gap-1.5">
                                                             <Calendar size={16} className="text-amber-400" />

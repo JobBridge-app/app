@@ -3,8 +3,10 @@
 import { memo } from "react";
 import { Building2, MapPin, Euro, Clock, Lock, CheckCircle2 } from "lucide-react";
 import type { Database } from "@/lib/types/supabase";
-import { timeAgo } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 import type { JobsListItem } from "@/lib/types/jobbridge";
+import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
+import { motion } from "framer-motion";
 
 import Link from "next/link";
 
@@ -100,13 +102,15 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
     };
 
     const CardContent = (
-        <div
+        <motion.div
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
             onClick={(e) => {
                 if (!href) {
                     onSelect?.(job);
                 }
             }}
-            className={`group relative overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer
+            className={`group relative flex flex-col h-full overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer
                 ${isApplied && !isUserWaitlisted
                     ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
                     : isLocked
@@ -148,55 +152,65 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
             )}
 
             <div className={`relative z-10 flex flex-col h-full ${isLocked ? 'md:opacity-50 md:blur-[1px] md:group-hover:blur-sm transition-all duration-300' : ''}`}>
-                <div className="flex justify-between items-start mb-5">
-                    <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-xl bg-gradient-to-br transition-all duration-300 shadow-inner
-                            ${isWaitlistMode
-                                ? "from-amber-500/15 to-orange-500/10 text-amber-400 border border-amber-500/10 group-hover:from-amber-500/25 group-hover:to-orange-500/15 group-hover:border-amber-500/25 group-hover:text-amber-300"
-                                : "from-indigo-500/15 to-violet-500/10 text-indigo-400 border border-indigo-500/10 group-hover:from-indigo-500/25 group-hover:to-violet-500/15 group-hover:border-indigo-500/25 group-hover:text-indigo-300"
-                            }
-                        `}>
-                            {isWaitlistMode ? (
-                                <Clock size={24} className="group-hover:scale-110 transition-transform duration-500" />
-                            ) : (
-                                <Building2 size={24} className="group-hover:scale-110 transition-transform duration-500" />
-                            )}
-                        </div>
-                        <div>
-                            {/* Extended Job Badge - Shows the origin market if it is an extended job */}
+                <div className="flex flex-col gap-2 mb-4">
+                    <div className="flex items-start justify-between">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* Extended Job Badge */}
                             {isCrossRegionalBadge && job.market_name && !isApplied && !isLocked && !isWaitlistMode && (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider mb-2 animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)]">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)]">
                                     <MapPin size={10} className="animate-pulse text-violet-400" />
                                     <span>Aus {job.market_name}</span>
                                 </div>
                             )}
+                            {/* Waitlist Badges */}
                             {isWaitlistMode && job.active_applicant && !isUserWaitlisted && (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider mb-2 animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]">
                                     <Clock size={10} className="text-amber-400" />
                                     <span>Reserviert von {job.active_applicant.full_name?.split(' ')[0] || "Nutzer"}</span>
                                 </div>
                             )}
                             {isWaitlistMode && isUserWaitlisted && (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider mb-2 animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]">
                                     <CheckCircle2 size={10} className="text-emerald-400" />
                                     <span>Du stehst auf der Warteliste</span>
                                 </div>
                             )}
-                            <h3 className="text-xl font-bold text-white leading-tight mb-1 group-hover:text-indigo-100 transition-colors">
-                                {job.title}
-                            </h3>
-                            <p className="text-sm text-slate-400 font-medium flex items-center gap-2">
-                                {job.creator?.company_name || "Privater Auftraggeber"}
-                                {isDemo && (
-                                    <span className="text-[10px] uppercase tracking-wider font-bold text-cyan-400 border border-cyan-400/30 px-1.5 py-0.5 rounded bg-cyan-400/10 ml-2">
-                                        Demo
-                                    </span>
-                                )}
-                            </p>
                         </div>
+
+                        {/* Always show Lock icon in corner if locked, separate from overlay */}
+                        {isLocked && <Lock size={16} className="text-slate-600 md:hidden shrink-0" />}
                     </div>
-                    {/* Always show Lock icon in corner if locked, separate from overlay */}
-                    {isLocked && <Lock size={16} className="text-slate-600 md:hidden" />}
+
+                    {/* Title Row */}
+                    <h3 className="text-xl font-bold text-white leading-tight group-hover:text-indigo-100 transition-colors">
+                        {job.title}
+                    </h3>
+
+                    {/* Metadata Row */}
+                    <div className="flex items-center flex-wrap gap-2 text-sm text-slate-400 font-medium">
+                        {(() => {
+                            const CategoryIcon = JOB_CATEGORIES.find(c => c.id === job.category)?.icon;
+                            const categoryLabel = JOB_CATEGORIES.find(c => c.id === job.category)?.label || "Sonstiges";
+                            return (
+                                <span className={cn(
+                                    "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide transition-all duration-300",
+                                    isWaitlistMode
+                                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_10px_-2px_rgba(245,158,11,0.15)]"
+                                        : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_10px_-2px_rgba(99,102,241,0.15)] group-hover:bg-indigo-500/20 group-hover:border-indigo-500/30 group-hover:shadow-[0_0_15px_-2px_rgba(99,102,241,0.25)]"
+                                )}>
+                                    {CategoryIcon && <CategoryIcon size={12} className={cn(isWaitlistMode ? "text-amber-400" : "text-indigo-400")} />}
+                                    {categoryLabel}
+                                </span>
+                            );
+                        })()}
+                        <span className="text-slate-600">•</span>
+                        <span className="text-slate-400 text-sm font-medium">{job.creator?.company_name || "Privater Auftraggeber"}</span>
+                        {isDemo && (
+                            <span className="text-[10px] uppercase tracking-wider font-bold text-cyan-400 border border-cyan-400/30 px-1.5 py-0.5 rounded bg-cyan-400/10 ml-1">
+                                Demo
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 <p className="text-slate-300 text-base line-clamp-2 mb-6 leading-relaxed flex-grow font-light">
@@ -206,7 +220,11 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                 <div className="flex flex-wrap gap-4 text-sm text-slate-400 mt-auto pt-4 border-t border-white/[0.06]">
                     <div className="flex items-center gap-2">
                         <Euro size={16} className="text-emerald-400" />
-                        <span className="font-semibold text-white">{job.wage_hourly} € / Std.</span>
+                        <span className="font-semibold text-white">
+                            {job.payment_type === 'fixed'
+                                ? `${job.wage_hourly} € pauschal`
+                                : `${job.wage_hourly} € / Std.`}
+                        </span>
                     </div>
                     {providerStatus ? (
                         <div className="flex items-center gap-2">
@@ -265,7 +283,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
 
 
             </div>
-        </div>
+        </motion.div>
     );
 
     if (href) {

@@ -11,7 +11,9 @@ import { JobApplicationModal } from "@/components/jobs/JobApplicationModal";
 import { WithdrawButton } from "@/components/jobs/WithdrawButton";
 import dynamic from "next/dynamic";
 import { JobsListItem } from "@/lib/types/jobbridge";
+import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
+import { cn } from "@/lib/utils";
 import { createSupabaseClient } from "@/lib/supabaseClient";
 import type { Profile } from "@/lib/types";
 
@@ -153,11 +155,22 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                         <CheckCircle2 size={12} /> Bereits beworben
                                                     </span>
                                                 )}
-                                                {job.category && (
-                                                    <span className="inline-flex items-center rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400 border border-indigo-500/20">
-                                                        {job.category}
-                                                    </span>
-                                                )}
+                                                {(() => {
+                                                    const categoryData = job.category ? JOB_CATEGORIES.find(c => c.id === job.category) : undefined;
+                                                    const CategoryIcon = categoryData?.icon;
+                                                    const categoryLabel = categoryData?.label || job.category;
+                                                    return job.category ? (
+                                                        <span className={cn(
+                                                            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all duration-300",
+                                                            isWaitlistMode
+                                                                ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                                                                : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_15px_-3px_rgba(99,102,241,0.2)]"
+                                                        )}>
+                                                            {CategoryIcon && <CategoryIcon size={14} className={cn(isWaitlistMode ? "text-amber-400" : "text-indigo-400")} />}
+                                                            {categoryLabel}
+                                                        </span>
+                                                    ) : null;
+                                                })()}
                                             </div>
 
                                             <Dialog.Title as="h3" className="text-4xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
@@ -181,7 +194,11 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                     <div className="p-1.5 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
                                                         <Euro size={18} />
                                                     </div>
-                                                    <span className="text-lg text-white">{job.wage_hourly} € <span className="text-slate-500 text-sm">/ Std.</span></span>
+                                                    <span className="text-lg text-white">
+                                                        {job.wage_hourly} € <span className="text-slate-500 text-sm">
+                                                            {job.payment_type === 'fixed' ? 'pauschal' : '/ Std.'}
+                                                        </span>
+                                                    </span>
                                                 </div>
 
                                                 <div className="w-px h-8 bg-white/10 hidden sm:block" />

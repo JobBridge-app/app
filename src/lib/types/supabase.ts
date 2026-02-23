@@ -99,6 +99,7 @@ export type Database = {
           id: string
           market_id: string | null
           max_applicants: number | null
+          payment_type: string
           posted_by: string
           public_lat: number | null
           public_lng: number | null
@@ -119,6 +120,7 @@ export type Database = {
           id?: string
           market_id?: string | null
           max_applicants?: number | null
+          payment_type?: string
           posted_by: string
           public_lat?: number | null
           public_lng?: number | null
@@ -139,6 +141,7 @@ export type Database = {
           id?: string
           market_id?: string | null
           max_applicants?: number | null
+          payment_type?: string
           posted_by?: string
           public_lat?: number | null
           public_lng?: number | null
@@ -316,6 +319,7 @@ export type Database = {
           id: string
           market_id: string | null
           max_applicants: number | null
+          payment_type: string
           posted_by: string
           public_lat: number | null
           public_lng: number | null
@@ -336,6 +340,7 @@ export type Database = {
           id?: string
           market_id?: string | null
           max_applicants?: number | null
+          payment_type?: string
           posted_by: string
           public_lat?: number | null
           public_lng?: number | null
@@ -356,6 +361,7 @@ export type Database = {
           id?: string
           market_id?: string | null
           max_applicants?: number | null
+          payment_type?: string
           posted_by?: string
           public_lat?: number | null
           public_lng?: number | null

@@ -16,6 +16,8 @@ export async function updateJobAction(jobId: string, formData: FormData) {
     const wage_hourly = parseFloat(formData.get("wage_hourly") as string);
     const status = formData.get("status") as Database["public"]["Enums"]["job_status"];
     const reach = (formData.get("reach") as string) || "internal_rheinbach";
+    const category = formData.get("category") as string;
+    const payment_type = (formData.get("payment_type") as "hourly" | "fixed") || "hourly";
 
     // Validate (basic)
     if (!title || !description || isNaN(wage_hourly)) {
@@ -44,6 +46,8 @@ export async function updateJobAction(jobId: string, formData: FormData) {
             title,
             description,
             wage_hourly,
+            category,
+            payment_type,
             status,
             reach,
             updated_at: new Date().toISOString()

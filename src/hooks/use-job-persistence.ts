@@ -18,6 +18,7 @@ export type JobDraftData = {
         isDefault?: boolean;
     };
     category?: string;
+    paymentType?: string;
     isDefaultLocation?: boolean;
 };
 

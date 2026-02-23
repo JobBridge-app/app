@@ -384,6 +384,7 @@ export type CreateJobInput = {
   wage_hourly: number;
   status: Database["public"]["Enums"]["job_status"];
   category: string;
+  payment_type: string;
   address_reveal_policy?: string | null;
   public_location_label?: string;
   public_lat?: number | null;

@@ -39,6 +39,7 @@ export type JobsListItem = {
   public_lat?: number | null;
   public_lng?: number | null;
   wage_hourly: number | null;
+  payment_type?: "hourly" | "fixed" | null;
   reach?: 'internal_rheinbach' | 'extended' | null;
   // Optional enrichments (separate lookup).
   distance_km?: number | null;

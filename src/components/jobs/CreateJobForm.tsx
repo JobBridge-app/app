@@ -3,12 +3,14 @@
 import { createJob } from "@/app/app-home/offers/actions";
 import { Loader2, Save, MapPin, FileEdit, AlertTriangle, Trash2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { ErrorInfo } from "@/lib/types/jobbridge";
 import Link from "next/link";
 import { LocationAutocomplete, LocationDetails } from "@/components/ui/LocationAutocomplete";
 import { useJobFormPersistence } from "@/hooks/use-job-persistence";
+import { motion, AnimatePresence } from "framer-motion";
+import { JOB_CATEGORIES, PaymentType } from "@/lib/constants/jobCategories";
 
 function SubmitButtons() {
     const { pending } = useFormStatus();
@@ -61,8 +63,13 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [wage, setWage] = useState("");
+    const [categoryId, setCategoryId] = useState<string>("");
+    const [paymentType, setPaymentType] = useState<PaymentType>("hourly");
     const [useCustomLocation, setUseCustomLocation] = useState(!defaultLocation);
     const [location, setLocation] = useState<LocationDetails | null>(null);
+
+    // Cinematic Scroll Reference
+    const titleRef = useRef<HTMLDivElement>(null);
 
     // Load from Draft on Mount
     useEffect(() => {
@@ -70,6 +77,8 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
             if (draft.title) setTitle(draft.title);
             if (draft.description) setDescription(draft.description);
             if (draft.wage) setWage(draft.wage);
+            if (draft.category) setCategoryId(draft.category);
+            if (draft.paymentType) setPaymentType(draft.paymentType as "hourly" | "fixed");
 
             // Logic: If draft has a specific location stored, we use custom mode.
             // If draft explicitly says "using default" (we'd need to store that boolean), currently we infer.
@@ -98,6 +107,8 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                 title,
                 description,
                 wage,
+                category: categoryId,
+                paymentType: paymentType,
                 location: location ? {
                     address: location.address_line1,
                     lat: location.lat,
@@ -116,6 +127,8 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
     return (
         <form action={formAction} className="space-y-6">
             <input type="hidden" name="use_default_location" value={(!useCustomLocation && defaultLocation) ? "true" : "false"} />
+            <input type="hidden" name="category" value={categoryId} />
+            <input type="hidden" name="payment_type" value={paymentType} />
             {state?.status === "partial" && <input type="hidden" name="job_id" value={state.jobId} />}
 
             {/* Hidden inputs for Location Data (to be picked up by Server Action) */}
@@ -138,7 +151,7 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                         </span>
                         <button
                             type="button"
-                            onClick={() => { clearDraft(); setTitle(""); setDescription(""); setWage(""); setLocation(null); setUseCustomLocation(!defaultLocation); }}
+                            onClick={() => { clearDraft(); setTitle(""); setDescription(""); setWage(""); setCategoryId(""); setPaymentType("hourly"); setLocation(null); setUseCustomLocation(!defaultLocation); }}
                             className="text-slate-500 hover:text-red-400 flex items-center gap-1 transition-colors"
                         >
                             <Trash2 size={10} />
@@ -147,7 +160,67 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                     </div>
                 )}
 
+                {/* Category Selection */}
                 <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-3">Welche Art von Hilfe suchst du? *</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {JOB_CATEGORIES.map((category) => {
+                            const Icon = category.icon;
+                            const isSelected = categoryId === category.id;
+
+                            return (
+                                <button
+                                    key={category.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setCategoryId(category.id);
+                                        if (!draft || !draft.paymentType) {
+                                            setPaymentType(category.defaultPaymentType);
+                                        }
+                                        // Cinematic Auto-Scroll after animation starts
+                                        setTimeout(() => {
+                                            titleRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                        }, 150);
+                                    }}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden",
+                                        isSelected
+                                            ? "bg-indigo-500/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10 scale-[1.02]"
+                                            : "bg-white/[0.02] border-white/5 hover:bg-white/5 hover:border-white/10"
+                                    )}
+                                >
+                                    {isSelected && (
+                                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent pointer-events-none" />
+                                    )}
+                                    <motion.div
+                                        animate={{
+                                            scale: isSelected ? 1.15 : 1,
+                                            rotate: isSelected ? -5 : 0
+                                        }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                                    >
+                                        <Icon
+                                            size={28}
+                                            strokeWidth={1.5}
+                                            className={cn(
+                                                "mb-3 transition-colors duration-300",
+                                                isSelected ? "text-indigo-400" : "text-slate-400 group-hover:text-slate-300"
+                                            )}
+                                        />
+                                    </motion.div>
+                                    <span className={cn(
+                                        "text-xs font-semibold text-center transition-colors duration-300",
+                                        isSelected ? "text-indigo-200" : "text-slate-300"
+                                    )}>
+                                        {category.label}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div ref={titleRef} className="scroll-mt-8">
                     <label htmlFor="title" className="block text-sm font-medium text-slate-300 mb-1">Titel des Jobs *</label>
                     <input
                         type="text"
@@ -252,19 +325,100 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                     </div>
                 </div>
 
-                <div>
-                    <label htmlFor="wage" className="block text-sm font-medium text-slate-300 mb-1">Stundenlohn (€)</label>
-                    <input
-                        type="number"
-                        name="wage"
-                        min="0"
-                        step="0.50"
-                        value={wage}
-                        onChange={(e) => setWage(e.target.value)}
-                        placeholder="12.00"
-                        className="w-full px-4 py-2 rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Bezahlung</label>
+                        <div className="flex bg-black/40 p-1 rounded-xl border border-white/10">
+                            <button
+                                type="button"
+                                onClick={() => setPaymentType("hourly")}
+                                className={cn(
+                                    "flex-1 text-sm py-1.5 rounded-lg font-medium transition-all duration-200",
+                                    paymentType === "hourly" ? "bg-indigo-500/20 text-indigo-300 shadow-sm" : "text-slate-400 hover:text-slate-300"
+                                )}
+                            >
+                                Stundenlohn
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaymentType("fixed")}
+                                className={cn(
+                                    "flex-1 text-sm py-1.5 rounded-lg font-medium transition-all duration-200",
+                                    paymentType === "fixed" ? "bg-indigo-500/20 text-indigo-300 shadow-sm" : "text-slate-400 hover:text-slate-300"
+                                )}
+                            >
+                                Pauschale
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label htmlFor="wage" className="block text-sm font-medium text-slate-300 mb-2">
+                            {paymentType === "hourly" ? "Stundenlohn (€)" : "Pauschale (€)"} *
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                name="wage"
+                                required
+                                min="0"
+                                step="0.50"
+                                value={wage}
+                                onChange={(e) => setWage(e.target.value)}
+                                placeholder={paymentType === "hourly" ? "15.00" : "50.00"}
+                                className="w-full pl-4 pr-12 py-1.5 h-[42px] rounded-xl bg-black/40 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm pointer-events-none">
+                                € {paymentType === "hourly" && <span className="text-xs">/h</span>}
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                {/* Compensation Suggestion (Animated) moved below inputs */}
+                <AnimatePresence>
+                    {categoryId && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                            animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                        >
+                            <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-500/10 to-indigo-900/10 border border-indigo-500/20 relative">
+                                {(() => {
+                                    const selectedCat = JOB_CATEGORIES.find(c => c.id === categoryId);
+                                    if (!selectedCat) return null;
+
+                                    const avg = ((selectedCat.recommendedWage.min + selectedCat.recommendedWage.max) / 2).toFixed(2);
+
+                                    return (
+                                        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                            <div>
+                                                <h4 className="text-sm font-bold text-indigo-300 mb-0.5">
+                                                    Unsere Empfehlung für eine faire Vergütung
+                                                </h4>
+                                                <p className="text-xs text-indigo-200/80 leading-relaxed m-0">
+                                                    {selectedCat.hint} Um schnell hilfsbereite Menschen zu finden, empfehlen wir für diese Kategorie <strong className="text-white bg-indigo-500/20 px-1 py-0.5 rounded">{selectedCat.recommendedWage.min} – {selectedCat.recommendedWage.max} €</strong>.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setWage(avg);
+                                                    setPaymentType(selectedCat.defaultPaymentType);
+                                                }}
+                                                className="shrink-0 text-xs font-semibold px-4 py-2 rounded-lg bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30 hover:text-white transition-all border border-indigo-500/30 shadow-sm text-center"
+                                            >
+                                                {avg} € {selectedCat.defaultPaymentType === 'hourly' ? '/ Std' : 'pau.'} übernehmen
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             <div className="pt-2">
@@ -287,37 +441,41 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                 </div>
             </div>
 
-            {state?.status === "error" && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-200 text-sm">
-                    <div className="font-semibold flex items-center gap-2">
-                        <AlertTriangle size={14} />
-                        Fehler
+            {
+                state?.status === "error" && (
+                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-200 text-sm">
+                        <div className="font-semibold flex items-center gap-2">
+                            <AlertTriangle size={14} />
+                            Fehler
+                        </div>
+                        <div className="mt-1 font-mono text-xs break-words pl-6">
+                            {state.error.code ? `${state.error.code}: ` : ""}{state.error.message}
+                        </div>
                     </div>
-                    <div className="mt-1 font-mono text-xs break-words pl-6">
-                        {state.error.code ? `${state.error.code}: ` : ""}{state.error.message}
-                    </div>
-                </div>
-            )}
+                )
+            }
 
-            {state?.status === "partial" && (
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm">
-                    {/* ... Keep Partial Logic ... */}
-                    <div className="font-semibold">Job erstellt, aber unvollstaendig</div>
-                    <div className="mt-1 text-sm text-amber-200/90">
-                        Der Job wurde erstellt, aber die privaten Details konnten nicht gespeichert werden.
+            {
+                state?.status === "partial" && (
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm">
+                        {/* ... Keep Partial Logic ... */}
+                        <div className="font-semibold">Job erstellt, aber unvollstaendig</div>
+                        <div className="mt-1 text-sm text-amber-200/90">
+                            Der Job wurde erstellt, aber die privaten Details konnten nicht gespeichert werden.
+                        </div>
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                            <button
+                                type="submit"
+                                name="intent"
+                                value="retry_private_details"
+                                className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/25 text-amber-100 border border-amber-500/30 text-sm font-semibold"
+                            >
+                                Private Details erneut speichern
+                            </button>
+                        </div>
                     </div>
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                        <button
-                            type="submit"
-                            name="intent"
-                            value="retry_private_details"
-                            className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/25 text-amber-100 border border-amber-500/30 text-sm font-semibold"
-                        >
-                            Private Details erneut speichern
-                        </button>
-                    </div>
-                </div>
-            )}
+                )
+            }
 
             <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between border-t border-white/5 mt-6 gap-4">
                 <p className="text-xs text-slate-500 max-w-xs">
@@ -328,6 +486,6 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                 </p>
                 <SubmitButtons />
             </div>
-        </form>
+        </form >
     );
 }

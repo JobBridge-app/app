@@ -14,11 +14,13 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: ErrorInfo };
 
 const createJobSchema = z.object({
     title: z.string().min(5, "Titel muss mindestens 5 Zeichen lang sein."),
-    description: z.string().min(20, "Beschreibung muss mindestens 20 Zeichen lang sein."),
+    description: z.string().min(10, "Beschreibung muss mindestens 10 Zeichen lang sein."),
     address_full: z.string().optional(),
     wage: z.number().optional(),
     lat: z.string().optional(),
     lng: z.string().optional(),
+    category: z.string().min(1, "Bitte wähle eine Kategorie aus."),
+    payment_type: z.enum(["hourly", "fixed"]).default("hourly"),
     reach: z.enum(["internal_rheinbach", "extended"]).optional(),
 });
 
@@ -148,6 +150,8 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
         wage: parseFloat(formData.get("wage") as string) || 12.00,
         lat: latInput || undefined,
         lng: lngInput || undefined,
+        category: formData.get("category") as string,
+        payment_type: (formData.get("payment_type") as string) || "hourly",
         reach: (formData.get("reach") as string) || "internal_rheinbach",
     };
 
@@ -200,7 +204,8 @@ export async function createJob(_prevState: CreateJobActionState, formData: Form
             description: validated.data.description,
             wage_hourly: validated.data.wage ?? 12.00,
             status: jobStatus,
-            category: "other",
+            category: validated.data.category,
+            payment_type: validated.data.payment_type,
             public_location_label: publicLabel,
             public_lat: finalLat,
             public_lng: finalLng,
