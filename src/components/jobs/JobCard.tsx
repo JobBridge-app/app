@@ -153,22 +153,9 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
 
             <div className={`relative z-10 flex flex-col h-full ${isLocked ? 'md:opacity-50 md:blur-[1px] md:group-hover:blur-sm transition-all duration-300' : ''}`}>
                 <div className="flex flex-col gap-2 mb-4">
-                    {/* Absolute Right-Aligned Badges */}
-                    <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
-                        {/* Extended Job Badge - Moved to Absolute Right */}
-                        {isCrossRegionalBadge && job.market_name && !isApplied && !isLocked && !isWaitlistMode && (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-right-2 shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)]">
-                                <MapPin size={10} className="animate-pulse text-violet-400" />
-                                <span>Aus {job.market_name}</span>
-                            </div>
-                        )}
-                        {/* Always show Lock icon in corner if locked, separate from overlay */}
-                        {isLocked && <Lock size={16} className="text-slate-600 md:hidden shrink-0" />}
-                    </div>
-
                     {/* Waitlist Badges - Keep in flow if they exist so title gets pushed down naturally */}
                     {(isWaitlistMode) && (
-                        <div className="flex items-start">
+                        <div className="flex items-start mb-1">
                             <div className="flex flex-wrap items-center gap-2">
                                 {job.active_applicant && !isUserWaitlisted && (
                                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]">
@@ -186,10 +173,28 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                         </div>
                     )}
 
-                    {/* Title Row */}
-                    <h3 className="text-xl font-bold text-white leading-tight group-hover:text-indigo-100 transition-colors">
-                        {job.title}
-                    </h3>
+                    {/* Main Header Row: Title & Right-Aligned Badges */}
+                    <div className="flex items-start justify-between gap-3">
+                        {/* Title Row */}
+                        <h3 className="text-xl font-bold text-white leading-tight group-hover:text-indigo-100 transition-colors">
+                            {job.title}
+                        </h3>
+
+                        {/* Right-Aligned Badges */}
+                        {((isCrossRegionalBadge && job.market_name && !isApplied && !isWaitlistMode) || isLocked) && (
+                            <div className="flex flex-col items-end gap-2 shrink-0">
+                                {/* Extended Job Badge */}
+                                {isCrossRegionalBadge && job.market_name && !isApplied && !isWaitlistMode && (
+                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-right-2 shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)]">
+                                        <MapPin size={10} className="animate-pulse text-violet-400" />
+                                        <span>Aus {job.market_name}</span>
+                                    </div>
+                                )}
+                                {/* Always show Lock icon in corner if locked, separate from overlay */}
+                                {isLocked && <Lock size={16} className="text-slate-600 md:hidden shrink-0" />}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Metadata Row */}
                     <div className="flex items-center flex-wrap gap-2 text-sm text-slate-400 font-medium">
