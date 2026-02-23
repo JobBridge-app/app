@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { JobCard } from "@/components/jobs/JobCard";
 import { JobsListSection } from "@/components/jobs/JobsListSection";
 import { JobDetailModal } from "@/components/jobs/JobDetailModal";
-import { Briefcase, CheckCircle2, Clock, Filter, ListFilter, MapPin } from "lucide-react";
+import { Briefcase, CheckCircle2, Clock, ListFilter, MapPin } from "lucide-react";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 import { cn } from "@/lib/utils";
+import { JobFilterSortPanel, DEFAULT_FILTER_STATE } from "@/components/jobs/JobFilterSortPanel";
+import type { SortOption, FilterState } from "@/components/jobs/JobFilterSortPanel";
 
 interface JobsListProps {
     localActiveJobs: JobsListItem[];
@@ -18,17 +19,76 @@ interface JobsListProps {
     guardianStatus: string;
 }
 
+function sortJobs(jobs: JobsListItem[], sort: SortOption): JobsListItem[] {
+    const arr = [...jobs];
+    switch (sort) {
+        case "distance":
+            return arr.sort((a, b) => {
+                if (a.distance_km == null && b.distance_km == null) return 0;
+                if (a.distance_km == null) return 1;
+                if (b.distance_km == null) return -1;
+                return a.distance_km - b.distance_km;
+            });
+        case "newest":
+            return arr.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        case "wage_desc":
+            return arr.sort((a, b) => {
+                if (a.wage_hourly == null && b.wage_hourly == null) return 0;
+                if (a.wage_hourly == null) return 1;
+                if (b.wage_hourly == null) return -1;
+                return b.wage_hourly - a.wage_hourly;
+            });
+        default:
+            return arr;
+    }
+}
+
+function applyFilters(jobs: JobsListItem[], filters: FilterState): JobsListItem[] {
+    return jobs.filter((job) => {
+        if (filters.categories.length > 0 && !filters.categories.includes(job.category ?? "other")) {
+            return false;
+        }
+        if (filters.maxDistanceKm !== null) {
+            if (job.distance_km == null || job.distance_km > filters.maxDistanceKm) {
+                return false;
+            }
+        }
+        return true;
+    });
+}
+
 export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, appliedJobs, isDemo, canApply, guardianStatus }: JobsListProps) {
     const [selectedJob, setSelectedJob] = useState<JobsListItem | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'active' | 'waitlist' | 'applied'>('active');
-    const [showFilterModal, setShowFilterModal] = useState(false);
+    const [showFilterPanel, setShowFilterPanel] = useState(false);
+
+    // Default sort: distance (ascending), user can change
+    const [sortOption, setSortOption] = useState<SortOption>("distance");
+    const [filterState, setFilterState] = useState<FilterState>(DEFAULT_FILTER_STATE);
+
+    const activeFilterCount = (filterState.categories.length > 0 ? 1 : 0) + (filterState.maxDistanceKm !== null ? 1 : 0);
+    const hasActiveFilters = activeFilterCount > 0;
 
     const handleJobSelect = useCallback((job: JobsListItem) => {
         setSelectedJob(job);
-
         setIsDetailOpen(true);
     }, []);
+
+    const handleReset = useCallback(() => {
+        setSortOption("distance");
+        setFilterState(DEFAULT_FILTER_STATE);
+    }, []);
+
+    const filteredLocalJobs = useMemo(() =>
+        sortJobs(applyFilters(localActiveJobs, filterState), sortOption),
+        [localActiveJobs, filterState, sortOption]
+    );
+
+    const filteredExtendedJobs = useMemo(() =>
+        sortJobs(applyFilters(extendedActiveJobs, filterState), sortOption),
+        [extendedActiveJobs, filterState, sortOption]
+    );
 
     return (
         <>
@@ -81,14 +141,19 @@ export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, 
 
                     {/* Filter Icon */}
                     <button
-                        onClick={() => setShowFilterModal(true)}
+                        onClick={() => setShowFilterPanel(true)}
                         className={cn(
-                            "h-full aspect-square flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all shrink-0 ml-0.5",
-                            showFilterModal && "text-indigo-400 bg-white/5"
+                            "relative h-full aspect-square flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all shrink-0 ml-0.5",
+                            (showFilterPanel || hasActiveFilters) && "text-indigo-400 bg-white/5"
                         )}
                         style={{ height: '36px', width: '36px' }}
                     >
                         <ListFilter size={18} />
+                        {activeFilterCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center">
+                                {activeFilterCount}
+                            </span>
+                        )}
                     </button>
                 </div>
             </div>
@@ -108,9 +173,9 @@ export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, 
                     >
                         <Briefcase size={16} className={cn(activeTab === 'active' ? "text-indigo-400" : "text-slate-500")} />
                         Aktuell
-                        {(localActiveJobs.length + extendedActiveJobs.length) > 0 && (
+                        {(filteredLocalJobs.length + filteredExtendedJobs.length) > 0 && (
                             <span className="bg-white/10 text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full ml-1">
-                                {localActiveJobs.length + extendedActiveJobs.length}
+                                {filteredLocalJobs.length + filteredExtendedJobs.length}
                             </span>
                         )}
                     </button>
@@ -152,16 +217,21 @@ export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, 
 
                 {/* Filter Button (Right Aligned) */}
                 <button
-                    onClick={() => setShowFilterModal(true)}
-                    className={
-                        cn(
-                            "ml-4 py-2 px-3 sm:px-4 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2 whitespace-nowrap border border-transparent hover:border-white/10",
-                            showFilterModal && "bg-white/10 text-indigo-400 border-indigo-500/20"
-                        )}
+                    onClick={() => setShowFilterPanel(true)}
+                    className={cn(
+                        "relative ml-4 py-2 px-3 sm:px-4 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2 whitespace-nowrap border border-transparent hover:border-white/10",
+                        showFilterPanel && "bg-white/10 text-indigo-400 border-indigo-500/20",
+                        hasActiveFilters && "text-indigo-400 border-indigo-500/20 bg-indigo-500/10"
+                    )}
                     title="Filter & Sortierung"
                 >
                     <ListFilter size={18} />
                     <span className="hidden sm:inline text-xs sm:text-sm font-medium">Filter</span>
+                    {activeFilterCount > 0 && (
+                        <span className="w-5 h-5 rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center">
+                            {activeFilterCount}
+                        </span>
+                    )}
                 </button>
             </div>
 
@@ -174,7 +244,7 @@ export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, 
                             title="Lokale Angebote"
                             icon={Briefcase}
                             colorClass="text-indigo-400"
-                            jobs={localActiveJobs}
+                            jobs={filteredLocalJobs}
                             emptyMsg={
                                 <div className="flex flex-col items-center justify-center space-y-4 py-8 px-4 animate-in fade-in duration-700">
                                     <div className="relative">
@@ -186,9 +256,11 @@ export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, 
                                     <div className="text-center space-y-2">
                                         <h3 className="text-xl font-bold text-white tracking-tight">Aktuell keine lokalen Jobs</h3>
                                         <p className="text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
-                                            {extendedActiveJobs.length > 0
-                                                ? "Aber gute Neuigkeiten! Entdecke unten spannende überregionale Angebote aus benachbarten Städten."
-                                                : "In deiner Stadt wird gerade keine Unterstützung gesucht. Schau später noch einmal vorbei!"}
+                                            {hasActiveFilters
+                                                ? "Keine lokalen Jobs für deine aktuellen Filter. Versuche, die Filter anzupassen."
+                                                : extendedActiveJobs.length > 0
+                                                    ? "Aber gute Neuigkeiten! Entdecke unten spannende überregionale Angebote aus benachbarten Städten."
+                                                    : "In deiner Stadt wird gerade keine Unterstützung gesucht. Schau später noch einmal vorbei!"}
                                         </p>
                                     </div>
                                 </div>
@@ -202,15 +274,14 @@ export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, 
                     </div>
 
                     {/* Extended Jobs */}
-                    {extendedActiveJobs.length > 0 && (
+                    {(filteredExtendedJobs.length > 0 || (hasActiveFilters && extendedActiveJobs.length > 0)) && (
                         <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150 fill-mode-both mt-12">
-
                             <JobsListSection
                                 title="Überregionale Angebote"
                                 icon={MapPin}
                                 colorClass="text-violet-400"
-                                jobs={extendedActiveJobs}
-                                emptyMsg=""
+                                jobs={filteredExtendedJobs}
+                                emptyMsg="Keine überregionalen Jobs für deine aktuellen Filter."
                                 isWhiteTitle={false}
                                 isDemo={isDemo}
                                 canApply={canApply}
@@ -262,33 +333,17 @@ export function JobsList({ localActiveJobs, extendedActiveJobs, waitlistedJobs, 
                 guardianStatus={guardianStatus}
             />
 
-            {/* Filter Modal (Coming Soon) */}
-            {showFilterModal && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowFilterModal(false)} />
-                    <div className="relative w-full max-w-sm bg-[#18181b] border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/10 rounded-full sm:hidden" />
-
-                        <div className="text-center space-y-4 pt-4 sm:pt-0">
-                            <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto text-indigo-400 mb-2">
-                                <ListFilter size={24} />
-                            </div>
-
-                            <h3 className="text-lg font-bold text-white">Filter & Sortierung</h3>
-
-                            <p className="text-slate-400 text-sm leading-relaxed">
-                                Erweiterte Funktionen wie Sortierung, Reihenfolgemodus und Wettbewerbsanalysen sind bald verfügbar.
-                            </p>
-
-                            <button
-                                onClick={() => setShowFilterModal(false)}
-                                className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-slate-200 transition-colors mt-4"
-                            >
-                                Verstanden
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {/* Filter & Sort Panel */}
+            {showFilterPanel && (
+                <JobFilterSortPanel
+                    sortOption={sortOption}
+                    filterState={filterState}
+                    onSortChange={setSortOption}
+                    onFilterChange={setFilterState}
+                    onClose={() => setShowFilterPanel(false)}
+                    onReset={handleReset}
+                    hasActiveFilters={hasActiveFilters}
+                />
             )}
         </>
     );
