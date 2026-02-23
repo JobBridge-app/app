@@ -180,7 +180,7 @@ body:
     id: security
     attributes:
       label: Security-/Abuse-Relevanz?
-      description: Wenn ja: bitte **privat** melden, keine Details hier.
+      description: "Wenn ja, bitte **privat** melden (keine Details hier posten)."
       options:
         - "Nein"
         - "Ja (privat melden, keine Details hier posten)"
