@@ -1,0 +1,145 @@
+name: Feature Request
+description: Schlage ein neues Feature oder eine Verbesserung für JobBridge vor
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für deinen Vorschlag. Bitte beschreibe die Idee so, dass wir sie testen und umsetzen können.
+        **Wichtig:** Keine sensiblen Daten posten (Adressen, Telefonnummern, Tokens, API-Keys).  
+        Für sicherheitsrelevante Themen bitte privat melden (Security Advisories).
+
+  - type: checkboxes
+    id: existing-issue
+    attributes:
+      label: Gibt es schon einen ähnlichen Feature-Vorschlag?
+      description: Bitte suche kurz, ob es bereits ein Issue dazu gibt.
+      options:
+        - label: Ich habe nach bestehenden Issues gesucht
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      description: Welches Problem löst das Feature? Warum ist es wichtig?
+      placeholder: "Ich habe das Problem, dass ... / Es ist frustrierend, weil ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: target-users
+    attributes:
+      label: Für wen ist das Feature?
+      description: Welche Rolle(n) profitieren davon am meisten?
+      placeholder: "Jugendliche / Jobanbieter (privat/gewerblich) / Moderation / Alle"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Vorschlag / Lösungsidee
+      description: Beschreibe, was genau passieren soll (möglichst konkret).
+      placeholder: "Wenn der Nutzer ..., dann soll ... / UI: ... / Ablauf: ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Akzeptanzkriterien (Definition of Done)
+      description: Woran erkennt man, dass das Feature fertig und korrekt ist?
+      placeholder: |
+        - [ ] Nutzer kann ...
+        - [ ] System verhindert ...
+        - [ ] In der Jobansicht wird ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativen / Workarounds
+      description: Welche Alternativen hast du schon bedacht?
+      placeholder: "Andere Ansätze, die das Problem auch lösen könnten ..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Bereich (Area)
+      description: Welcher Teil von JobBridge ist betroffen?
+      options:
+        - "Onboarding / Registrierung"
+        - "Login / Session / Rechte"
+        - "Rollen (Jugendliche / Anbieter / Moderation)"
+        - "Profil / Verifizierung"
+        - "Job erstellen / bearbeiten"
+        - "Jobsuche / Filter / Liste"
+        - "Bewerbung / Reservierung / Status"
+        - "Chat (jobbezogen) / Moderation"
+        - "TrustScore / Meldungen / Missbrauch"
+        - "Benachrichtigungen"
+        - "Admin / Moderationsbereich"
+        - "Website / Landing"
+        - "Zahlung / Spenden"
+        - "Performance"
+        - "Andere"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Wichtigkeit / Impact
+      description: Wie wichtig ist das Feature für den Nutzen der Plattform?
+      options:
+        - "Nice to have"
+        - "Verbessert die Nutzererfahrung deutlich"
+        - "Wichtig für den Kernprozess"
+        - "Blocker ohne dieses Feature"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Aufwandsschätzung (optional)
+      description: Grobe Einschätzung (auch wenn unsicher).
+      options:
+        - "S (klein)"
+        - "M (mittel)"
+        - "L (groß)"
+        - "Unklar"
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / Beispiele (optional)
+      description: Screenshots, Skizzen oder Beispiele aus anderen Apps.
+      placeholder: "Drag & Drop Bilder hier oder verlinke Beispiele"
+    validations:
+      required: false
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risiken / Nebenwirkungen (optional)
+      description: Datenschutz, Jugendschutz, Missbrauch, Moderationsaufwand, rechtliche Punkte.
+      placeholder: "Mögliche Risiken oder Dinge, auf die wir achten müssen ..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Zusätzlicher Kontext (optional)
+      description: Alles, was noch hilft (z.B. Pilot in Rheinbach, Zielgruppe, Edge Cases).
+      placeholder: "Weitere Infos ..."
+    validations:
+      required: false
