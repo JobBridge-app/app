@@ -1,7 +1,7 @@
 name: Feature Request
 description: Schlage ein neues Feature oder eine Verbesserung für JobBridge vor
 title: "[Feature]: "
-labels: ["enhancement", "triage"]
+type: feature
 body:
   - type: markdown
     attributes:
