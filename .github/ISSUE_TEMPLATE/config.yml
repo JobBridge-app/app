@@ -1,0 +1,21 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/RAY-Group-eu/JobBridge/security/advisories/new
+    about: Bitte Sicherheitslücken privat melden. Keine Details in öffentlichen Issues posten.
+
+  - name: Bug report (Issue-Form)
+    url: https://github.com/RAY-Group-eu/JobBridge/issues/new?template=bug_report.yml
+    about: Melde Bugs oder unerwartetes Verhalten über das Bug-Formular.
+
+  - name: Feature request / idea
+    url: https://github.com/RAY-Group-eu/JobBridge/issues/new/choose
+    about: Für neue Ideen/Features bitte ein passendes Template auswählen (oder später Feature-Form nutzen).
+
+  - name: Discussions
+    url: https://github.com/RAY-Group-eu/JobBridge/discussions
+    about: Für Fragen, Feedback und Diskussionen (ohne konkreten Bug).
+
+  - name: JobBridge Website
+    url: https://www.jobbridge.app
+    about: Allgemeine Infos und Kontakt.
