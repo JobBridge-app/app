@@ -36,5 +36,5 @@ For official partnership inquiries, media requests, or authorized developer acce
 *   **Direct Email:** [rezan@jobbridge.app](mailto:rezan@jobbridge.app)
 
 <div align="center">
-  <sub>© 2026 JobBridge | Sicher • Lokal • Fair</sub>
+  <sub>© 2026 JobBridge | Die digitale Taschengeldbörse</sub>
 </div>

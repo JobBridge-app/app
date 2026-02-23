@@ -38,5 +38,5 @@ Instances of abusive, harassing, or otherwise unacceptable behavior may be repor
 This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1.
 
 <div align="center">
-  <sub>© 2026 JobBridge | Sicher • Lokal • Fair</sub>
+  <sub>© 2026 JobBridge | Die digitale Taschengeldbörse</sub>
 </div>

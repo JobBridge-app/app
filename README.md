@@ -12,7 +12,7 @@
 
 Welcome to the **JobBridge Web Platform**. 
 
-JobBridge is a high-end platform connecting job seekers (youth, adults, seniors) with private individuals and companies for everyday tasks and pocket-money jobs. This repository specifically houses our **Web Application**—a highly optimized, PWA-ready Next.js 15 environment that delivers a native, app-like experience directly in the browser. *(Note: Our native iOS and Android applications are maintained in separate, dedicated repositories).*
+JobBridge is a high-end platform connecting job seekers (14-18 years old) with private individuals and companies for everyday tasks and pocket-money jobs. This repository specifically houses our **Web Application**—a highly optimized, PWA-ready Next.js 15 environment that delivers a native, app-like experience directly in the browser. *(Note: Our native iOS and Android applications are maintained in separate, dedicated repositories).*
 
 Our engineering philosophy prioritizes three pillars: **Uncompromising Security**, **Cinematic UX/UI**, and **Scalable Architecture**.
 
