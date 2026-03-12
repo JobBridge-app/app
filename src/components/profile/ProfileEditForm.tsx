@@ -603,6 +603,9 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                 </label>
                                                 <div className="relative">
                                                     <input
+                                                        id="skills"
+                                                        name="skills"
+                                                        autoComplete="off"
                                                         value={skills}
                                                         onChange={(e) => setSkills(e.target.value)}
                                                         placeholder="Mathe, Englisch..."
@@ -617,6 +620,9 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                 </label>
                                                 <div className="relative">
                                                     <input
+                                                        id="interests"
+                                                        name="interests"
+                                                        autoComplete="off"
                                                         value={interests}
                                                         onChange={(e) => setInterests(e.target.value)}
                                                         placeholder="Fußball, Gaming..."
@@ -634,6 +640,9 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                         </label>
                                         <div className="relative">
                                             <input
+                                                id="availabilityNote"
+                                                name="availabilityNote"
+                                                autoComplete="off"
                                                 value={availabilityNote}
                                                 onChange={(e) => setAvailabilityNote(e.target.value)}
                                                 placeholder="z.B. Nachmittags ab 15 Uhr, Wochenenden..."
@@ -720,12 +729,18 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                 </label>
                                                 <div className="flex gap-2">
                                                     <input
+                                                        id="street"
+                                                        name="street"
+                                                        autoComplete="address-line1"
                                                         value={street}
                                                         onChange={(e) => setStreet(e.target.value)}
                                                         placeholder="Straße"
                                                         className="w-full h-14 rounded-2xl bg-[#0F0F12] border-2 border-transparent px-5 text-slate-200 placeholder:text-slate-700 focus:outline-none focus:bg-[#121216] focus:border-sky-500/20 transition-all font-medium"
                                                     />
                                                     <input
+                                                        id="houseNumber"
+                                                        name="houseNumber"
+                                                        autoComplete="address-line2"
                                                         value={houseNumber}
                                                         onChange={(e) => setHouseNumber(e.target.value)}
                                                         placeholder="Nr."
@@ -744,6 +759,9 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                             <LockKeyhole size={16} />
                                                         </div>
                                                         <input
+                                                            id="zipDisplay"
+                                                            name="zipDisplay"
+                                                            autoComplete="postal-code"
                                                             value={zip}
                                                             disabled
                                                             title="Deine PLZ ist fest mit deinem Account verknüpft und kann nicht geändert werden."
@@ -755,6 +773,9 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                             <LockKeyhole size={16} />
                                                         </div>
                                                         <input
+                                                            id="cityDisplay"
+                                                            name="cityDisplay"
+                                                            autoComplete="address-level2"
                                                             value={city}
                                                             disabled
                                                             title="Deine Stadt ist fest mit deinem Account verknüpft und kann nicht geändert werden."

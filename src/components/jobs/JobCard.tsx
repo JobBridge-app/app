@@ -121,15 +121,15 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                 }
             `}
         >
-            {/* Locked Overlay (Desktop Only) */}
+            {/* Locked Overlay */}
             {isLocked && (
-                <div className="hidden md:absolute md:inset-0 md:z-20 md:flex md:items-center md:justify-center md:bg-slate-950/60 md:backdrop-blur-[2px] md:opacity-0 md:group-hover:opacity-100 md:transition-opacity md:duration-300">
-                    <div className="flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/60 backdrop-blur-[2px] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none">
+                    <div className="flex flex-col items-center gap-2 transform sm:translate-y-4 sm:group-hover:translate-y-0 transition-transform duration-300">
                         <div className="w-12 h-12 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-slate-400 shadow-xl">
                             <Lock size={20} />
                         </div>
-                        <span className="text-xs font-medium text-slate-300 px-3 py-1 rounded-full bg-slate-900/80 border border-white/10">
-                            Freischalten
+                        <span className="text-xs font-medium text-slate-300 px-3 py-1 rounded-full bg-slate-900/80 border border-white/10 text-center">
+                            Verifizierung erforderlich
                         </span>
                     </div>
                 </div>

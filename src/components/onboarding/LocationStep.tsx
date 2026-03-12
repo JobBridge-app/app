@@ -80,6 +80,7 @@ export function LocationStep({ onComplete }: LocationStepProps) {
             </div>
 
             <LocationAutocomplete
+                cityOnly={true}
                 onSelect={(loc) => {
                     setSelectedLocality(loc);
                     setError(null);

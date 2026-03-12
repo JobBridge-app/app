@@ -3,14 +3,16 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q');
+    const cityOnly = searchParams.get('cityOnly') === 'true';
 
     if (!q || q.length < 3) {
         return NextResponse.json([]);
     }
 
     try {
+        const featureQuery = cityOnly ? '&featureType=city' : '';
         const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=5&countrycodes=de&viewbox=6.80,50.75,7.10,50.55&dedupe=1`,
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=5&countrycodes=de&viewbox=6.80,50.75,7.10,50.55&dedupe=1${featureQuery}`,
             {
                 headers: {
                     "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",

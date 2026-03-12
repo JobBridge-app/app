@@ -22,9 +22,10 @@ interface LocationAutocompleteProps {
   defaultValue?: string;
   className?: string;
   placeholder?: string;
+  cityOnly?: boolean;
 }
 
-export function LocationAutocomplete({ onSelect, defaultValue = "", className, placeholder }: LocationAutocompleteProps) {
+export function LocationAutocomplete({ onSelect, defaultValue = "", className, placeholder, cityOnly = false }: LocationAutocompleteProps) {
   const [query, setQuery] = useState(defaultValue);
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +60,13 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
         // viewbox: left,top,right,bottom -> roughly 6.8,50.8,7.2,50.5
         // &dedupe=1 removes duplicates
 
-        const response = await fetch(`/api/location/search?q=${encodeURIComponent(query)}`);
+        const url = new URL("/api/location/search", window.location.origin);
+        url.searchParams.set("q", query);
+        if (cityOnly) {
+          url.searchParams.set("cityOnly", "true");
+        }
+
+        const response = await fetch(url.toString());
         const data = await response.json();
         setResults(data);
         setIsOpen(true);
@@ -123,6 +130,9 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
         </div>
         <input
           ref={inputRef}
+          id="location-search"
+          name="location"
+          autoComplete="off"
           type="text"
           value={query}
           onChange={(e) => {
@@ -130,7 +140,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
             setIsOpen(true);
           }}
           onFocus={() => query.length >= 3 && setIsOpen(true)}
-          placeholder={placeholder || "Adresse suchen (z.B. Hauptstraße 12)..."}
+          placeholder={placeholder || (cityOnly ? "Stadt eingeben (z.B. Bonn)..." : "Adresse suchen (z.B. Hauptstraße 12)...")}
           className="w-full pl-12 pr-10 h-14 rounded-2xl bg-[#0F0F12] border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all text-base font-medium shadow-sm"
         />
         {query && (
@@ -162,19 +172,26 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
                 </div>
                 <div>
                   <div className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
-                    {item.address?.road || item.display_name.split(",")[0]}
-                    {item.address?.house_number && <span className="text-indigo-400"> {item.address.house_number}</span>}
+                    {cityOnly 
+                      ? (item.address?.city || item.address?.town || item.address?.village || item.display_name.split(",")[0])
+                      : (item.address?.road || item.display_name.split(",")[0])}
+                    {!cityOnly && item.address?.house_number && <span className="text-indigo-400"> {item.address.house_number}</span>}
                   </div>
                   <div className="text-xs text-slate-500 mt-1 font-medium group-hover:text-slate-400">
-                    {item.address?.postcode} {item.address?.city || item.address?.town || item.address?.village}, {item.address?.country}
+                    {cityOnly 
+                      ? `${item.address?.postcode || ""} ${item.address?.state || ""}`.trim() || item.address?.country
+                      : `${item.address?.postcode || ""} ${item.address?.city || item.address?.town || item.address?.village}, ${item.address?.country}`.trim()
+                    }
                   </div>
                 </div>
               </button>
             ))}
           </div>
-          <div className="px-4 py-2 bg-black/20 border-t border-white/5 text-[10px] uppercase tracking-wider text-slate-600 font-bold flex justify-between items-center">
-            Rheinbach & Umgebung
-          </div>
+          {!cityOnly && (
+            <div className="px-4 py-2 bg-black/20 border-t border-white/5 text-[10px] uppercase tracking-wider text-slate-600 font-bold flex justify-between items-center">
+              Rheinbach & Umgebung
+            </div>
+          )}
         </div>
       )}
     </div>

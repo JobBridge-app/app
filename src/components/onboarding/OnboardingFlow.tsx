@@ -54,9 +54,22 @@ export function OnboardingFlow({
 
   // Live validation for age for immediate UX feedback
   useEffect(() => {
-    if (step === "profile" && data.birthdate && data.role) {
+    if (step === "profile" && data.role && data.birthdate !== undefined) {
+      if (!data.birthdate) {
+        setFieldErrors((prev) => {
+          if (!prev.birthdate) return prev;
+          const { birthdate, ...rest } = prev;
+          return rest;
+        });
+        return;
+      }
+
       const d = new Date(data.birthdate);
-      if (Number.isNaN(d.getTime())) return;
+      if (Number.isNaN(d.getTime())) {
+        setFieldErrors((prev) => ({ ...prev, birthdate: "Bitte geben Sie ein vollständiges Datum ein." }));
+        return;
+      }
+      
       const now = new Date();
       let age = now.getFullYear() - d.getFullYear();
       const m = now.getMonth() - d.getMonth();
@@ -64,6 +77,8 @@ export function OnboardingFlow({
 
       if (data.role === "youth" && age >= 21) {
         setFieldErrors((prev) => ({ ...prev, birthdate: "Als Jugendliche/r oder junge/r Erwachsene/r musst du unter 21 Jahre alt sein." }));
+      } else if (data.role === "youth" && age < 14) {
+        setFieldErrors((prev) => ({ ...prev, birthdate: "Du musst für JobBridge mindestens 14 Jahre alt sein." }));
       } else if (data.role !== "youth" && age < 18) {
         setFieldErrors((prev) => ({ ...prev, birthdate: "Für diese Rolle musst du mindestens 18 Jahre alt sein." }));
       } else {
@@ -102,17 +117,25 @@ export function OnboardingFlow({
         isValid = false;
       } else {
         const d = new Date(data.birthdate);
-        const now = new Date();
-        let age = now.getFullYear() - d.getFullYear();
-        const m = now.getMonth() - d.getMonth();
-        if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-
-        if (data.role === "youth" && age >= 21) {
-          newErrors.birthdate = "Als Jugendliche/r oder junge/r Erwachsene/r musst du unter 21 Jahre alt sein.";
+        if (Number.isNaN(d.getTime())) {
+          newErrors.birthdate = "Bitte geben Sie ein vollständiges Datum ein.";
           isValid = false;
-        } else if (data.role !== "youth" && age < 18) {
-           newErrors.birthdate = "Für diese Rolle musst du mindestens 18 Jahre alt sein.";
-           isValid = false;
+        } else {
+          const now = new Date();
+          let age = now.getFullYear() - d.getFullYear();
+          const m = now.getMonth() - d.getMonth();
+          if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+
+          if (data.role === "youth" && age >= 21) {
+            newErrors.birthdate = "Als Jugendliche/r oder junge/r Erwachsene/r musst du unter 21 Jahre alt sein.";
+            isValid = false;
+          } else if (data.role === "youth" && age < 14) {
+            newErrors.birthdate = "Du musst für JobBridge mindestens 14 Jahre alt sein.";
+            isValid = false;
+          } else if (data.role !== "youth" && age < 18) {
+             newErrors.birthdate = "Für diese Rolle musst du mindestens 18 Jahre alt sein.";
+             isValid = false;
+          }
         }
       }
 

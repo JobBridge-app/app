@@ -53,6 +53,8 @@ export default function UpdatePasswordPage() {
                             </label>
                             <input
                                 id="password"
+                                name="password"
+                                autoComplete="new-password"
                                 type="password"
                                 required
                                 minLength={6}

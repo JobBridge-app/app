@@ -21,7 +21,7 @@ export function OnboardingLayout({
   const progress = Math.round((stepIndex / Math.max(stepCount - 1, 1)) * 100);
 
   return (
-    <div className="relative min-h-screen overflow-hidden px-4 py-10 md:px-8 md:py-14">
+    <div className="relative min-h-screen px-4 py-10 md:px-8 md:py-14">
       <div className="pointer-events-none absolute inset-0">
         <div className="floating-blob absolute -left-10 top-10 h-56 w-56 opacity-80" />
         <div className="floating-blob absolute right-0 top-24 h-72 w-72 bg-purple-400/20 blur-3xl" />
@@ -50,7 +50,7 @@ export function OnboardingLayout({
 
         <div
           className={clsx(
-            "bg-white/8 backdrop-blur-xl border border-white/10 rounded-3xl shadow-xl shadow-black/40 relative overflow-hidden p-6 md:p-10"
+            "bg-white/8 backdrop-blur-xl border border-white/10 rounded-3xl shadow-xl shadow-black/40 relative p-6 md:p-10"
           )}
         >
           <div className="relative">{children}</div>

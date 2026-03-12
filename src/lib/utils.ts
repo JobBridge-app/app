@@ -14,5 +14,5 @@ export function timeAgo(date: string | Date): string {
     if (diffInSeconds < 3600) return `vor ${Math.floor(diffInSeconds / 60)} Min.`;
     if (diffInSeconds < 86400) return `vor ${Math.floor(diffInSeconds / 3600)} Std.`;
     if (diffInSeconds < 604800) return `vor ${Math.floor(diffInSeconds / 86400)} Tagen`;
-    return d.toLocaleDateString();
+    return d.toLocaleDateString("de-DE");
 }

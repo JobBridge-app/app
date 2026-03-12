@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { OnboardingRole } from "@/lib/types";
 import { AlertCircle } from "lucide-react";
+import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
 
 type StepProfileProps = {
   role: OnboardingRole | null;
@@ -81,6 +82,8 @@ export function StepProfile({
         <label className="space-y-2 text-lg md:text-xl relative block">
           <span className="block text-slate-100">Vollständiger Name</span>
           <motion.input
+            id="fullName"
+            name="fullName"
             type="text"
             autoComplete="name"
             value={fullName}
@@ -96,26 +99,21 @@ export function StepProfile({
           <ErrorMessage message={errors.fullName} />
         </label>
 
-        <label className="space-y-2 text-lg md:text-xl relative block">
+        <div className="space-y-2 text-lg md:text-xl relative block">
           <span className="block text-slate-100">Geburtsdatum</span>
-          <motion.input
-            type="date"
-            autoComplete="bday"
-            value={birthdate}
-            onChange={(e) => onChange("birthdate", e.target.value)}
-            className={`w-full appearance-none shadow-none [color-scheme:dark] rounded-2xl border bg-white/5 px-4 py-4 text-lg text-white invalid:text-slate-500 placeholder:text-slate-300/70 focus:outline-none focus:ring-2 transition-all duration-300 md:text-xl ${
-              errors.birthdate
-                ? "border-rose-500/50 focus:border-rose-400 focus:ring-rose-400/50 shadow-[0_0_15px_-3px_rgba(244,63,94,0.2)]"
-                : "border-white/15 focus:border-cyan-300/80 focus:ring-cyan-300/60"
-            }`}
-            whileFocus={{ scale: 1.005 }}
+          <CinematicDateInput
+             value={birthdate}
+             onChange={(val) => onChange("birthdate", val)}
+             error={errors.birthdate}
+             role={role}
           />
-          <ErrorMessage message={errors.birthdate} />
-        </label>
+        </div>
 
         <label className="space-y-2 text-lg md:text-xl md:col-span-2 relative block">
           <span className="block text-slate-100">Stadt / Ort</span>
           <motion.input
+            id="city"
+            name="city"
             type="text"
             autoComplete="address-level2"
             value={city}

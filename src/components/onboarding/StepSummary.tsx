@@ -33,7 +33,13 @@ export function StepSummary({
   onBack,
   loading,
 }: StepSummaryProps) {
-  const birthYear = birthdate ? new Date(birthdate).getFullYear() : "";
+  const formattedBirthdate = birthdate
+    ? new Date(birthdate).toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : "";
 
   return (
     <div className="space-y-8">
@@ -55,7 +61,7 @@ export function StepSummary({
           { label: "Rolle", value: roleLabel[role] },
           { label: "Name", value: fullName },
           { label: "Stadt / Ort", value: city },
-          { label: "Geburtsjahr", value: birthYear },
+          { label: "Geburtsdatum", value: formattedBirthdate },
         ].map((item) => (
           <div
             key={item.label}

@@ -17,6 +17,7 @@ import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2, AlertCircle, Mail, UserX, KeyRound } from "lucide-react";
 import { LocationStep } from "./onboarding/LocationStep";
 import { checkEmailExists } from "@/lib/authServerActions";
+import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
 
 type Step = "location" | "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
 
@@ -406,6 +407,37 @@ export function OnboardingWizard({
         setErrorMsg("Bitte fülle alle Felder aus.");
         return;
       }
+
+      const d = new Date(profileData.birthdate);
+      if (Number.isNaN(d.getTime())) {
+        setErrorType("general");
+        setErrorMsg("Bitte gib ein vollständiges Datum ein.");
+        return;
+      }
+
+      const now = new Date();
+      let age = now.getFullYear() - d.getFullYear();
+      const m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+
+      // Clear existing errors since we made it to validation check
+      setErrorMsg(null);
+      setErrorType(null);
+
+      if (profileData.role === "youth" && age >= 21) {
+        setErrorType("general");
+        setErrorMsg("Als Jugendliche/r oder junge/r Erwachsene/r musst du unter 21 Jahre alt sein.");
+        return;
+      } else if (profileData.role === "youth" && age < 14) {
+        setErrorType("general");
+        setErrorMsg("Du musst für JobBridge mindestens 14 Jahre alt sein.");
+        return;
+      } else if (profileData.role !== "youth" && age < 18) {
+        setErrorType("general");
+        setErrorMsg("Für diese Rolle musst du mindestens 18 Jahre alt sein.");
+        return;
+      }
+
       if (profileData.role === "company") {
         setStep("contact");
       } else {
@@ -1076,10 +1108,11 @@ export function OnboardingWizard({
                     <input
                       type="text"
                       value={profileData.fullName}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({ ...prev, fullName: e.target.value }))
-                      }
-                      className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      onChange={(e) => {
+                        setProfileData((prev) => ({ ...prev, fullName: e.target.value }));
+                        setErrorMsg(null);
+                      }}
+                      className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
                       placeholder="Max Mustermann"
                       required
                     />
@@ -1091,27 +1124,20 @@ export function OnboardingWizard({
                     <label className="mb-2 block text-lg font-medium text-white">
                       Geburtsdatum
                     </label>
-                    <input
-                      type="date"
+                    <CinematicDateInput
                       value={profileData.birthdate}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({ ...prev, birthdate: e.target.value }))
-                      }
-                      className="w-full appearance-none shadow-none [color-scheme:dark] rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white invalid:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                      required
+                      role={profileData.role}
+                      onChange={(val) => {
+                        setProfileData((prev) => ({ ...prev, birthdate: val }));
+                        setErrorMsg(null);
+                      }}
+                      onErrorChange={(msg) => setErrorMsg(msg)}
                     />
                     <p className="mt-2 text-sm text-slate-400">
                       Erforderlich für Jugendschutz.
                     </p>
                   </div>
-
-                  {/* Region selection removed from this step as it is handled at the start */}
-                  {errorMsg && (
-                    <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
-                      {errorMsg}
-                    </div>
-                  )}
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 pt-2">
                     <ButtonSecondary onClick={prevStep} className="flex-1">
                       Zurück
                     </ButtonSecondary>
@@ -1294,6 +1320,12 @@ export function OnboardingWizard({
                           <div>
                             <div className="text-sm text-slate-400">Name</div>
                             <div className="text-xl font-semibold text-white">{profileData.fullName}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-slate-400">Geburtsdatum</div>
+                            <div className="text-xl font-semibold text-white">
+                              {profileData.birthdate ? new Date(profileData.birthdate).toLocaleDateString("de-DE", { day: '2-digit', month: '2-digit', year: 'numeric' }) : "—"}
+                            </div>
                           </div>
                           <div>
                             <div className="text-sm text-slate-400">Region</div>
