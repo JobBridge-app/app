@@ -1,35 +1,25 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { supabaseBrowser } from "@/lib/supabaseClient";
-import { Bell, Mail, Smartphone, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Mail, Smartphone, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { NotificationSettingsForm } from "@/components/notifications/NotificationSettingsForm";
+import { getAppHomeSnapshot } from "@/lib/app-shell";
+import { supabaseServer } from "@/lib/supabaseServer";
 
-export default function NotificationSettingsPage() {
-    const [loading, setLoading] = useState(false);
-    const [saved, setSaved] = useState(false);
-    const router = useRouter();
+export default async function NotificationSettingsPage() {
+    const snapshot = await getAppHomeSnapshot();
+    const supabase = await supabaseServer();
 
-    // Mock state for now as 'notification_preferences' table might not exist or be structured differently.
-    // Ideally we fetch this from profile or a separate table.
-    const [prefs, setPrefs] = useState({
-        email_jobs: true,
-        email_security: true,
-        push_messages: false
-    });
+    const { data } = await supabase
+        .from("notification_preferences")
+        .select("email_enabled, email_application_updates, email_messages, email_job_updates, digest_frequency")
+        .eq("user_id", snapshot.profile.id)
+        .maybeSingle();
 
-    const handleSave = async () => {
-        setLoading(true);
-        // Simulate DB call or make real one if table exists
-        // await supabaseBrowser.from('profiles').update({...})...
-        await new Promise(r => setTimeout(r, 800));
-
-        setSaved(true);
-        setLoading(false);
-        setTimeout(() => {
-            router.back();
-        }, 1000); // Auto return after save
+    const initialPrefs = {
+        email_enabled: data?.email_enabled ?? true,
+        email_application_updates: data?.email_application_updates ?? true,
+        email_messages: data?.email_messages ?? true,
+        email_job_updates: data?.email_job_updates ?? true,
+        digest_frequency: data?.digest_frequency ?? "instant",
     };
 
     return (
@@ -48,29 +38,9 @@ export default function NotificationSettingsPage() {
                         <Mail size={18} className="text-indigo-400" />
                         Email Benachrichtigungen
                     </h3>
-
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-slate-200 font-medium">Neue Jobangebote</p>
-                                <p className="text-slate-500 text-xs">Wenn neue Jobs in deiner Region erscheinen.</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked={prefs.email_jobs} onChange={e => setPrefs({ ...prefs, email_jobs: e.target.checked })} className="sr-only peer" />
-                                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                            </label>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-slate-200 font-medium">Sicherheitsupdates</p>
-                                <p className="text-slate-500 text-xs">Login-Warnungen und Passwortänderungen.</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked={prefs.email_security} onChange={e => setPrefs({ ...prefs, email_security: e.target.checked })} className="sr-only peer" />
-                                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                            </label>
-                        </div>
-                    </div>
+                    <p className="text-sm text-slate-400">
+                        Feineinstellungen fuer Job-Updates, Nachrichten und Versandhaeufigkeit verwaltest du weiter unten.
+                    </p>
                 </div>
 
                 <div className="bg-slate-900/40 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm p-6">
@@ -85,13 +55,7 @@ export default function NotificationSettingsPage() {
                     </div>
                 </div>
 
-                <button
-                    onClick={handleSave}
-                    disabled={loading || saved}
-                    className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all flex items-center justify-center gap-2"
-                >
-                    {saved ? <><CheckCircle2 size={20} /> Gespeichert</> : (loading ? "Speichert..." : "Änderungen speichern")}
-                </button>
+                <NotificationSettingsForm initialPrefs={initialPrefs} userId={snapshot.profile.id} />
             </div>
         </div>
     );

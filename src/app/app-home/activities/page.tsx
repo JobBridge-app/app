@@ -1,17 +1,15 @@
-import { requireCompleteProfile } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { getEffectiveView } from "@/lib/dal/jobbridge";
 import type { Database } from "@/lib/types/supabase";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ActivitiesPageClient } from "@/components/activity/ActivitiesPageClient";
 import { ProviderActivityList } from "@/components/activity/ProviderActivityList";
+import { getAppHomeSnapshot } from "@/lib/app-shell";
 
 export default async function ActivityPage() {
-    const { profile } = await requireCompleteProfile();
-
-    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
-    const viewRole = viewRes.ok ? viewRes.data.viewRole : (profile.account_type ?? "job_seeker");
-    const source = viewRes.ok ? viewRes.data.source : "live";
+    const snapshot = await getAppHomeSnapshot();
+    const profile = snapshot.profile;
+    const viewRole = snapshot.effectiveView.viewRole;
+    const source = snapshot.effectiveView.source;
 
     const supabase = await supabaseServer();
     const appsTable: "applications" | "demo_applications" = source === "demo" ? "demo_applications" : "applications";

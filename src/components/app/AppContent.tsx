@@ -6,17 +6,16 @@ import { LogoBadge } from "@/components/ui/LogoBadge";
 import { LiquidBackground } from "@/components/ui/LiquidBackground";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { supabaseBrowser } from "@/lib/supabaseClient";
-import { Profile } from "@/lib/types";
+import { Market, Profile } from "@/lib/types";
 import { BRAND_NAME } from "@/lib/constants";
-import { useMarket } from "@/components/providers/MarketProvider";
 
 type AppContentProps = {
   profile: Profile | null;
+  market?: Market | null;
 };
 
-export function AppContent({ profile }: AppContentProps) {
+export function AppContent({ profile, market = null }: AppContentProps) {
   const router = useRouter();
-  const { currentMarket } = useMarket();
 
   const handleLogout = async () => {
     await supabaseBrowser.auth.signOut();
@@ -37,11 +36,11 @@ export function AppContent({ profile }: AppContentProps) {
               <LogoBadge size="sm" />
               <div>
                 <h1 className="text-xl font-semibold text-white leading-tight">
-                  {currentMarket?.brand_prefix || BRAND_NAME}
+                  {market?.brand_prefix || BRAND_NAME}
                 </h1>
-                {currentMarket?.display_name && (
+                {market?.display_name && (
                   <p className="text-xs font-medium text-indigo-400">
-                    {currentMarket.display_name}
+                    {market.display_name}
                   </p>
                 )}
               </div>

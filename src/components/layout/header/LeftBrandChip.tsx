@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMarket } from "@/components/providers/MarketProvider";
 import { BRAND_NAME } from "@/lib/constants";
+import type { Market } from "@/lib/types";
 
-export function LeftBrandChip() {
-    const { currentMarket } = useMarket();
-
+export function LeftBrandChip({ market }: { market: Market | null }) {
     return (
         <Link
             href="/app-home"
@@ -27,11 +25,11 @@ export function LeftBrandChip() {
 
             <div className="hidden md:flex flex-col justify-center">
                 <span className="text-lg font-bold leading-none tracking-tight text-white">
-                    {currentMarket?.brand_prefix || BRAND_NAME}
+                    {market?.brand_prefix || BRAND_NAME}
                 </span>
-                {currentMarket?.display_name && (
+                {market?.display_name && (
                     <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-200/90">
-                        {currentMarket.display_name}
+                        {market.display_name}
                     </span>
                 )}
             </div>

@@ -1,12 +1,9 @@
-import { requireCompleteProfile } from "@/lib/auth";
+import { getAppHomeSnapshot } from "@/lib/app-shell";
 import { redirect } from "next/navigation";
-import { getEffectiveView } from "@/lib/dal/jobbridge";
 
 export default async function AppHomePage() {
-  const { profile } = await requireCompleteProfile();
-
-  const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
-  const viewRole = viewRes.ok ? viewRes.data.viewRole : (profile.account_type ?? "job_seeker");
+  const snapshot = await getAppHomeSnapshot();
+  const viewRole = snapshot.effectiveView.viewRole;
 
   // Strict Redirect based on EFFECTIVE role (demo_view > override > base profile)
   if (viewRole === "job_provider") redirect("/app-home/offers");

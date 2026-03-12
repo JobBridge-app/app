@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Briefcase, Activity, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Profile } from "@/lib/types";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
+import { warmRouteAdjacentUI } from "@/lib/ui-warmup";
+import { endPerfMark, startPerfMark } from "@/lib/perf";
 
 type NavItem = {
     label: string;
@@ -16,8 +19,10 @@ type NavItem = {
 };
 
 export function CenterNavPill({ profile, instanceId = "default" }: { profile: Profile | null; instanceId?: string }) {
+    const router = useRouter();
     const pathname = usePathname();
-    const currentPath = pathname || "";
+    const [pendingHref, setPendingHref] = useState<string | null>(null);
+    const currentPath = pendingHref || pathname || "";
     const activePillId = `active-pill-${instanceId}`;
 
     const commonItems: NavItem[] = [
@@ -67,6 +72,15 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
         ];
     }
 
+    useEffect(() => {
+        setPendingHref(null);
+        endPerfMark("app-header-route");
+    }, [pathname]);
+
+    const warmRoute = (href: string) => {
+        router.prefetch(href);
+        void warmRouteAdjacentUI(href);
+    };
 
     return (
         <nav className="flex h-[52px] items-center gap-1 rounded-full border border-white/10 bg-slate-900/40 p-[6px] shadow-xl backdrop-blur-md transition-all duration-300">
@@ -76,6 +90,14 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                     <Link
                         key={item.href}
                         href={item.href}
+                        prefetch
+                        onClick={() => {
+                            startPerfMark("app-header-route");
+                            setPendingHref(item.href);
+                        }}
+                        onMouseEnter={() => warmRoute(item.href)}
+                        onFocus={() => warmRoute(item.href)}
+                        onPointerDown={() => warmRoute(item.href)}
                         className={cn(
                             "group relative flex h-10 items-center justify-center rounded-full px-3 transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 md:px-5",
                             isActive

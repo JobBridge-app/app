@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { JobsListSection } from "@/components/jobs/JobsListSection";
-import { JobDetailModal } from "@/components/jobs/JobDetailModal";
 import { Briefcase, CheckCircle2, Clock, ListFilter, MapPin } from "lucide-react";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import {
     deriveVisibleJobs,
     sortJobs,
@@ -17,7 +16,18 @@ import {
     type SortOption,
     type FilterState,
 } from "@/lib/jobs/sortFilter";
-import { JobFilterSortPanel } from "@/components/jobs/JobFilterSortPanel";
+import { warmJobsUI } from "@/lib/ui-warmup";
+import { endPerfMark, startPerfMark } from "@/lib/perf";
+
+const JobDetailModal = dynamic(
+    () => import("@/components/jobs/JobDetailModal").then((mod) => mod.JobDetailModal),
+    { loading: () => null },
+);
+
+const JobFilterSortPanel = dynamic(
+    () => import("@/components/jobs/JobFilterSortPanel").then((mod) => mod.JobFilterSortPanel),
+    { loading: () => null },
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,14 +78,6 @@ function persistState(sortOption: SortOption, filterState: FilterState): void {
     } catch { /* storage unavailable — ignore */ }
 }
 
-// ─── Animation variants ───────────────────────────────────────────────────────
-
-const tabContentVariants = {
-    enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
-    center: { opacity: 1, x: 0 },
-    exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
-};
-
 const TAB_ORDER: Tab[] = ["active", "waitlist", "applied"];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -92,7 +94,11 @@ export function JobsList({
     const [selectedJob, setSelectedJob] = useState<JobsListItem | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>("active");
-    const [prevTab, setPrevTab] = useState<Tab>("active");
+    const [visitedTabs, setVisitedTabs] = useState<Record<Tab, boolean>>({
+        active: true,
+        waitlist: false,
+        applied: false,
+    });
     const [showFilterPanel, setShowFilterPanel] = useState(false);
 
     const [sortOption, setSortOption] = useState<SortOption>(DEFAULT_SORT_OPTION);
@@ -126,14 +132,16 @@ export function JobsList({
     const totalBadgeCount = activeFilterCount + (isNonDefaultSort ? 1 : 0);
     const currentSortLabel = SORT_META[sortOption].label;
 
-    const slideDir = TAB_ORDER.indexOf(activeTab) > TAB_ORDER.indexOf(prevTab) ? 1 : -1;
-
     const handleTabChange = useCallback((tab: Tab) => {
-        setPrevTab(activeTab);
+        if (tab === activeTab) return;
+        startPerfMark("jobs-tab-switch");
         setActiveTab(tab);
+        setVisitedTabs((current) => ({ ...current, [tab]: true }));
     }, [activeTab]);
 
     const handleJobSelect = useCallback((job: JobsListItem) => {
+        startPerfMark("job-detail-open");
+        void warmJobsUI();
         setSelectedJob(job);
         setIsDetailOpen(true);
     }, []);
@@ -169,6 +177,26 @@ export function JobsList({
             : activeTab === "waitlist"
                 ? sortedWaitlistedJobs.length
                 : sortedAppliedJobs.length;
+
+    useEffect(() => {
+        const frameId = requestAnimationFrame(() => {
+            endPerfMark("jobs-tab-switch");
+        });
+        return () => cancelAnimationFrame(frameId);
+    }, [activeTab]);
+
+    const getPanelClassName = (tab: Tab) => {
+        const offset = TAB_ORDER.indexOf(tab) > TAB_ORDER.indexOf(activeTab) ? 20 : -20;
+
+        return cn(
+            "col-start-1 row-start-1 transform-gpu transition-[opacity,transform,filter] duration-300 ease-out will-change-transform motion-reduce:transition-none",
+            activeTab === tab
+                ? "relative z-10 translate-x-0 opacity-100 blur-0 pointer-events-auto"
+                : visitedTabs[tab]
+                    ? `pointer-events-none opacity-0 blur-[1px] ${offset > 0 ? "translate-x-5" : "-translate-x-5"}`
+                    : "hidden",
+        );
+    };
 
     return (
         <>
@@ -271,18 +299,9 @@ export function JobsList({
 
             {/* ── Tab Content ──────────────────────────────────────────── */}
             <div className="relative pb-20" style={{ minHeight: 200 }}>
-                <AnimatePresence mode="wait" custom={slideDir}>
-                    {activeTab === "active" && (
-                        <motion.div
-                            key="active"
-                            custom={slideDir}
-                            variants={tabContentVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                            className="space-y-16"
-                        >
+                <div className="grid">
+                    <div className={getPanelClassName("active")}>
+                        <div className="space-y-16">
                             <JobsListSection
                                 title="Lokale Angebote"
                                 icon={Briefcase}
@@ -323,57 +342,37 @@ export function JobsList({
                                     onSelect={handleJobSelect}
                                 />
                             )}
-                        </motion.div>
-                    )}
+                        </div>
+                    </div>
 
-                    {activeTab === "waitlist" && (
-                        <motion.div
-                            key="waitlist"
-                            custom={slideDir}
-                            variants={tabContentVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                        >
-                            <JobsListSection
-                                title="Warteliste"
-                                icon={Clock}
-                                colorClass="text-amber-400"
-                                jobs={sortedWaitlistedJobs}
-                                emptyMsg="Aktuell sind keine Jobs für die Warteliste verfügbar."
-                                isDemo={isDemo}
-                                canApply={canApply}
-                                hideStatusLabel={true}
-                                onSelect={handleJobSelect}
-                            />
-                        </motion.div>
-                    )}
+                    <div className={getPanelClassName("waitlist")}>
+                        <JobsListSection
+                            title="Warteliste"
+                            icon={Clock}
+                            colorClass="text-amber-400"
+                            jobs={sortedWaitlistedJobs}
+                            emptyMsg="Aktuell sind keine Jobs für die Warteliste verfügbar."
+                            isDemo={isDemo}
+                            canApply={canApply}
+                            hideStatusLabel={true}
+                            onSelect={handleJobSelect}
+                        />
+                    </div>
 
-                    {activeTab === "applied" && (
-                        <motion.div
-                            key="applied"
-                            custom={slideDir}
-                            variants={tabContentVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                        >
-                            <JobsListSection
-                                title="Bereits Beworben"
-                                icon={CheckCircle2}
-                                colorClass="text-emerald-400"
-                                jobs={sortedAppliedJobs}
-                                emptyMsg="Noch keine Bewerbungen versendet."
-                                isDemo={isDemo}
-                                canApply={canApply}
-                                hideStatusLabel={true}
-                                onSelect={handleJobSelect}
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                    <div className={getPanelClassName("applied")}>
+                        <JobsListSection
+                            title="Bereits Beworben"
+                            icon={CheckCircle2}
+                            colorClass="text-emerald-400"
+                            jobs={sortedAppliedJobs}
+                            emptyMsg="Noch keine Bewerbungen versendet."
+                            isDemo={isDemo}
+                            canApply={canApply}
+                            hideStatusLabel={true}
+                            onSelect={handleJobSelect}
+                        />
+                    </div>
+                </div>
             </div>
 
             <JobDetailModal
@@ -513,4 +512,3 @@ function EmptyState({
         </div>
     );
 }
-

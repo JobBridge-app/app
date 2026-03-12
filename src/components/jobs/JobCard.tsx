@@ -1,14 +1,12 @@
 "use client";
 
 import { memo } from "react";
-import { Building2, MapPin, Euro, Clock, Lock, CheckCircle2 } from "lucide-react";
-import type { Database } from "@/lib/types/supabase";
+import { MapPin, Euro, Clock, Lock, CheckCircle2 } from "lucide-react";
 import { cn, timeAgo } from "@/lib/utils";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
-import { motion } from "framer-motion";
-
 import Link from "next/link";
+import { warmJobsUI } from "@/lib/ui-warmup";
 
 interface JobCardProps {
     job: JobsListItem;
@@ -101,29 +99,33 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
         return null;
     };
 
+    const handleSelect = () => {
+        if (!href) {
+            void warmJobsUI();
+            onSelect?.(job);
+        }
+    };
+
     const CardContent = (
-        <motion.div
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={(e) => {
-                if (!href) {
-                    onSelect?.(job);
-                }
-            }}
-            className={`group relative flex flex-col h-full overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer
+        <div
+            onClick={handleSelect}
+            onMouseEnter={() => void warmJobsUI()}
+            onFocus={() => void warmJobsUI()}
+            onPointerDown={() => void warmJobsUI()}
+            className={`group relative flex h-full transform-gpu cursor-pointer flex-col overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-[transform,border-color,box-shadow,background-color,filter] duration-300 will-change-transform sm:hover:-translate-y-1
                 ${isApplied && !isUserWaitlisted
                     ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
                     : isLocked
                         ? "bg-slate-900/40 border-white/[0.05] hover:border-white/10" // Locked style
                         : isWaitlistMode
-                            ? "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-amber-500/40 hover:shadow-[0_8px_40px_-12px_rgba(245,158,11,0.25)]"
-                            : "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-indigo-500/40 hover:shadow-[0_8px_40px_-12px_rgba(99,102,241,0.25)]"
+                            ? "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-amber-500/35 hover:shadow-[0_18px_30px_-22px_rgba(245,158,11,0.45)]"
+                            : "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-indigo-500/35 hover:shadow-[0_18px_30px_-22px_rgba(99,102,241,0.45)]"
                 }
             `}
         >
             {/* Locked Overlay */}
             {isLocked && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/60 backdrop-blur-[2px] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none">
+                <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-slate-950/60 opacity-100 transition-opacity duration-300 pointer-events-none sm:opacity-0 sm:group-hover:opacity-100">
                     <div className="flex flex-col items-center gap-2 transform sm:translate-y-4 sm:group-hover:translate-y-0 transition-transform duration-300">
                         <div className="w-12 h-12 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-slate-400 shadow-xl">
                             <Lock size={20} />
@@ -259,7 +261,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                                     <span className="text-slate-500 text-xs">Entfernung unbekannt</span>
                                     {/* Pulse effect wrapper */}
                                     <div className="relative flex items-center justify-center">
-                                        <div className="absolute inset-0 bg-indigo-500/20 rounded-lg blur-[4px] group-hover/loc:bg-indigo-500/40 transition-all duration-300 animate-pulse" />
+                                        <div className="absolute inset-0 rounded-lg bg-indigo-500/20 blur-[3px] transition-all duration-300 group-hover/loc:bg-indigo-500/35" />
                                         <span className="relative text-[10px] font-bold text-indigo-100 bg-indigo-600 hover:bg-indigo-500 px-2 py-0.5 rounded-lg transition-colors ring-1 ring-white/10 shadow-lg whitespace-nowrap">
                                             Wohnort angeben
                                         </span>
@@ -290,10 +292,8 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                         )}
                     </div>
                 </div>
-
-
             </div>
-        </motion.div>
+        </div>
     );
 
     if (href) {

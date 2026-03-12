@@ -1,41 +1,25 @@
-import { requireCompleteProfile } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { MyJobsView } from "./components/MyJobsView";
 import { RegionView } from "./components/RegionView";
-import { fetchJobs, getEffectiveView } from "@/lib/dal/jobbridge";
+import { fetchJobs } from "@/lib/dal/jobbridge";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 import { Settings } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { getAppHomeSnapshot } from "@/lib/app-shell";
 
 export default async function OffersPage({
     searchParams,
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const { profile } = await requireCompleteProfile();
-
-    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
-    if (!viewRes.ok) {
-        return (
-            <div className="container mx-auto py-8 px-4 md:px-6 max-w-6xl">
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-200">
-                    <p className="font-semibold">Fehler beim Bestimmen der Datenquelle/Rolle</p>
-                    <p className="mt-2 text-sm font-mono break-words">
-                        {viewRes.error.code ? `${viewRes.error.code}: ` : ""}{viewRes.error.message}
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
-    const effectiveView = viewRes.data;
+    const snapshot = await getAppHomeSnapshot();
+    const profile = snapshot.profile;
+    const effectiveView = snapshot.effectiveView;
     if (effectiveView.viewRole === "job_seeker") {
         redirect("/app-home/jobs");
     }
-
-    const isDemo = effectiveView.source === "demo";
 
     // Determine View
     const params = await searchParams;

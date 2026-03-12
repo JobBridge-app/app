@@ -7,7 +7,6 @@ import type { Database } from "@/lib/types/supabase";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { VerificationRequiredModal } from "@/components/auth/VerificationRequiredModal";
 import { Lock } from "lucide-react";
-import { JobApplicationModal } from "@/components/jobs/JobApplicationModal";
 import { WithdrawButton } from "@/components/jobs/WithdrawButton";
 import dynamic from "next/dynamic";
 import { JobsListItem } from "@/lib/types/jobbridge";
@@ -16,6 +15,7 @@ import { UserProfileModal } from "@/components/profile/UserProfileModal";
 import { cn } from "@/lib/utils";
 import { createSupabaseClient } from "@/lib/supabaseClient";
 import type { Profile } from "@/lib/types";
+import { endPerfMark, startPerfMark } from "@/lib/perf";
 
 const LeafletMap = dynamic(() => import("@/components/ui/LeafletMap"), {
     ssr: false,
@@ -25,6 +25,11 @@ const LeafletMap = dynamic(() => import("@/components/ui/LeafletMap"), {
         </div>
     ),
 });
+
+const JobApplicationModal = dynamic(
+    () => import("@/components/jobs/JobApplicationModal").then((mod) => mod.JobApplicationModal),
+    { loading: () => null },
+);
 
 interface JobDetailModalProps {
     job: JobsListItem | null;
@@ -91,6 +96,10 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
         let timeout: NodeJS.Timeout;
         if (isOpen) {
             setShouldRenderMap(true);
+            const frameId = requestAnimationFrame(() => {
+                endPerfMark("job-detail-open");
+            });
+            return () => cancelAnimationFrame(frameId);
         } else {
             // Wait for close animation + user scroll start before destroying map (500ms)
             timeout = setTimeout(() => {
@@ -374,7 +383,10 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                     </ButtonPrimary>
                                                 ) : (
                                                     <ButtonPrimary
-                                                        onClick={() => setIsApplicationModalOpen(true)}
+                                                        onClick={() => {
+                                                            startPerfMark("job-apply-open");
+                                                            setIsApplicationModalOpen(true);
+                                                        }}
                                                         className={`w-full md:w-auto px-10 py-4 text-lg shadow-xl hover:scale-[1.02] transition-all ${isWaitlistMode ? 'shadow-amber-500/20 hover:shadow-amber-500/30 bg-amber-600 hover:bg-amber-500' : 'shadow-indigo-500/20 hover:shadow-indigo-500/30'}`}
                                                     >
                                                         <span className="flex items-center gap-3 font-bold">

@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { User, MessageSquare, Check, X, Clock, AlertTriangle } from "lucide-react";
 import { ApplicationRow } from "@/lib/types/jobbridge";
 import { acceptApplicant, rejectApplicant } from "@/app/app-home/offers/actions";
 import { RejectionModal } from "./RejectionModal";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ApplicationChatModal } from "@/components/activity/ApplicationChatModal";
 import { sendMessage } from "@/app/app-home/applications/actions";
+import dynamic from "next/dynamic";
+
+const ApplicationChatModal = dynamic(
+    () => import("@/components/activity/ApplicationChatModal").then((mod) => mod.ApplicationChatModal),
+    { loading: () => null },
+);
 
 export function ApplicantList({ applications, jobTitle }: { applications: ApplicationRow[], jobTitle: string }) {
     const router = useRouter();
+    const [items, setItems] = useState(applications);
     const [selectedApplicant, setSelectedApplicant] = useState<ApplicationRow | null>(null);
     const [selectedChatApp, setSelectedChatApp] = useState<any | null>(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
@@ -20,7 +26,11 @@ export function ApplicantList({ applications, jobTitle }: { applications: Applic
     const [confirmAcceptId, setConfirmAcceptId] = useState<string | null>(null);
     const [acceptResult, setAcceptResult] = useState<{ auto_rejected_count: number } | null>(null);
 
-    const submittedCount = applications.filter((a) => a.status === "submitted").length;
+    useEffect(() => {
+        setItems(applications);
+    }, [applications]);
+
+    const submittedCount = items.filter((a) => a.status === "submitted").length;
 
     const handleAcceptClick = (appId: string) => {
         // Show confirmation if there are other submitted applications
@@ -35,18 +45,36 @@ export function ApplicantList({ applications, jobTitle }: { applications: Applic
         setConfirmAcceptId(null);
         setLoadingId(appId);
         try {
+            const previousItems = items;
+            setItems((current) =>
+                current.map((app) => {
+                    if (app.id === appId) {
+                        return { ...app, status: "accepted" as ApplicationRow["status"] };
+                    }
+
+                    if (["submitted", "negotiating", "waitlisted"].includes(app.status)) {
+                        return { ...app, status: "auto_rejected" as ApplicationRow["status"] };
+                    }
+
+                    return app;
+                }),
+            );
+
             const res = await acceptApplicant(appId);
             if (res.ok) {
                 setAcceptResult({ auto_rejected_count: res.data.auto_rejected_count });
                 setTimeout(() => setAcceptResult(null), 5000);
             } else {
+                setItems(previousItems);
                 console.error("Accept error:", res.error);
             }
-            router.refresh();
         } catch (e) {
             console.error(e);
         } finally {
             setLoadingId(null);
+            startTransition(() => {
+                router.refresh();
+            });
         }
     };
 
@@ -60,12 +88,28 @@ export function ApplicantList({ applications, jobTitle }: { applications: Applic
         setLoadingId(selectedApplicant.id);
         try {
             const reasonText = message || reasonId;
-            await rejectApplicant(selectedApplicant.id, reasonText);
-            router.refresh();
+            const selectedId = selectedApplicant.id;
+            const previousItems = items;
+            setItems((current) =>
+                current.map((app) =>
+                    app.id === selectedId
+                        ? { ...app, status: "rejected" as ApplicationRow["status"], rejection_reason: reasonText }
+                        : app,
+                ),
+            );
+
+            const res = await rejectApplicant(selectedId, reasonText);
+            if (!res.ok) {
+                setItems(previousItems);
+                throw new Error(res.error.message);
+            }
         } catch (e) {
             console.error(e);
         } finally {
             setLoadingId(null);
+            startTransition(() => {
+                router.refresh();
+            });
         }
     };
 
@@ -88,7 +132,7 @@ export function ApplicantList({ applications, jobTitle }: { applications: Applic
         }
     };
 
-    if (applications.length === 0) {
+    if (items.length === 0) {
         return (
             <div className="text-center py-12 border border-dashed border-white/10 rounded-xl bg-white/5">
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
@@ -119,7 +163,7 @@ export function ApplicantList({ applications, jobTitle }: { applications: Applic
                 </div>
             )}
 
-            {applications.map((app) => (
+            {items.map((app) => (
                 <div key={app.id} className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col md:flex-row items-center gap-6 group hover:border-white/20 transition-all">
                     {/* Avatar / User Info */}
                     <div className="flex items-center gap-4 w-full md:w-auto">
@@ -191,7 +235,10 @@ export function ApplicantList({ applications, jobTitle }: { applications: Applic
                             })()
                         )}
                         <button
-                            onClick={() => setSelectedChatApp({ ...app, job: { title: jobTitle } })}
+                            onClick={() => {
+                                setSelectedChatApp({ ...app, job: { title: jobTitle } });
+                                setIsChatOpen(true);
+                            }}
                             className="p-2.5 rounded-lg bg-white/5 text-slate-400 hover:bg-white/10 transition-colors"
                             title="Chat"
                         >
@@ -251,9 +298,26 @@ export function ApplicantList({ applications, jobTitle }: { applications: Applic
                 application={selectedChatApp}
                 currentUserRole="provider"
                 onReject={async (reason) => {
-                    await rejectApplicant(selectedChatApp.id, reason);
-                    setIsChatOpen(false); // Close modal on reject
-                    router.refresh();
+                    const selectedId = selectedChatApp.id;
+                    const previousItems = items;
+                    setItems((current) =>
+                        current.map((app) =>
+                            app.id === selectedId
+                                ? { ...app, status: "rejected" as ApplicationRow["status"], rejection_reason: reason }
+                                : app,
+                        ),
+                    );
+
+                    const res = await rejectApplicant(selectedId, reason);
+                    if (!res.ok) {
+                        setItems(previousItems);
+                        throw new Error(res.error.message);
+                    }
+
+                    setIsChatOpen(false);
+                    startTransition(() => {
+                        router.refresh();
+                    });
                 }}
                 onSendMessage={sendMessage}
             />

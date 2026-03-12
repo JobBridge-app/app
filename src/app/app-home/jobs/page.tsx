@@ -1,55 +1,15 @@
-import { requireCompleteProfile } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { fetchJobs, fetchCandidateApplications, getEffectiveView } from "@/lib/dal/jobbridge";
-import { QueryDebugPanel } from "@/components/debug/QueryDebugPanel";
+import { fetchJobs, fetchCandidateApplications } from "@/lib/dal/jobbridge";
 import { JobsList } from "@/components/jobs/JobsList";
 import type { JobsListItem } from "@/lib/types/jobbridge";
-import { supabaseServer } from "@/lib/supabaseServer";
-
-
+import { getAppHomeSnapshot } from "@/lib/app-shell";
 
 export default async function JobsPage() {
-    const { profile } = await requireCompleteProfile();
-
-    const viewRes = await getEffectiveView({ userId: profile.id, baseAccountType: profile.account_type });
-    if (!viewRes.ok) {
-        return (
-            <div className="container mx-auto py-12 px-4 md:px-6">
-                <div className="mx-auto max-w-4xl space-y-6">
-                    <h1 className="text-3xl font-bold tracking-tight text-white">Finde deinen Job</h1>
-                    <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-200">
-                        <p className="font-semibold">Fehler beim Bestimmen der Datenquelle/Rolle</p>
-                        <p className="mt-2 text-sm font-mono">
-                            {viewRes.error.code ? `${viewRes.error.code}: ` : ""}{viewRes.error.message}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    const view = viewRes.data;
+    const snapshot = await getAppHomeSnapshot();
+    const profile = snapshot.profile;
+    const view = snapshot.effectiveView;
     if (view.viewRole === "job_provider") {
         redirect("/app-home/offers");
-    }
-
-    let guardianStatus = profile.guardian_status ?? "none";
-    let canApply = guardianStatus === "linked";
-
-    // Self-healing check: verify actual relationship exists if profile claims to be linked
-    if (guardianStatus === "linked") {
-        const sb = await supabaseServer();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { count } = await (sb as any)
-            .from("guardian_relationships")
-            .select("*", { count: 'exact', head: true })
-            .eq("child_id", profile.id)
-            .eq("status", "active");
-
-        if (count === null || count === 0) {
-            guardianStatus = "none";
-            canApply = false;
-        }
     }
 
     const [jobsRes, appsRes] = await Promise.all([
@@ -121,9 +81,9 @@ export default async function JobsPage() {
                         extendedActiveJobs={extendedActiveJobs}
                         waitlistedJobs={waitlistedJobs}
                         appliedJobs={appliedJobs}
-                        isDemo={view.source === "demo"}
-                        canApply={canApply}
-                        guardianStatus={guardianStatus}
+                        isDemo={snapshot.isDemo}
+                        canApply={snapshot.canApply}
+                        guardianStatus={snapshot.guardianStatus}
                     />
                 )}
             </div>

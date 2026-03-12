@@ -51,16 +51,23 @@ export const JobsListSection = memo(function JobsListSection({
                     </div>
                 ) : (
                     jobs.map(job => (
-                        <JobCard
+                        <div
                             key={job.id}
-                            job={job}
-                            isDemo={isDemo}
-                            isApplied={title === 'Bereits Beworben'}
-                            isLocked={!canApply}
-                            hideStatusLabel={hideStatusLabel}
-                            isCrossRegionalBadge={isExtendedSection}
-                            onSelect={onSelect}
-                        />
+                            style={{
+                                contentVisibility: "auto",
+                                containIntrinsicSize: "320px",
+                            }}
+                        >
+                            <JobCard
+                                job={job}
+                                isDemo={isDemo}
+                                isApplied={title === 'Bereits Beworben'}
+                                isLocked={!canApply}
+                                hideStatusLabel={hideStatusLabel}
+                                isCrossRegionalBadge={isExtendedSection}
+                                onSelect={onSelect}
+                            />
+                        </div>
                     ))
                 )}
             </div>

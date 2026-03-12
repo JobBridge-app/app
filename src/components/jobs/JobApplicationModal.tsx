@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useState } from "react";
-import type { ReactNode } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, Send, Lock, AlertTriangle } from "lucide-react";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { applyToJob } from "@/app/app-home/jobs/actions";
 import { GuardianConsentModal } from "@/components/GuardianConsentModal";
+import { endPerfMark, startPerfMark } from "@/lib/perf";
 
 interface JobApplicationModalProps {
     isOpen: boolean;
@@ -25,6 +25,14 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const frameId = requestAnimationFrame(() => {
+            endPerfMark("job-apply-open");
+        });
+        return () => cancelAnimationFrame(frameId);
+    }, [isOpen]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -35,6 +43,7 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
 
         setLoading(true);
         setError(null);
+        startPerfMark("job-apply-submit");
 
         const formData = new FormData();
         formData.append("message", message);
@@ -45,6 +54,7 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
         setLoading(false);
 
         if (result.success) {
+            endPerfMark("job-apply-submit");
             setSuccess(true);
             setTimeout(() => {
                 onClose();
@@ -52,6 +62,7 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                 setMessage("");
             }, 2000);
         } else {
+            endPerfMark("job-apply-submit");
             setError(result.error || "Ein unbekannter Fehler ist aufgetreten.");
         }
     };

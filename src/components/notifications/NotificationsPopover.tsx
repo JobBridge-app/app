@@ -1,54 +1,63 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
+import type { HeaderNotificationItem } from "@/lib/types/jobbridge";
+import { endPerfMark, startPerfMark } from "@/lib/perf";
 
-type NotificationItem = {
-    id: string;
-    type: string;
-    title: string | null;
-    body: string | null;
-    created_at: string;
-    read_at: string | null;
-};
+type NotificationItem = HeaderNotificationItem;
 
-export function NotificationsPopover() {
-    const [unreadCount, setUnreadCount] = useState(0);
+export function NotificationsPopover({
+    initialUnreadCount = 0,
+    initialNotifications = [],
+}: {
+    initialUnreadCount?: number;
+    initialNotifications?: NotificationItem[];
+}) {
+    const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
     const [open, setOpen] = useState(false);
-    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
+    const [hasLoadedFresh, setHasLoadedFresh] = useState(false);
 
-    useEffect(() => {
-        const fetchNotifications = async () => {
-            const supabase = supabaseBrowser;
-            const { count } = await supabase
+    const refreshNotifications = useCallback(async () => {
+        const supabase = supabaseBrowser;
+        const [countResult, rowsResult] = await Promise.all([
+            supabase
                 .from("notifications")
                 .select("*", { count: "exact", head: true })
-                .is("read_at", null);
-            setUnreadCount(count || 0);
-
-            const { data } = await supabase
+                .is("read_at", null),
+            supabase
                 .from("notifications")
                 .select("id, type, title, body, created_at, read_at")
                 .order("created_at", { ascending: false })
-                .limit(10) as any;
+                .limit(10),
+        ]);
 
-            const mapped = (data ?? []).map((notification: any) => {
-                return {
-                    id: notification.id,
-                    type: notification.type,
-                    title: notification.title,
-                    body: notification.body, // content is now body
-                    created_at: notification.created_at || "",
-                    read_at: notification.read_at || "",
-                } satisfies NotificationItem;
-            });
-            setNotifications(mapped);
-        };
-        fetchNotifications();
+        setUnreadCount(countResult.count || 0);
+        setNotifications((rowsResult.data ?? []) as NotificationItem[]);
     }, []);
+
+    useEffect(() => {
+        if (!open || hasLoadedFresh) return;
+
+        const fetchNotifications = async () => {
+            await refreshNotifications();
+            setHasLoadedFresh(true);
+        };
+
+        fetchNotifications();
+    }, [hasLoadedFresh, open, refreshNotifications]);
+
+    useEffect(() => {
+        if (!open) return;
+        const frameId = requestAnimationFrame(() => {
+            endPerfMark("notifications-open");
+        });
+        return () => cancelAnimationFrame(frameId);
+    }, [open]);
 
     const markAsRead = async (id: string) => {
         const supabase = supabaseBrowser;
@@ -65,7 +74,12 @@ export function NotificationsPopover() {
         <div className="relative">
             <button
                 type="button"
-                onClick={() => setOpen(!open)}
+                onClick={() => {
+                    if (!open) {
+                        startPerfMark("notifications-open");
+                    }
+                    setOpen((current) => !current);
+                }}
                 aria-label={open ? "Benachrichtigungen schließen" : "Benachrichtigungen öffnen"}
                 className={cn(
                     "relative flex h-[52px] w-[52px] items-center justify-center rounded-full border text-slate-300",
@@ -113,7 +127,7 @@ export function NotificationsPopover() {
                                         <p className="mt-1 line-clamp-2 text-xs text-slate-400">{notification.body || "Kein Inhalt."}</p>
                                         <div className="mt-2 flex items-center justify-between">
                                             <span className="text-[10px] text-slate-500">
-                                                {new Date(notification.created_at).toLocaleDateString("de-DE")}
+                                                {new Date(notification.created_at || Date.now()).toLocaleDateString("de-DE")}
                                             </span>
                                             {!notification.read_at && <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />}
                                         </div>

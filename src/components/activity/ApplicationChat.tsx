@@ -29,20 +29,12 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const supabase = supabaseBrowser;
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-    const [isReady, setIsReady] = useState(false);
+    const [isReady] = useState(true);
 
     // Profile Modal State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
     const [selectedProfileIsStaff, setSelectedProfileIsStaff] = useState(false);
-
-    // Defer heavy content rendering to unblock initial interaction
-    useEffect(() => {
-        const timer = requestAnimationFrame(() => {
-            setIsReady(true);
-        });
-        return () => cancelAnimationFrame(timer);
-    }, []);
 
     // Get current user id
     useEffect(() => {

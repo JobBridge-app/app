@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 import { MessageSquare, Clock, MapPin, Briefcase, ArrowRight, XCircle } from "lucide-react";
-import { ApplicationChatModal } from "@/components/activity/ApplicationChatModal";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
 import type { Database } from "@/lib/types/supabase";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const ApplicationChatModal = dynamic(
+    () => import("@/components/activity/ApplicationChatModal").then((mod) => mod.ApplicationChatModal),
+    { loading: () => null },
+);
 
 // Define the type for the provider's view of an application
 export type ProviderApplication = Database["public"]["Tables"]["applications"]["Row"] & {
@@ -20,10 +25,15 @@ export type ProviderApplication = Database["public"]["Tables"]["applications"]["
 };
 
 export function ProviderActivityList({ applications, userId }: { applications: ProviderApplication[], userId: string }) {
+    const [items, setItems] = useState(applications);
     const [selectedApp, setSelectedApp] = useState<ProviderApplication | null>(null);
     const [viewProfile, setViewProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
     const supabase = supabaseBrowser;
     const router = useRouter();
+
+    useEffect(() => {
+        setItems(applications);
+    }, [applications]);
 
     const handleSendMessage = async (applicationId: string, message: string) => {
         const { error } = await supabase
@@ -39,6 +49,21 @@ export function ProviderActivityList({ applications, userId }: { applications: P
 
     const handleReject = async (reason: string) => {
         if (!selectedApp) return;
+        const selectedId = selectedApp.id;
+
+        const previousItems = items;
+        setItems((current) =>
+            current.map((app) =>
+                app.id === selectedId
+                    ? { ...app, status: "rejected", rejection_reason: reason }
+                    : app,
+            ),
+        );
+        setSelectedApp((current) => (
+            current && current.id === selectedId
+                ? { ...current, status: "rejected", rejection_reason: reason }
+                : current
+        ));
 
         const { error } = await supabase
             .from("applications")
@@ -46,13 +71,19 @@ export function ProviderActivityList({ applications, userId }: { applications: P
                 status: "rejected",
                 rejection_reason: reason
             })
-            .eq("id", selectedApp.id);
+            .eq("id", selectedId);
 
-        if (error) throw error;
-        router.refresh();
+        if (error) {
+            setItems(previousItems);
+            throw error;
+        }
+
+        startTransition(() => {
+            router.refresh();
+        });
     };
 
-    if (applications.length === 0) {
+    if (items.length === 0) {
         return (
             <div className="rounded-[2.5rem] border border-white/5 bg-[#0B0C10] p-16 text-center shadow-xl">
                 <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/5">
@@ -65,9 +96,9 @@ export function ProviderActivityList({ applications, userId }: { applications: P
     }
 
     // Separate applications into logic groups
-    const activeApps = applications.filter(app => ['submitted', 'negotiating', 'accepted'].includes(app.status));
-    const waitlistedApps = applications.filter(app => app.status === 'waitlisted');
-    const closedApps = applications.filter(app => ['rejected', 'withdrawn', 'cancelled'].includes(app.status));
+    const activeApps = items.filter(app => ['submitted', 'negotiating', 'accepted'].includes(app.status));
+    const waitlistedApps = items.filter(app => app.status === 'waitlisted');
+    const closedApps = items.filter(app => ['rejected', 'withdrawn', 'cancelled'].includes(app.status));
 
     // Sort active apps: Accepted first, then Negotiating, then Submitted
     activeApps.sort((a, b) => {

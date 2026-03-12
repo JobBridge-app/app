@@ -1,5 +1,6 @@
 import type { AccountType } from "@/lib/types";
 import type { Database } from "@/lib/types/supabase";
+import type { Market, Profile } from "@/lib/types";
 
 export type DataSource = "live" | "demo";
 
@@ -69,3 +70,28 @@ export type ApplicationRow = Database["public"]["Tables"]["applications"]["Row"]
   } | null;
 };
 
+export type HeaderNotificationItem = Pick<
+  Database["public"]["Tables"]["notifications"]["Row"],
+  "id" | "type" | "title" | "body" | "created_at" | "read_at"
+>;
+
+export type AppHeaderProfile = Profile & {
+  has_active_guardian?: boolean;
+};
+
+export type AppHomeSnapshot = {
+  sessionUserId: string;
+  profile: AppHeaderProfile;
+  profileLite: AppHeaderProfile;
+  effectiveView: EffectiveViewSnapshot;
+  market: Market | null;
+  isDemo: boolean;
+  isStaff: boolean;
+  accountEmail: string | null;
+  guardianStatus: string;
+  hasActiveGuardian: boolean;
+  isVerified: boolean;
+  canApply: boolean;
+  unreadCount: number;
+  notificationsPreview: HeaderNotificationItem[];
+};

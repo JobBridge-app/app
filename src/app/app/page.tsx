@@ -1,5 +1,6 @@
 import { AppContent } from "@/components/app/AppContent";
 import { getAuthState } from "@/lib/auth";
+import { getMarketSummary } from "@/lib/app-shell";
 import { redirect } from "next/navigation";
 
 export default async function AppPage() {
@@ -13,5 +14,7 @@ export default async function AppPage() {
     redirect("/onboarding");
   }
 
-  return <AppContent profile={authState.profile} />;
+  const market = await getMarketSummary(authState.profile?.market_id);
+
+  return <AppContent profile={authState.profile} market={market} />;
 }

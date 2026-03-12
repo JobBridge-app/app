@@ -123,7 +123,7 @@ function GuardianAccessContent() {
 
             {/* Branding Top Left */}
             <div className="absolute top-6 left-6 z-20">
-                <LeftBrandChip />
+                <LeftBrandChip market={null} />
             </div>
 
             <div className="relative max-w-md w-full space-y-6 text-center z-10">

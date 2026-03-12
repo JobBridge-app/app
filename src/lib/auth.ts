@@ -1,13 +1,15 @@
 import type { Session } from "@supabase/supabase-js";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "./supabaseServer";
 import { Profile, isProfileComplete, SystemRoleType, AccountType } from "./types";
+import type { EffectiveViewSnapshot } from "./types/jobbridge";
 
 export type AuthState =
   | { state: "no-session" }
-  | { state: "email-unconfirmed"; session: Session; profile: Profile | null; systemRoles: string[] }
-  | { state: "incomplete-profile"; session: Session; profile: Profile | null; systemRoles: string[] }
-  | { state: "ready"; session: Session; profile: Profile | null; systemRoles: string[] };
+  | { state: "email-unconfirmed"; session: Session; profile: Profile | null; systemRoles: string[]; effectiveView: EffectiveViewSnapshot | null }
+  | { state: "incomplete-profile"; session: Session; profile: Profile | null; systemRoles: string[]; effectiveView: EffectiveViewSnapshot | null }
+  | { state: "ready"; session: Session; profile: Profile | null; systemRoles: string[]; effectiveView: EffectiveViewSnapshot | null };
 
 /**
  * Helper to determine if we should look at Live Data or Demo Data
@@ -42,10 +44,11 @@ export async function getActiveOverride(userId: string) {
   return override;
 }
 
-export const getCurrentSessionAndProfile = async (): Promise<{
+const getCurrentSessionAndProfileCached = cache(async (): Promise<{
   session: Session | null;
   profile: Profile | null;
   systemRoles: string[];
+  effectiveView: EffectiveViewSnapshot | null;
 }> => {
   const supabase = await supabaseServer();
 
@@ -54,14 +57,14 @@ export const getCurrentSessionAndProfile = async (): Promise<{
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
   if (userError || !user?.id) {
-    return { session: null, profile: null, systemRoles: [] };
+    return { session: null, profile: null, systemRoles: [], effectiveView: null };
   }
 
   // Now safe to read session metadata (tokens are already refreshed by getUser above)
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
-    return { session: null, profile: null, systemRoles: [] };
+    return { session: null, profile: null, systemRoles: [], effectiveView: null };
   }
 
   // Parallel fetch: profile, roles, demo session, active override
@@ -69,7 +72,7 @@ export const getCurrentSessionAndProfile = async (): Promise<{
   const [profileResult, rolesResult, demoResult, overrideResult] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
     supabase.from("user_system_roles").select("role:system_roles(name)").eq("user_id", session.user.id),
-    supabase.from("demo_sessions").select("enabled, demo_view").eq("user_id", session.user.id).single(),
+    supabase.from("demo_sessions").select("enabled, demo_view").eq("user_id", session.user.id).maybeSingle(),
     (supabase.from("role_overrides" as any).select("view_as, expires_at").eq("user_id", session.user.id).gt("expires_at", new Date().toISOString()).maybeSingle() as any)
   ]);
 
@@ -82,28 +85,41 @@ export const getCurrentSessionAndProfile = async (): Promise<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const systemRoles = rolesResult.data ? (rolesResult.data as any[]).map((r) => r.role?.name).filter(Boolean) : [];
 
-  // Determine Effective Account Type
-  let accountType: AccountType = 'job_seeker'; // Default
+  let effectiveView: EffectiveViewSnapshot | null = null;
 
   if (profile) {
-    // Priority 1: Demo Mode (highest priority for view)
-    if (demoResult.data?.enabled) {
-      accountType = demoResult.data.demo_view as AccountType;
-    }
-    // Priority 2: Override (if not in demo, allows testing logic on real data)
-    else if (overrideResult.data) {
-      accountType = overrideResult.data.view_as as AccountType;
-    }
-    // Priority 3: Base Profile
-    else {
-      accountType = (profile.account_type as AccountType | null) ?? "job_seeker";
-    }
+    const baseRole = (profile.account_type as AccountType | null) ?? "job_seeker";
+    const demoView = demoResult.data?.enabled
+      ? ((demoResult.data.demo_view as AccountType | null) ?? "job_seeker")
+      : null;
+    const overrideView = overrideResult.data
+      ? (overrideResult.data.view_as as AccountType)
+      : null;
 
-    profile.account_type = accountType;
+    effectiveView = demoView
+      ? {
+          isDemoEnabled: true,
+          viewRole: demoView,
+          source: "demo",
+          roles: systemRoles,
+          demoView,
+          overrideExpiresAt: null,
+        }
+      : {
+          isDemoEnabled: false,
+          viewRole: overrideView ?? baseRole,
+          source: "live",
+          roles: systemRoles,
+          overrideExpiresAt: overrideResult.data?.expires_at ?? null,
+        };
+
+    profile.account_type = effectiveView.viewRole;
   }
 
-  return { session, profile: profile ?? null, systemRoles };
-};
+  return { session, profile: profile ?? null, systemRoles, effectiveView };
+});
+
+export const getCurrentSessionAndProfile = async () => getCurrentSessionAndProfileCached();
 
 // Helpers
 export const isAccountType = (profile: Profile | null, type: AccountType) => {
@@ -115,8 +131,8 @@ export const hasSystemRole = (userRoles: string[], role: SystemRoleType) => {
 };
 
 // Klare Zustände, kein Redirect
-export async function getAuthState(): Promise<AuthState> {
-  const { session, profile, systemRoles } = await getCurrentSessionAndProfile();
+const getAuthStateCached = cache(async (): Promise<AuthState> => {
+  const { session, profile, systemRoles, effectiveView } = await getCurrentSessionAndProfileCached();
 
   if (!session) {
     return { state: "no-session" } as const;
@@ -127,14 +143,18 @@ export async function getAuthState(): Promise<AuthState> {
   const isEmailConfirmed = Boolean((session.user as any)?.email_confirmed_at || confirmedAt);
 
   if (!isEmailConfirmed) {
-    return { state: "email-unconfirmed", session, profile, systemRoles } as const;
+    return { state: "email-unconfirmed", session, profile, systemRoles, effectiveView } as const;
   }
 
   if (!isProfileComplete(profile)) {
-    return { state: "incomplete-profile", session, profile, systemRoles } as const;
+    return { state: "incomplete-profile", session, profile, systemRoles, effectiveView } as const;
   }
 
-  return { state: "ready", session, profile, systemRoles } as const;
+  return { state: "ready", session, profile, systemRoles, effectiveView } as const;
+});
+
+export async function getAuthState(): Promise<AuthState> {
+  return getAuthStateCached();
 }
 
 export const requireSession = async () => {

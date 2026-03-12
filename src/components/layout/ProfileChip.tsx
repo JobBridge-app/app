@@ -1,68 +1,34 @@
 "use client";
 
-import { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { ChevronDown, User, ShieldCheck, ShieldAlert, Sparkles, Building2, CheckCircle2, AlertCircle } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useEffect } from "react";
+import { ChevronDown, User, Building2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import type { AppHeaderProfile } from "@/lib/types/jobbridge";
+import { endPerfMark, startPerfMark } from "@/lib/perf";
 
 type ProfileChipProps = {
-    profile: Profile | null;
+    profile: AppHeaderProfile | null;
     className?: string;
     isDemo?: boolean;
+    isStaff: boolean;
+    accountEmail: string | null;
 };
 
-export function ProfileChip({ profile, className, isDemo }: ProfileChipProps) {
+export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail }: ProfileChipProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [isStaff, setIsStaff] = useState(false);
-    const [accountEmail, setAccountEmail] = useState<string | null | undefined>(profile?.email?.trim() || undefined);
     const router = useRouter();
-    const profileId = profile?.id;
 
     useEffect(() => {
-        const checkRole = async () => {
-            if (!profileId) {
-                setIsStaff(false);
-                return;
-            }
-            const { data } = await supabaseBrowser.from("user_system_roles").select("role_id").eq("user_id", profileId).single();
-            setIsStaff(!!data);
-        };
-        checkRole();
-    }, [profileId]);
-
-    useEffect(() => {
-        let isActive = true;
-
-        const resolveEmail = async () => {
-            const profileEmail = profile?.email?.trim();
-            if (profileEmail) {
-                setAccountEmail(profileEmail);
-                return;
-            }
-
-            try {
-                const { data } = await supabaseBrowser.auth.getUser();
-                if (isActive) {
-                    setAccountEmail(data.user?.email?.trim() || null);
-                }
-            } catch {
-                if (isActive) {
-                    setAccountEmail(null);
-                }
-            }
-        };
-
-        resolveEmail();
-
-        return () => {
-            isActive = false;
-        };
-    }, [profile?.email, profileId]);
+        if (!isOpen) return;
+        const frameId = requestAnimationFrame(() => {
+            endPerfMark("profile-menu-open");
+        });
+        return () => cancelAnimationFrame(frameId);
+    }, [isOpen]);
 
     if (!profile) {
         return (
@@ -86,11 +52,6 @@ export function ProfileChip({ profile, className, isDemo }: ProfileChipProps) {
         profile.account_type === "job_provider"
             ? profile.provider_verification_status === "verified"
             : (profile.guardian_status === "linked" && (profile as any).has_active_guardian !== false);
-    // We rely on the parent to inject 'has_active_guardian' if available, otherwise fallback to status
-    // But wait, if I can't inject it easily without changing types everywhere...
-    // I'll check if I can just fetch it in useEffect? No, that causes layout shift.
-    // Best is to update the Fetch in layout.tsx.
-
 
     const handleLogout = async () => {
         await supabaseBrowser.auth.signOut();
@@ -98,11 +59,18 @@ export function ProfileChip({ profile, className, isDemo }: ProfileChipProps) {
         router.refresh();
     };
 
+    const handleOpenChange = () => {
+        if (!isOpen) {
+            startPerfMark("profile-menu-open");
+        }
+        setIsOpen((current) => !current);
+    };
+
     return (
         <div className={cn("relative", className)}>
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={handleOpenChange}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
                 className={cn(
@@ -178,7 +146,7 @@ export function ProfileChip({ profile, className, isDemo }: ProfileChipProps) {
                                 <div className="text-left mt-2">
                                     <p className="text-sm font-semibold text-slate-100">{profile?.full_name || "Gast"}</p>
                                     <p className="text-xs text-slate-400 truncate max-w-[16rem]">
-                                        {accountEmail === undefined ? "E-Mail wird geladen..." : (accountEmail || "Keine E-Mail hinterlegt")}
+                                        {accountEmail || "Keine E-Mail hinterlegt"}
                                     </p>
                                 </div>
                             </div>

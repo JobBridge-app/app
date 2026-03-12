@@ -1,12 +1,8 @@
-"use client";
-
-import { Bell, Moon, Shield, ChevronRight, Laptop, Smartphone, User } from "lucide-react";
+import { Bell, Shield, ChevronRight, Laptop, User } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from "@/components/providers/ThemeProvider";
+import { ThemeModeToggle } from "@/components/settings/ThemeModeToggle";
 
 export default function SettingsPage() {
-    const { theme, setTheme } = useTheme();
-
     return (
         <div className="container mx-auto py-8 px-4 md:px-6 max-w-4xl">
             <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Einstellungen</h1>
@@ -47,26 +43,7 @@ export default function SettingsPage() {
                                 <h3 className="text-white font-medium">Design Modus</h3>
                                 <p className="text-sm text-slate-400">Wähle deine bevorzugte Ansicht.</p>
                             </div>
-                            <div className="flex items-center p-1 bg-black/40 rounded-lg border border-white/5">
-                                <button
-                                    onClick={() => setTheme("dark")}
-                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${theme === 'dark' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                                >
-                                    Dark
-                                </button>
-                                <button
-                                    onClick={() => setTheme("light")}
-                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${theme === 'light' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                                >
-                                    Light
-                                </button>
-                                <button
-                                    onClick={() => setTheme("system")}
-                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${theme === 'system' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                                >
-                                    System
-                                </button>
-                            </div>
+                            <ThemeModeToggle />
                         </div>
                     </div>
                 </section>

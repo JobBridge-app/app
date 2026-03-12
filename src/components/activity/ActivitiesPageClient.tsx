@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import { ActivityItem } from "@/components/activity/ActivityItem";
-import { ApplicationChat } from "@/components/activity/ApplicationChat";
 import { withdrawApplication, sendMessage } from "@/app/app-home/applications/actions";
 import { MessageSquare, CheckCircle2, XCircle, ArrowRight, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+
+const ApplicationChat = dynamic(
+    () => import("@/components/activity/ApplicationChat").then((mod) => mod.ApplicationChat),
+    { loading: () => null },
+);
 
 interface ActivitiesPageClientProps {
     applications: any[];
@@ -13,29 +19,49 @@ interface ActivitiesPageClientProps {
 }
 
 export function ActivitiesPageClient({ applications, userId }: ActivitiesPageClientProps) {
+    const router = useRouter();
+    const [items, setItems] = useState(applications);
     const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
+    useEffect(() => {
+        setItems(applications);
+    }, [applications]);
+
     const selectedApp = useMemo(() =>
-        applications.find(a => a.id === selectedAppId),
-        [applications, selectedAppId]);
+        items.find(a => a.id === selectedAppId),
+        [items, selectedAppId]);
 
     const handleWithdraw = async (reason: string) => {
         if (!selectedAppId) return;
-        await withdrawApplication(selectedAppId, reason);
-        // Optimistically update or just refresh? for now let rendering handle it via props update if server component refreshes, 
-        // but here we are client side. Ideally we'd validte cache.
-        // For simple UX, close chat or show status change.
+        const previousItems = items;
+        setItems((current) =>
+            current.map((app) =>
+                app.id === selectedAppId
+                    ? { ...app, status: "withdrawn", rejection_reason: reason }
+                    : app,
+            ),
+        );
+
+        const result = await withdrawApplication(selectedAppId, reason);
+        if (result?.error) {
+            setItems(previousItems);
+            throw new Error(result.error);
+        }
+
+        startTransition(() => {
+            router.refresh();
+        });
     };
 
     const stats = useMemo(() => {
         return {
-            negotiating: applications.filter(a => ['negotiating', 'submitted', 'waitlisted'].includes(a.status)).length,
-            accepted: applications.filter(a => a.status === 'accepted').length,
-            rejected: applications.filter(a => ['rejected', 'withdrawn', 'cancelled'].includes(a.status)).length
+            negotiating: items.filter(a => ['negotiating', 'submitted', 'waitlisted'].includes(a.status)).length,
+            accepted: items.filter(a => a.status === 'accepted').length,
+            rejected: items.filter(a => ['rejected', 'withdrawn', 'cancelled'].includes(a.status)).length
         };
-    }, [applications]);
+    }, [items]);
 
-    if (applications.length === 0) {
+    if (items.length === 0) {
         return (
             <div className="text-center py-20 px-4 rounded-3xl border border-dashed border-slate-800 bg-slate-900/20">
                 <div className="bg-slate-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
@@ -92,7 +118,7 @@ export function ActivitiesPageClient({ applications, userId }: ActivitiesPageCli
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Verlauf</h3>
                     </div>
                     <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                        {applications.map((app) => (
+                        {items.map((app) => (
                             <div key={app.id} onClick={() => setSelectedAppId(app.id)} className="cursor-pointer">
                                 <ActivityItem
                                     app={app}
