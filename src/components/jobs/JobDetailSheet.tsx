@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { X, MapPin, Euro, Calendar, Building2, ExternalLink, ShieldCheck } from "lucide-react";
+import { X, MapPin, Euro, Calendar, Building2, ExternalLink, ShieldCheck, Lock } from "lucide-react";
 import type { Database } from "@/lib/types/supabase";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { JobApplicationModal } from "@/components/jobs/JobApplicationModal";
@@ -154,9 +154,19 @@ export function JobDetailSheet({ job, isOpen, onClose, canApply, guardianStatus 
                                             <div className="sticky bottom-0 border-t border-white/10 bg-[#121217]/90 p-6 backdrop-blur-xl sm:px-10">
                                                 <ButtonPrimary
                                                     onClick={() => setIsApplicationModalOpen(true)}
-                                                    className="w-full text-base py-6"
+                                                    className={cn(
+                                                        "w-full text-base py-6 flex items-center justify-center gap-2",
+                                                        !canApply ? "shadow-indigo-500/25 cursor-pointer relative z-50" : ""
+                                                    )}
                                                 >
-                                                    Jetzt bewerben
+                                                    {!canApply ? (
+                                                        <>
+                                                            <Lock size={18} />
+                                                            <span>Freischalten</span>
+                                                        </>
+                                                    ) : (
+                                                        job.status === 'reserved' ? "Auf die Warteliste setzen" : "Jetzt bewerben"
+                                                    )}
                                                 </ButtonPrimary>
                                                 <p className="text-center text-xs text-slate-500 mt-3">
                                                     Mit deiner Bewerbung akzeptierst du unsere Nutzungsbedingungen.

@@ -6,16 +6,7 @@ import { Profile } from "@/lib/types";
 import { getEffectiveView } from "@/lib/dal/jobbridge";
 import { Database } from "@/lib/types/supabase";
 
-function isMinor(birthdate: string | null): boolean {
-    if (!birthdate) return true;
-    const d = new Date(birthdate);
-    if (Number.isNaN(d.getTime())) return true;
-    const now = new Date();
-    let age = now.getFullYear() - d.getFullYear();
-    const m = now.getMonth() - d.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-    return age < 18;
-}
+
 
 export async function applyToJob(formData: FormData | string) {
     // Determine if input is formData or just ID (legacy support/direct call)
@@ -62,9 +53,9 @@ export async function applyToJob(formData: FormData | string) {
 
     const hasActiveGuardian = count !== null && count > 0;
 
-    // If minor and no active guardian, block
-    if (isMinor(profile.birthdate ?? null) && !hasActiveGuardian) {
-        return { error: "Du bist nicht berechtigt, dich zu bewerben (Elternbestätigung fehlt)." };
+    // All job seekers require an active guardian relationship (verification) before applying
+    if (!hasActiveGuardian) {
+        return { error: "Du bist nicht verifiziert und kannst dich nicht bewerben (Elternbestätigung fehlt)." };
     }
 
     // Get Job Owner ID

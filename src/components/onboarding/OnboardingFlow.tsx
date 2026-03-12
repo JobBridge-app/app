@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { OnboardingLayout } from "./OnboardingLayout";
@@ -30,7 +30,12 @@ export function OnboardingFlow({
 
   const [step, setStep] = useState<StepKey>("welcome");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    fullName?: string;
+    birthdate?: string;
+    city?: string;
+  }>({});
   const [data, setData] = useState<{
     role: OnboardingRole | null;
     fullName: string;
@@ -47,23 +52,79 @@ export function OnboardingFlow({
 
   const stepIndex = steps.indexOf(step);
 
+  // Live validation for age for immediate UX feedback
+  useEffect(() => {
+    if (step === "profile" && data.birthdate && data.role) {
+      const d = new Date(data.birthdate);
+      if (Number.isNaN(d.getTime())) return;
+      const now = new Date();
+      let age = now.getFullYear() - d.getFullYear();
+      const m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+
+      if (data.role === "youth" && age >= 21) {
+        setFieldErrors((prev) => ({ ...prev, birthdate: "Als Jugendliche/r oder junge/r Erwachsene/r musst du unter 21 Jahre alt sein." }));
+      } else if (data.role !== "youth" && age < 18) {
+        setFieldErrors((prev) => ({ ...prev, birthdate: "Für diese Rolle musst du mindestens 18 Jahre alt sein." }));
+      } else {
+        setFieldErrors((prev) => {
+          if (!prev.birthdate) return prev;
+          const { birthdate, ...rest } = prev;
+          return rest;
+        });
+      }
+    }
+  }, [data.birthdate, data.role, step]);
+
   const validate = (current: StepKey) => {
+    setGlobalError(null);
+    setFieldErrors({});
+
     if (current === "role" && !data.role) {
-      setError("Bitte wählen Sie eine Rolle aus.");
+      setGlobalError("Bitte wählen Sie eine Rolle aus.");
       return false;
     }
-    if (
-      current === "profile" &&
-      (!data.fullName.trim() || !data.birthdate || !data.city.trim())
-    ) {
-      setError("Bitte füllen Sie alle Felder aus.");
-      return false;
+    if (current === "profile") {
+      let isValid = true;
+      const newErrors: typeof fieldErrors = {};
+
+      if (!data.fullName.trim()) {
+        newErrors.fullName = "Bitte geben Sie Ihren vollständigen Namen an.";
+        isValid = false;
+      }
+      if (!data.city.trim()) {
+        newErrors.city = "Bitte geben Sie Ihren Wohnort an.";
+        isValid = false;
+      }
+
+      if (!data.birthdate) {
+        newErrors.birthdate = "Bitte geben Sie Ihr Geburtsdatum an.";
+        isValid = false;
+      } else {
+        const d = new Date(data.birthdate);
+        const now = new Date();
+        let age = now.getFullYear() - d.getFullYear();
+        const m = now.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+
+        if (data.role === "youth" && age >= 21) {
+          newErrors.birthdate = "Als Jugendliche/r oder junge/r Erwachsene/r musst du unter 21 Jahre alt sein.";
+          isValid = false;
+        } else if (data.role !== "youth" && age < 18) {
+           newErrors.birthdate = "Für diese Rolle musst du mindestens 18 Jahre alt sein.";
+           isValid = false;
+        }
+      }
+
+      if (!isValid) {
+        setFieldErrors(newErrors);
+        return false;
+      }
     }
     if (current === "summary" && !data.agreed) {
-      setError("Bitte bestätigen Sie, dass Ihre Angaben korrekt sind.");
+      setGlobalError("Bitte bestätigen Sie, dass Ihre Angaben korrekt sind.");
       return false;
     }
-    setError(null);
     return true;
   };
 
@@ -79,17 +140,18 @@ export function OnboardingFlow({
   const prevStep = () => {
     if (stepIndex > 0) {
       setStep(steps[stepIndex - 1]);
-      setError(null);
+      setGlobalError(null);
+      setFieldErrors({});
     }
   };
 
   const completeOnboarding = async () => {
     if (!data.role) {
-      setError("Bitte wählen Sie eine Rolle aus.");
+      setGlobalError("Bitte wählen Sie eine Rolle aus.");
       return;
     }
     setLoading(true);
-    setError(null);
+    setGlobalError(null);
     const mapped: { account_type: AccountType; provider_kind: ProviderKind | null } =
       data.role === "youth"
         ? { account_type: "job_seeker", provider_kind: null }
@@ -110,7 +172,7 @@ export function OnboardingFlow({
       router.push("/home");
     } catch (saveError) {
       console.error(saveError);
-      setError(
+      setGlobalError(
         "Speichern fehlgeschlagen. Bitte später erneut versuchen oder Support kontaktieren."
       );
     } finally {
@@ -147,9 +209,14 @@ export function OnboardingFlow({
               fullName={data.fullName}
               birthdate={data.birthdate}
               city={data.city}
-              onChange={(field, value) =>
-                setData((prev) => ({ ...prev, [field]: value }))
-              }
+              errors={fieldErrors}
+              onChange={(field, value) => {
+                setData((prev) => ({ ...prev, [field]: value }));
+                // Clear specific error on type for immediate UX feedback
+                if (fieldErrors[field]) {
+                  setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+                }
+              }}
               onNext={nextStep}
               onBack={prevStep}
             />
@@ -171,9 +238,9 @@ export function OnboardingFlow({
           )}
         </motion.div>
       </AnimatePresence>
-      {error && (
+      {globalError && (
         <div className="mt-6 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100 md:text-base">
-          {error}
+          {globalError}
         </div>
       )}
     </OnboardingLayout>

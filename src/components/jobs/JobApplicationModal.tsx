@@ -144,22 +144,24 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                                             )}
 
                                             <form onSubmit={handleSubmit} className="space-y-4">
-                                                <div>
-                                                    <label htmlFor="message" className="block text-sm font-medium text-slate-300 mb-2">
-                                                        Deine Nachricht (Optional)
-                                                    </label>
-                                                    <textarea
-                                                        id="message"
-                                                        rows={5}
-                                                        className="w-full rounded-xl bg-black/20 border border-white/10 p-3 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm resize-none"
-                                                        placeholder="Hallo, ich habe Interesse an dem Job weil..."
-                                                        value={message}
-                                                        onChange={(e) => setMessage(e.target.value)}
-                                                    />
-                                                    <p className="mt-2 text-xs text-slate-500">
-                                                        Stelle dich kurz vor und schreibe, warum du der/die Richtige für den Job bist.
-                                                    </p>
-                                                </div>
+                                                {canApply && (
+                                                    <div>
+                                                        <label htmlFor="message" className="block text-sm font-medium text-slate-300 mb-2">
+                                                            Deine Nachricht (Optional)
+                                                        </label>
+                                                        <textarea
+                                                            id="message"
+                                                            rows={5}
+                                                            className="w-full rounded-xl bg-black/20 border border-white/10 p-3 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm resize-none"
+                                                            placeholder="Hallo, ich habe Interesse an dem Job weil..."
+                                                            value={message}
+                                                            onChange={(e) => setMessage(e.target.value)}
+                                                        />
+                                                        <p className="mt-2 text-xs text-slate-500">
+                                                            Stelle dich kurz vor und schreibe, warum du der/die Richtige für den Job bist.
+                                                        </p>
+                                                    </div>
+                                                )}
 
                                                 {error && (
                                                     <p className="text-sm text-red-400 bg-red-500/10 p-2 rounded-lg border border-red-500/20">

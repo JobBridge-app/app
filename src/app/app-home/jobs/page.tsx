@@ -4,17 +4,9 @@ import { fetchJobs, fetchCandidateApplications, getEffectiveView } from "@/lib/d
 import { QueryDebugPanel } from "@/components/debug/QueryDebugPanel";
 import { JobsList } from "@/components/jobs/JobsList";
 import type { JobsListItem } from "@/lib/types/jobbridge";
+import { supabaseServer } from "@/lib/supabaseServer";
 
-function isMinor(birthdate: string | null): boolean {
-    if (!birthdate) return true;
-    const d = new Date(birthdate);
-    if (Number.isNaN(d.getTime())) return true;
-    const now = new Date();
-    let age = now.getFullYear() - d.getFullYear();
-    const m = now.getMonth() - d.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-    return age < 18;
-}
+
 
 export default async function JobsPage() {
     const { profile } = await requireCompleteProfile();
@@ -41,8 +33,24 @@ export default async function JobsPage() {
         redirect("/app-home/offers");
     }
 
-    const guardianStatus = profile.guardian_status ?? "none";
-    const canApply = !isMinor(profile.birthdate ?? null) || guardianStatus === "linked";
+    let guardianStatus = profile.guardian_status ?? "none";
+    let canApply = guardianStatus === "linked";
+
+    // Self-healing check: verify actual relationship exists if profile claims to be linked
+    if (guardianStatus === "linked") {
+        const sb = await supabaseServer();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { count } = await (sb as any)
+            .from("guardian_relationships")
+            .select("*", { count: 'exact', head: true })
+            .eq("child_id", profile.id)
+            .eq("status", "active");
+
+        if (count === null || count === 0) {
+            guardianStatus = "none";
+            canApply = false;
+        }
+    }
 
     const [jobsRes, appsRes] = await Promise.all([
         fetchJobs({
