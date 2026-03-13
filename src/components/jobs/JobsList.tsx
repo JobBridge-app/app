@@ -5,7 +5,8 @@ import { JobsListSection } from "@/components/jobs/JobsListSection";
 import { Briefcase, CheckCircle2, Clock, ListFilter, MapPin } from "lucide-react";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
+import { JobDetailModal } from "@/components/jobs/JobDetailModal";
+import { JobFilterSortPanel } from "@/components/jobs/JobFilterSortPanel";
 import {
     deriveVisibleJobs,
     sortJobs,
@@ -19,15 +20,7 @@ import {
 import { warmJobsUI } from "@/lib/ui-warmup";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
 
-const JobDetailModal = dynamic(
-    () => import("@/components/jobs/JobDetailModal").then((mod) => mod.JobDetailModal),
-    { loading: () => null },
-);
 
-const JobFilterSortPanel = dynamic(
-    () => import("@/components/jobs/JobFilterSortPanel").then((mod) => mod.JobFilterSortPanel),
-    { loading: () => null },
-);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

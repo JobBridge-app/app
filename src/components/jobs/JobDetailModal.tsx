@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, memo, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, MapPin, Euro, Calendar, ShieldCheck, Clock, Building2, Briefcase, ArrowRight, CheckCircle2, MessageSquare } from "lucide-react";
 import type { Database } from "@/lib/types/supabase";
@@ -12,6 +12,8 @@ import dynamic from "next/dynamic";
 import { JobsListItem } from "@/lib/types/jobbridge";
 import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
+import { JobApplicationModal } from "@/components/jobs/JobApplicationModal";
+import { StaffBadge } from "@/components/ui/StaffBadge";
 import { cn } from "@/lib/utils";
 import { createSupabaseClient } from "@/lib/supabaseClient";
 import type { Profile } from "@/lib/types";
@@ -26,10 +28,6 @@ const LeafletMap = dynamic(() => import("@/components/ui/LeafletMap"), {
     ),
 });
 
-const JobApplicationModal = dynamic(
-    () => import("@/components/jobs/JobApplicationModal").then((mod) => mod.JobApplicationModal),
-    { loading: () => null },
-);
 
 interface JobDetailModalProps {
     job: JobsListItem | null;
@@ -40,7 +38,7 @@ interface JobDetailModalProps {
     guardianStatus: string;
     context?: 'feed' | 'activity';
 }
-export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guardianStatus, context = 'feed' }: JobDetailModalProps) {
+export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guardianStatus, context = 'feed' }: JobDetailModalProps) {
     const isWaitlistMode = job?.status === 'reserved' && !['negotiating', 'accepted'].includes(job?.application_status || '');
     // ... component implementation ...
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
@@ -52,6 +50,23 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
     const [isProfileLoading, setIsProfileLoading] = useState(false);
     const [isSelectedProfileStaff, setIsSelectedProfileStaff] = useState(false);
 
+    // Fetch staff status immediately when modal opens so "Sicherheit" section is correct
+    useEffect(() => {
+        if (!isOpen || !job?.posted_by) return;
+        let active = true;
+        
+        fetch(`/api/user/roles?userId=${job.posted_by}`)
+            .then(res => res.json())
+            .then(data => {
+                if (active) setIsSelectedProfileStaff(data.isStaff);
+            })
+            .catch(() => {
+                if (active) setIsSelectedProfileStaff(false);
+            });
+            
+        return () => { active = false; };
+    }, [isOpen, job?.posted_by]);
+
     const handleProfileClick = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -61,23 +76,16 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
         try {
             const supabase = createSupabaseClient();
 
-            // Parallel fetch for profile and staff status
-            const [profileResponse, rolesResponse] = await Promise.all([
-                supabase
-                    .from("profiles")
-                    .select("*")
-                    .eq("id", job.posted_by)
-                    .single(),
-                supabase
-                    .from("user_system_roles")
-                    .select("*", { count: 'exact', head: true })
-                    .eq("user_id", job.posted_by)
-            ]);
+            // Fetch profile data
+            const profileResponse = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", job.posted_by)
+                .single();
 
             if (profileResponse.data) {
-                // Cast to Profile to handle potential null vs undefined mismatches for optional fields like theme_preference
+                // Cast to Profile to handle potential null vs undefined mismatches 
                 setSelectedProfile(profileResponse.data as unknown as Profile);
-                setIsSelectedProfileStaff((rolesResponse.count || 0) > 0);
                 setIsProfileModalOpen(true);
             }
         } catch (error) {
@@ -283,17 +291,31 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
                                                     <ShieldCheck size={16} /> Sicherheit
                                                 </h4>
                                                 <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 flex-1 flex flex-col justify-center">
-                                                    <div className="flex items-start gap-4">
-                                                        <div className="mt-1 p-2 bg-green-500/10 rounded-full text-green-400 shrink-0">
-                                                            <CheckCircle2 size={20} />
+                                                    {isSelectedProfileStaff ? (
+                                                        <div className="flex flex-col items-start gap-4">
+                                                            <div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <h5 className="font-semibold text-white text-lg">JobBridge Mitarbeiter</h5>
+                                                                    <StaffBadge />
+                                                                </div>
+                                                                <p className="text-slate-400 mt-1 leading-relaxed text-sm">
+                                                                    Dieser Job wurde direkt von einem offiziellen JobBridge Team-Mitglied veröffentlicht.
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <h5 className="font-semibold text-white text-lg">Geprüfter Job</h5>
-                                                            <p className="text-slate-400 mt-1 leading-relaxed text-sm">
-                                                                Dieser Job wurde vom JobBridge-Team geprüft und freigegeben.
-                                                            </p>
+                                                    ) : (
+                                                        <div className="flex items-start gap-4">
+                                                            <div className="mt-1 p-2 bg-green-500/10 rounded-full text-green-400 shrink-0">
+                                                                <CheckCircle2 size={20} />
+                                                            </div>
+                                                            <div>
+                                                                <h5 className="font-semibold text-white text-lg">Geprüfter Job</h5>
+                                                                <p className="text-slate-400 mt-1 leading-relaxed text-sm">
+                                                                    Dieser Job wurde vom JobBridge-Team geprüft und freigegeben.
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -429,4 +451,4 @@ export const JobDetailModal = memo(function JobDetailModal({ job, isOpen, onClos
             />
         </>
     );
-});
+}

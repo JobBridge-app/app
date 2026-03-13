@@ -4,6 +4,7 @@ import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, MapPin, Calendar, Award, Briefcase, Star, ShieldCheck, Mail, Phone, ExternalLink } from "lucide-react";
 import { Profile } from "@/lib/types";
+import { StaffBadge } from "@/components/ui/StaffBadge";
 
 interface UserProfileModalProps {
     isOpen: boolean;
@@ -44,9 +45,34 @@ export function UserProfileModal({ isOpen, onClose, profile, stats = { jobsCompl
 
     // Logic for Staff/Provider
     const isJobProvider = profile.account_type === "job_provider" || profile.user_type === "job_provider";
-    // isStaff passed via props now
+    // isStaff passed via props or derived internally for 100% reliability
+    const [internalIsStaff, setInternalIsStaff] = useState(false);
 
-    const age = getAge(profile.birthdate);
+    useEffect(() => {
+        if (!profile?.id) return;
+        
+        const checkStaffStatus = async () => {
+            try {
+                const res = await fetch(`/api/user/roles?userId=${profile.id}`);
+                const data = await res.json();
+                setInternalIsStaff(data.isStaff);
+            } catch (e) {
+                console.error("Failed to fetch staff status", e);
+                setInternalIsStaff(false);
+            }
+        };
+
+        // If it's passed as true, no need to check. Otherwise verify to be safe.
+        if (!isStaff) {
+            setInternalIsStaff(false);
+            checkStaffStatus();
+        } else {
+            setInternalIsStaff(true);
+        }
+    }, [profile?.id, isStaff]);
+
+    const age = getAge(profile?.birthdate || null);
+    const showStaffBadge = isStaff || internalIsStaff;
 
     return (
         <Transition appear show={isOpen} as={Fragment}>
@@ -110,13 +136,6 @@ export function UserProfileModal({ isOpen, onClose, profile, stats = { jobsCompl
                                             </div>
 
                                             {/* Staff Badge moved to Header in v21 */}
-
-                                            {/* Verified Provider Badge */}
-                                            {!isStaff && profile.provider_verification_status === 'verified' && (
-                                                <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-2 rounded-full border-4 border-[#09090b] shadow-lg z-20" title="Verifiziert">
-                                                    <ShieldCheck size={16} className="fill-white text-emerald-500" />
-                                                </div>
-                                            )}
                                         </div>
 
                                         <div className="flex-1 pt-2 md:pt-0">
@@ -136,17 +155,8 @@ export function UserProfileModal({ isOpen, onClose, profile, stats = { jobsCompl
                                                     </span>
                                                 )}
 
-                                                {/* Staff Badge - New Header Position (v21) */}
-                                                {isStaff && (
-                                                    <div
-                                                        className="relative px-3 py-0.5 bg-[#0A0A0C] border border-indigo-500/50 rounded-full shadow-[0_0_15px_-3px_rgba(79,70,229,0.4)] flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-500"
-                                                        title="Offizieller JobBridge Mitarbeiter"
-                                                    >
-                                                        <div className="absolute inset-0 bg-indigo-500/10 rounded-full animate-pulse-slow" />
-                                                        <ShieldCheck size={12} className="text-indigo-400 relative z-10" />
-                                                        <span className="text-[9px] font-black text-indigo-100 tracking-widest uppercase relative z-10 whitespace-nowrap">JOBBRIDGE TEAM</span>
-                                                    </div>
-                                                )}
+                                                {/* Staff Badge (Centralized & 100% Reliable) */}
+                                                {showStaffBadge && <StaffBadge />}
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400">

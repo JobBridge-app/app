@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { AppHeaderProfile } from "@/lib/types/jobbridge";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
+import { StaffBadge } from "@/components/ui/StaffBadge";
 
 type ProfileChipProps = {
     profile: AppHeaderProfile | null;
@@ -91,11 +92,6 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             )}
                         </div>
                     </div>
-                    {/* Status Dot */}
-                    <div className={cn(
-                        "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-slate-950 z-10",
-                        isVerified ? "bg-emerald-500" : "bg-amber-500"
-                    )} />
                 </div>
 
                 <div className="hidden min-w-0 md:flex md:flex-col md:items-start md:text-left">
@@ -111,11 +107,6 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-1.5 py-px text-[9px] font-bold tracking-[0.14em] text-amber-300">
                                 DEMO
                             </span>
-                        )}
-                        {!isProvider && !isDemo && (
-                            isVerified
-                                ? <CheckCircle2 size={10} className="text-emerald-500" />
-                                : <AlertCircle size={10} className="text-amber-500" />
                         )}
                     </div>
                 </div>
@@ -141,7 +132,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             <div className="mb-1 border-b border-white/10 px-3 py-2">
                                 <div className="mb-1 flex items-center justify-between">
                                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Account</p>
-                                    {isStaff && <span className="rounded border border-indigo-500/30 bg-indigo-500/20 px-1.5 py-0.5 text-[10px] text-indigo-300">STAFF</span>}
+                                    {isStaff && <StaffBadge />}
                                 </div>
                                 <div className="text-left mt-2">
                                     <p className="text-sm font-semibold text-slate-100">{profile?.full_name || "Gast"}</p>
@@ -166,9 +157,9 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             {isStaff && (
                                 <>
                                     <div className="my-1 h-px bg-white/5" />
-                                    <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Staff Console</p>
+                                    <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Team Console</p>
                                     <Link href="/admin" onClick={() => setIsOpen(false)} className="rounded-lg px-3 py-2 text-left text-sm font-medium text-indigo-400 transition-colors hover:bg-indigo-500/10 hover:text-indigo-300">
-                                        Staff Console
+                                        Team Console
                                     </Link>
                                     <Link href="/admin/demo" onClick={() => setIsOpen(false)} className="w-full rounded-lg px-3 py-2 text-left text-sm text-amber-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400">
                                         Demo Mode

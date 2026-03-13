@@ -7,6 +7,7 @@ import type { JobsListItem } from "@/lib/types/jobbridge";
 import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
 import Link from "next/link";
 import { warmJobsUI } from "@/lib/ui-warmup";
+import { StaffBadge } from "@/components/ui/StaffBadge";
 
 interface JobCardProps {
     job: JobsListItem;
@@ -112,7 +113,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
             onMouseEnter={() => void warmJobsUI()}
             onFocus={() => void warmJobsUI()}
             onPointerDown={() => void warmJobsUI()}
-            className={`group relative flex h-full transform-gpu cursor-pointer flex-col overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-[transform,border-color,box-shadow,background-color,filter] duration-300 will-change-transform sm:hover:-translate-y-1
+            className={`group relative flex h-full transform-gpu cursor-pointer flex-col overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-[border-color,box-shadow,background-color,filter] duration-300
                 ${isApplied && !isUserWaitlisted
                     ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
                     : isLocked

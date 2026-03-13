@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { LocationAutocomplete, LocationDetails } from "@/components/ui/LocationAutocomplete";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
+import { StaffBadge } from "@/components/ui/StaffBadge";
 import { ProviderVerificationModal } from "@/components/profile/ProviderVerificationModal";
 import { GuardianBanner } from "./GuardianBanner";
 import { GuardianConsentModal } from "@/components/GuardianConsentModal";
@@ -405,10 +406,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                             </div>
 
                                             {isStaff && (
-                                                <div className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center gap-1.5">
-                                                    <ShieldCheck size={10} className="text-indigo-400" />
-                                                    <span className="text-[10px] font-black text-indigo-300 tracking-wide uppercase">TEAM</span>
-                                                </div>
+                                                <StaffBadge />
                                             )}
                                         </div>
                                     </div>

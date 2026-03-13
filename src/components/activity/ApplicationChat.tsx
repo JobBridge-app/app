@@ -9,6 +9,7 @@ import { de } from "date-fns/locale";
 import { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
 import { UserProfileCard, UserProfileModal } from "@/components/profile/UserProfileModal";
 import { Profile } from "@/lib/types";
+import { StaffBadge } from "@/components/ui/StaffBadge";
 
 interface ApplicationChatProps {
     application: any; // Using any for simplicity as it involves a complex join
@@ -35,6 +36,19 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
     const [selectedProfileIsStaff, setSelectedProfileIsStaff] = useState(false);
+    const [isHeaderStaff, setIsHeaderStaff] = useState(false);
+
+    // Determine header profile once
+    const headerProfile = currentUserRole === "seeker" ? application?.job?.creator : application?.applicant;
+
+    // Fetch header staff status securely
+    useEffect(() => {
+        if (!headerProfile?.id) return;
+        fetch(`/api/user/roles?userId=${headerProfile.id}`)
+            .then(res => res.json())
+            .then(data => setIsHeaderStaff(data.isStaff))
+            .catch(() => setIsHeaderStaff(false));
+    }, [headerProfile?.id]);
 
     // Get current user id
     useEffect(() => {
@@ -175,8 +189,8 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
 
         if (profileData) {
             // Determine if staff based on fetched roles
-            const roles = profileData.user_system_roles?.map((r: any) => r.role?.name) || [];
-            isStaff = roles.includes('admin') || roles.includes('moderator') || roles.includes('analyst');
+            const roles = profileData.user_system_roles || [];
+            isStaff = roles.length > 0;
 
             setSelectedProfile(profileData);
             setSelectedProfileIsStaff(isStaff);
@@ -190,22 +204,11 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
     const isActive = ['submitted', 'negotiating', 'accepted'].includes(status);
 
     // Prepare Header Data for Display
-    let headerProfile: any = null;
     let headerSubtitle = "";
-    let isHeaderStaff = false;
-
     if (currentUserRole === "seeker") {
-        headerProfile = application.job?.creator;
         headerSubtitle = application.job?.title || "Job-Angebot";
     } else {
-        headerProfile = application.applicant;
         headerSubtitle = "Bewerber für " + (application.job?.title || "Job");
-    }
-
-    // Check staff status for header badge
-    if (headerProfile?.user_system_roles) {
-        const roles = headerProfile.user_system_roles.map((r: any) => r.role?.name) || [];
-        isHeaderStaff = roles.includes('admin') || roles.includes('moderator') || roles.includes('analyst');
     }
 
     return (
@@ -246,9 +249,8 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                                         compact={false}
                                     />
                                     {isHeaderStaff && (
-                                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-                                            <ShieldCheck size={10} className="text-indigo-400" />
-                                            <span className="text-[9px] font-bold text-indigo-300 uppercase tracking-wider">JobBridge Team</span>
+                                        <div className="mt-2">
+                                            <StaffBadge />
                                         </div>
                                     )}
                                 </div>
