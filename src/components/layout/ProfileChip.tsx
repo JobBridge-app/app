@@ -74,8 +74,9 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                 onClick={handleOpenChange}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
+                style={{ touchAction: "manipulation" }}
                 className={cn(
-                    "group flex h-[52px] items-center gap-2 rounded-full border border-white/10 bg-slate-900/40 pl-[6px] pr-2 shadow-xl backdrop-blur-md transition-all duration-200 md:pr-3",
+                    "group flex h-[52px] items-center gap-2 rounded-full border border-white/10 bg-slate-900/40 pl-[6px] pr-2 shadow-xl backdrop-blur-md transition-colors duration-200 md:pr-3",
                     "hover:border-white/20 hover:bg-slate-900/50",
                     isOpen && "border-white/25 bg-slate-900/55"
                 )}
@@ -122,20 +123,22 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             onClick={() => setIsOpen(false)}
                         />
                         <motion.div
-                            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                            initial={{ opacity: 0, y: 6, scale: 0.97 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                            transition={{ duration: 0.15 }}
+                            exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                            transition={{ duration: 0.1, ease: "easeOut" }}
                             className="absolute right-0 top-full z-50 mt-2 flex w-[18rem] flex-col gap-1 rounded-2xl border border-white/10 bg-slate-950/95 p-2 shadow-xl shadow-black/50 backdrop-blur-3xl"
                         >
 
                             <div className="mb-1 border-b border-white/10 px-3 py-2">
                                 <div className="mb-1 flex items-center justify-between">
                                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Account</p>
-                                    {isStaff && <StaffBadge />}
                                 </div>
                                 <div className="text-left mt-2">
-                                    <p className="text-sm font-semibold text-slate-100">{profile?.full_name || "Gast"}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-semibold text-slate-100">{profile?.full_name || "Gast"}</p>
+                                        {isStaff && <StaffBadge />}
+                                    </div>
                                     <p className="text-xs text-slate-400 truncate max-w-[16rem]">
                                         {accountEmail || "Keine E-Mail hinterlegt"}
                                     </p>

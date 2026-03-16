@@ -83,7 +83,7 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
     };
 
     return (
-        <nav className="flex h-[52px] items-center gap-1 rounded-full border border-white/10 bg-slate-900/40 p-[6px] shadow-xl backdrop-blur-md transition-all duration-300">
+        <nav className="flex h-[52px] items-center gap-1 rounded-full border border-white/10 bg-slate-900/40 p-[6px] shadow-xl backdrop-blur-md">
             {navItems.map((item) => {
                 const isActive = item.activePattern.test(currentPath);
                 return (
@@ -98,8 +98,9 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                         onMouseEnter={() => warmRoute(item.href)}
                         onFocus={() => warmRoute(item.href)}
                         onPointerDown={() => warmRoute(item.href)}
+                        style={{ touchAction: "manipulation" }}
                         className={cn(
-                            "group relative flex h-10 items-center justify-center rounded-full px-3 transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 md:px-5",
+                            "group relative flex h-10 items-center justify-center rounded-full px-3 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 md:px-5",
                             isActive
                                 ? "text-white"
                                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -112,7 +113,13 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                                 layoutId={activePillId}
                                 className="absolute inset-0 z-0 rounded-full bg-indigo-600/90 shadow-[0_0_20px_rgba(79,70,229,0.4)]"
                                 initial={false}
-                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                style={{ willChange: "transform" }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 420,
+                                    damping: 28,
+                                    mass: 0.9,
+                                }}
                             />
                         )}
 
@@ -125,12 +132,12 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                                 size={18}
                                 strokeWidth={2.5}
                                 className={cn(
-                                    "transition-transform duration-300",
-                                    isActive ? "scale-100" : "group-hover:scale-105 opacity-70 group-hover:opacity-100"
+                                    "transition-transform duration-150",
+                                    isActive ? "scale-100" : "opacity-70 group-hover:scale-105 group-hover:opacity-100"
                                 )}
                             />
                             <span className={cn(
-                                "font-medium text-sm transition-all duration-300",
+                                "font-medium text-sm",
                                 isActive ? "opacity-100 hidden md:inline-block" : "opacity-0 w-0 hidden"
                             )}>
                                 {item.label}
