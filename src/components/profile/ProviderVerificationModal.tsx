@@ -15,6 +15,8 @@ type ProviderVerificationModalProps = {
 export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerified }: ProviderVerificationModalProps) {
     const [street, setStreet] = useState("");
     const [houseNumber, setHouseNumber] = useState("");
+    const [city, setCity] = useState("");
+    const [zip, setZip] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -28,6 +30,8 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
             setIsSuccess(false);
             setStreet("");
             setHouseNumber("");
+            setCity("");
+            setZip("");
             setIsAddressLocked(false);
             setError(null);
         }
@@ -43,6 +47,8 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
 
         setStreet(loc.address_line1);
         setHouseNumber(foundHouseNumber || "");
+        setCity(loc.city || "");
+        setZip(loc.postal_code || "");
         setIsAddressLocked(true); // Always lock to show the "Selected Address" view
         setError(null);
     };
@@ -50,6 +56,8 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
     const handleResetAddress = () => {
         setStreet("");
         setHouseNumber("");
+        setCity("");
+        setZip("");
         setIsAddressLocked(false);
     };
 
@@ -68,6 +76,8 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                 .update({
                     street: street.trim(),
                     house_number: houseNumber.trim(),
+                    city: city.trim() || null,
+                    zip: zip.trim() || null,
                     provider_verification_status: "verified",
                     provider_verified_at: new Date().toISOString(),
                 })
