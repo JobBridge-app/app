@@ -117,9 +117,16 @@ function WaitlistContent() {
                     </div>
 
                     <div>
-                        <label className="block text-lg font-medium text-white mb-2">Deine E-Mail-Adresse</label>
+                        <label htmlFor="waitlist-email" className="block text-lg font-medium text-white mb-2">Deine E-Mail-Adresse</label>
                         <input
+                            id="waitlist-email"
+                            name="email"
                             type="email"
+                            autoComplete="email"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            inputMode="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required

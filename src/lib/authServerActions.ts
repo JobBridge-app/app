@@ -34,3 +34,34 @@ export async function checkEmailExists(email: string): Promise<boolean> {
     const userExists = data.users.some(u => u.email?.toLowerCase() === email.toLowerCase());
     return userExists;
 }
+
+export async function createSignupFallback(email: string, password: string, data?: Record<string, unknown>): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+        throw new Error("Bitte gib eine gültige E-Mail und ein Passwort ein.");
+    }
+
+    const adminClient = supabaseAdmin();
+    const redirectTo = process.env.NEXT_PUBLIC_SITE_URL;
+
+    const { error: createError } = await adminClient.auth.admin.createUser({
+        email: normalizedEmail,
+        password,
+        email_confirm: false,
+        user_metadata: data,
+    });
+
+    const isAlreadyRegisteredError = createError?.message?.toLowerCase().includes("already");
+    if (createError && !isAlreadyRegisteredError) {
+        throw new Error(createError.message);
+    }
+
+    const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(normalizedEmail, {
+        redirectTo,
+        data,
+    });
+
+    if (inviteError) {
+        throw new Error(inviteError.message);
+    }
+}

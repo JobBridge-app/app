@@ -16,7 +16,7 @@ import { type AccountType, type OnboardingRole, type Profile, type ProviderKind 
 import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2, AlertCircle, Mail, UserX, KeyRound } from "lucide-react";
 import { LocationStep } from "./onboarding/LocationStep";
-import { checkEmailExists } from "@/lib/authServerActions";
+import { checkEmailExists, createSignupFallback } from "@/lib/authServerActions";
 import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
 
 type Step = "location" | "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
@@ -301,11 +301,24 @@ export function OnboardingWizard({
     setErrorType(null);
     setErrorMsg(null);
     try {
-      await signUpWithEmail(email, password, {
+      const { error } = await signUpWithEmail(email, password, {
         city: profileData.region,
         full_name: "",
         market_id: profileData.marketId
       });
+
+      if (error) {
+        if (error.message === "Error sending confirmation email") {
+          await createSignupFallback(email, password, {
+            city: profileData.region,
+            full_name: "",
+            market_id: profileData.marketId,
+          });
+        } else {
+          throw error;
+        }
+      }
+
       setStep("email-confirm");
     } catch (err: unknown) {
       setErrorType("general");
@@ -659,11 +672,18 @@ export function OnboardingWizard({
                   className="space-y-6"
                 >
                   <div>
-                    <label className="mb-2 block text-lg font-medium text-white">
+                    <label htmlFor="auth-email" className="mb-2 block text-lg font-medium text-white">
                       E-Mail-Adresse
                     </label>
                     <input
+                      id="auth-email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      inputMode="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
@@ -675,11 +695,17 @@ export function OnboardingWizard({
                     </p>
                   </div>
                   <div>
-                    <label className="mb-2 block text-lg font-medium text-white">
+                    <label htmlFor="auth-password" className="mb-2 block text-lg font-medium text-white">
                       Passwort
                     </label>
                     <input
+                      id="auth-password"
+                      name="password"
                       type="password"
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full rounded-2xl border border-white/20 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
@@ -1188,11 +1214,14 @@ export function OnboardingWizard({
                       className="space-y-6"
                     >
                       <div>
-                        <label className="mb-2 block text-lg font-medium text-white">
+                        <label htmlFor="company-name" className="mb-2 block text-lg font-medium text-white">
                           Firmenname / Organisation
                         </label>
                         <input
+                          id="company-name"
+                          name="organization"
                           type="text"
+                          autoComplete="organization"
                           value={profileData.companyName}
                           onChange={(e) =>
                             setProfileData((prev) => ({ ...prev, companyName: e.target.value }))
@@ -1203,11 +1232,18 @@ export function OnboardingWizard({
                         />
                       </div>
                       <div>
-                        <label className="mb-2 block text-lg font-medium text-white">
+                        <label htmlFor="company-email" className="mb-2 block text-lg font-medium text-white">
                           E-Mail-Adresse
                         </label>
                         <input
+                          id="company-email"
+                          name="email"
                           type="email"
+                          autoComplete="email"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          inputMode="email"
                           value={profileData.companyEmail}
                           onChange={(e) =>
                             setProfileData((prev) => ({ ...prev, companyEmail: e.target.value }))
