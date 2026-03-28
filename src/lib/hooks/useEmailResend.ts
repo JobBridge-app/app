@@ -1,5 +1,8 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { supabaseBrowser } from "@/lib/supabaseClient";
+import { ensureConfirmationEmailTemplate } from "@/lib/authServerActions";
 
 const COOLDOWN_SECONDS = 60;
 
@@ -35,11 +38,24 @@ export function useEmailResend(email: string): UseEmailResendReturn {
         setError(null);
 
         try {
-            const { error: err } = await supabaseBrowser.auth.resend({
+            let { error: err } = await supabaseBrowser.auth.resend({
                 type: "signup",
                 email,
                 options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/verified` },
             });
+
+            if (err?.message === "Error sending confirmation email") {
+                const repaired = await ensureConfirmationEmailTemplate();
+                if (repaired) {
+                    const retry = await supabaseBrowser.auth.resend({
+                        type: "signup",
+                        email,
+                        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/verified` },
+                    });
+                    err = retry.error;
+                }
+            }
+
             if (err) throw err;
 
             setMessage("E-Mail wurde erneut gesendet.");

@@ -16,7 +16,7 @@ import { type AccountType, type OnboardingRole, type Profile, type ProviderKind 
 import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2, AlertCircle, Mail, UserX, KeyRound } from "lucide-react";
 import { LocationStep } from "./onboarding/LocationStep";
-import { checkEmailExists, createSignupFallback } from "@/lib/authServerActions";
+import { checkEmailExists, ensureConfirmationEmailTemplate } from "@/lib/authServerActions";
 import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
 
 type Step = "location" | "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
@@ -301,23 +301,22 @@ export function OnboardingWizard({
     setErrorType(null);
     setErrorMsg(null);
     try {
-      const { error } = await signUpWithEmail(email, password, {
+      const signUpData = {
         city: profileData.region,
         full_name: "",
         market_id: profileData.marketId
-      });
+      };
+      let { error } = await signUpWithEmail(email, password, signUpData);
 
-      if (error) {
-        if (error.message === "Error sending confirmation email") {
-          await createSignupFallback(email, password, {
-            city: profileData.region,
-            full_name: "",
-            market_id: profileData.marketId,
-          });
-        } else {
-          throw error;
+      if (error?.message === "Error sending confirmation email") {
+        const repaired = await ensureConfirmationEmailTemplate();
+        if (repaired) {
+          const retry = await signUpWithEmail(email, password, signUpData);
+          error = retry.error;
         }
       }
+
+      if (error) throw error;
 
       setStep("email-confirm");
     } catch (err: unknown) {
