@@ -1,6 +1,7 @@
 import { getAuthState } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import AuthBridge from "@/components/AuthBridge";
+import { MiniFooter } from "@/components/layout/MiniFooter";
 
 export default async function LandingPage({
   searchParams,
@@ -21,5 +22,10 @@ export default async function LandingPage({
   }
 
   // Ansonsten Wizard anzeigen (no-session oder incomplete-profile)
-  return <AuthBridge authState={authState} redirectTo={redirectTo} initialMode={authMode} />;
+  return (
+    <>
+      <AuthBridge authState={authState} redirectTo={redirectTo} initialMode={authMode} />
+      <MiniFooter />
+    </>
+  );
 }

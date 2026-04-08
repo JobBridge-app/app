@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ChevronDown, User, Building2, CheckCircle2, AlertCircle } from "lucide-react";
+import { ChevronDown, User, Building2, CheckCircle2, AlertCircle, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabaseBrowser } from "@/lib/supabaseClient";
@@ -169,6 +169,17 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                                     </Link>
                                 </>
                             )}
+
+                            <div className="my-1 h-px bg-white/5" />
+                            <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Rechtliches</p>
+                            <Link
+                                href="/legal/impressum"
+                                onClick={() => setIsOpen(false)}
+                                className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
+                            >
+                                <Shield size={16} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
+                                <span>Trust Center</span>
+                            </Link>
 
                             <div className="my-1 h-px bg-white/5" />
 

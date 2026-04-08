@@ -17,7 +17,7 @@ export async function GET(request: Request) {
                 headers: {
                     "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
                     // Server-side user agent allows bypassing client CORS blocks and adheres to Nominatim usage policy
-                    "User-Agent": "JobBridgeAppServer/1.0 (contact: info@jobbridge.de)"
+                    "User-Agent": "JobBridgeAppServer/1.0 (contact: support@jobbridge.app)"
                 }
             }
         );
