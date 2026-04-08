@@ -36,6 +36,8 @@ type OnboardingWizardProps = {
 const getErrorMessage = (err: unknown, fallback: string) =>
   err instanceof Error ? err.message : fallback;
 
+const normalizeEmail = (value: string | null | undefined) => value?.trim().toLowerCase() || "";
+
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || BRAND_EMAIL;
 
 const isProfileComplete = (profile: Profile | null | undefined) => {
@@ -142,8 +144,16 @@ export function OnboardingWizard({
   };
 
   const checkSessionAfterEmailConfirm = useCallback(async () => {
+    const expectedEmail = normalizeEmail(email);
+    if (!expectedEmail) return false;
+
     const { data: { user } } = await supabaseBrowser.auth.getUser();
     if (!user) return false;
+
+    const confirmedEmail = normalizeEmail(user.email);
+    if (confirmedEmail !== expectedEmail) {
+      return false;
+    }
 
     const { data: profile } = await supabaseBrowser
       .from("profiles")
@@ -300,7 +310,12 @@ export function OnboardingWizard({
     setLoading(true);
     setErrorType(null);
     setErrorMsg(null);
+    setEmailConfirmed(false);
+    setCodeError(null);
     try {
+      const { error: signOutError } = await supabaseBrowser.auth.signOut();
+      if (signOutError) throw signOutError;
+
       const signUpData = {
         city: profileData.region,
         full_name: "",
@@ -901,13 +916,15 @@ export function OnboardingWizard({
                           <p className="text-xs text-slate-400 mb-2">
                             Falls du nicht automatisch weitergeleitet wirst:
                           </p>
-                          <ButtonPrimary
-                            onClick={() => checkSessionAfterEmailConfirm()}
-                            loading={loading}
-                            className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white"
+                          <ButtonSecondary
+                            disabled
+                            className="w-full h-12 line-through decoration-2"
                           >
-                            Ich habe bestätigt
-                          </ButtonPrimary>
+                            Per Link bestätigen
+                          </ButtonSecondary>
+                          <p className="mt-2 px-1 text-[11px] leading-5 text-slate-400/90">
+                            Ey, aktuell aufgrund von technischen Problemen nicht verfügbar. Bitte nutze die Code-Eingabe-Funktion.
+                          </p>
                         </div>
                         <div className="flex flex-col gap-3">
                           <ButtonSecondary onClick={handleResendConfirmation} className="w-full" disabled={resendCooldown > 0 || resendLoading}>
@@ -993,11 +1010,6 @@ export function OnboardingWizard({
                         </motion.div>
                       )}
                     </>
-                  )}
-                  {resendError && (
-                    <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
-                      {resendError}
-                    </div>
                   )}
                 </div>
               </div>
