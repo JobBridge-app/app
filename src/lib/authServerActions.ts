@@ -15,10 +15,11 @@ const DEFAULT_BRANDED_CONFIRMATION_TEMPLATE = `<!DOCTYPE html>
       <tr>
         <td style="padding:28px;">
           <p style="margin:0 0 18px;font-size:16px;line-height:1.6;">Willkommen bei JobBridge. Bitte bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren.</p>
-          <p style="margin:0 0 24px;text-align:center;">
-            <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#00c4cc;color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;">E-Mail bestätigen</a>
-          </p>
-          <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Alternativ kannst du diesen Bestätigungscode in der App eingeben:</p>
+          <div style="margin:0 0 10px;text-align:center;">
+            <span style="display:inline-block;min-width:240px;padding:14px 24px;border-radius:999px;border:1px solid #d8dee6;background:#f6f8fb;color:#7a8696;font-size:16px;font-weight:700;text-decoration:line-through;text-decoration-thickness:2px;">Per Link bestätigen</span>
+          </div>
+          <p style="margin:0 0 18px;font-size:13px;line-height:1.6;color:#5c6673;text-align:center;">Aktuell technische Probleme. Deshalb klicke bitte unten auf &bdquo;Mit Code bestätigen&ldquo; und nutze die Code-Eingabe.</p>
+          <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Bitte gib diesen Bestätigungscode in der App ein:</p>
           <div style="margin:0 0 24px;text-align:center;">
             <span style="display:inline-block;padding:12px 18px;border-radius:999px;background:#eef2f7;font-size:22px;font-weight:700;letter-spacing:0.16em;">{{ .Token }}</span>
           </div>
@@ -34,9 +35,6 @@ const DEFAULT_BRANDED_CONFIRMATION_TEMPLATE = `<!DOCTYPE html>
     </table>
   </body>
 </html>`;
-
-const CONFIRMATION_LINK_BLOCK = `<p style="margin:24px 0 0;text-align:center;"><a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#00c4cc;color:#ffffff;font-size:17px;font-weight:700;text-decoration:none;">E-Mail bestätigen</a></p>`;
-const CONFIRMATION_TOKEN_BLOCK = `<p style="margin:18px 0 0;text-align:center;font-size:15px;line-height:1.6;">Bestätigungscode:</p><div style="margin:12px 0 0;text-align:center;"><span style="display:inline-block;padding:12px 18px;border-radius:999px;background:#eef2f7;font-size:22px;font-weight:700;letter-spacing:0.16em;">{{ .Token }}</span></div>`;
 
 type SupabaseAuthConfig = {
     mailer_subjects_confirmation?: string | null;
@@ -90,35 +88,13 @@ async function fetchAuthConfig(): Promise<SupabaseAuthConfig | null> {
     return response.json();
 }
 
-function insertBeforeClosingTag(template: string, block: string): string {
-    if (template.includes("</body>")) {
-        return template.replace("</body>", `${block}</body>`);
-    }
-
-    if (template.includes("</html>")) {
-        return template.replace("</html>", `${block}</html>`);
-    }
-
-    return `${template}${block}`;
-}
-
 function repairConfirmationTemplate(template: string | null | undefined): string {
-    let repaired = template?.trim() || DEFAULT_BRANDED_CONFIRMATION_TEMPLATE;
-
-    repaired = repaired.replace(
-        /href\s*=\s*(?=(?:\s*(?:target=|rel=|style=|class=|id=|aria-|data-|>)))/i,
-        'href="{{ .ConfirmationURL }}" '
-    );
-
-    if (!repaired.includes("{{ .ConfirmationURL }}")) {
-        repaired = insertBeforeClosingTag(repaired, CONFIRMATION_LINK_BLOCK);
+    const current = template?.trim();
+    if (current === DEFAULT_BRANDED_CONFIRMATION_TEMPLATE) {
+        return current;
     }
 
-    if (!repaired.includes("{{ .Token }}")) {
-        repaired = insertBeforeClosingTag(repaired, CONFIRMATION_TOKEN_BLOCK);
-    }
-
-    return repaired;
+    return DEFAULT_BRANDED_CONFIRMATION_TEMPLATE;
 }
 
 export async function ensureConfirmationEmailTemplate(): Promise<boolean> {

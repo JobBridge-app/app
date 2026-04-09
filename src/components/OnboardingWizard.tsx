@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { CardHeader } from "./ui/CardHeader";
 import { ChoiceTile } from "./ui/ChoiceTile";
 import { ButtonPrimary } from "./ui/ButtonPrimary";
@@ -18,6 +17,7 @@ import { Sparkles, HandHeart, Building2, AlertCircle, Mail, UserX, KeyRound } fr
 import { LocationStep } from "./onboarding/LocationStep";
 import { checkEmailExists, ensureConfirmationEmailTemplate } from "@/lib/authServerActions";
 import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
+import type { User } from "@supabase/supabase-js";
 
 type Step = "location" | "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
 
@@ -37,6 +37,7 @@ const getErrorMessage = (err: unknown, fallback: string) =>
   err instanceof Error ? err.message : fallback;
 
 const normalizeEmail = (value: string | null | undefined) => value?.trim().toLowerCase() || "";
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || BRAND_EMAIL;
 
@@ -66,7 +67,6 @@ export function OnboardingWizard({
   initialMode = null,
   isJustVerified = false,
 }: OnboardingWizardProps) {
-  const router = useRouter();
   const [step, setStep] = useState<Step>(forcedStep || "welcome");
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [loading, setLoading] = useState(false);
@@ -90,7 +90,14 @@ export function OnboardingWizard({
   const [codeError, setCodeError] = useState<string | null>(null);
 
   // Email resend hook
-  const { cooldown: resendCooldown, message: resendMessage, error: resendError, loading: resendLoading, resend: handleResendConfirmation } = useEmailResend(email);
+  const {
+    cooldown: resendCooldown,
+    message: resendMessage,
+    error: resendError,
+    loading: resendLoading,
+    resend: handleResendConfirmation,
+    markSent: markConfirmationEmailSent,
+  } = useEmailResend(email);
 
   // const [regions, setRegions] = useState<Region[]>([]);
   // const [regionsLoading, setRegionsLoading] = useState(true);
@@ -134,14 +141,18 @@ export function OnboardingWizard({
     if (!code) return;
     setLoading(true);
     setCodeError(null);
+    setCodeMessage(null);
     try {
-      const { error } = await supabaseBrowser.auth.verifyOtp({
+      const { data, error } = await supabaseBrowser.auth.verifyOtp({
         email,
         token: code,
         type: 'signup'
       });
       if (error) throw error;
-      await checkSessionAfterEmailConfirm();
+      const confirmed = await checkSessionAfterEmailConfirm(data.user ?? null);
+      if (!confirmed) {
+        throw new Error("Bestätigung war erfolgreich, aber die Sitzung konnte nicht übernommen werden. Bitte versuche es erneut.");
+      }
     } catch (err: unknown) {
       setCodeError(getErrorMessage(err, "Code ungültig."));
     } finally {
@@ -149,15 +160,26 @@ export function OnboardingWizard({
     }
   };
 
-  const checkSessionAfterEmailConfirm = useCallback(async () => {
+  const checkSessionAfterEmailConfirm = useCallback(async (verifiedUser?: User | null) => {
     const expectedEmail = normalizeEmail(email);
-    if (!expectedEmail) return false;
+    let user = verifiedUser ?? null;
 
-    const { data: { user } } = await supabaseBrowser.auth.getUser();
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      if (user?.email_confirmed_at) {
+        break;
+      }
+
+      const { data } = await supabaseBrowser.auth.getUser();
+      user = data.user ?? user;
+      if (!user?.email_confirmed_at) {
+        await wait(250);
+      }
+    }
+
     if (!user) return false;
 
     const confirmedEmail = normalizeEmail(user.email);
-    if (confirmedEmail !== expectedEmail) {
+    if (expectedEmail && confirmedEmail && confirmedEmail !== expectedEmail) {
       return false;
     }
 
@@ -169,37 +191,39 @@ export function OnboardingWizard({
 
     const profileTyped = profile as Profile | null;
     const isComplete = isProfileComplete(profileTyped);
-    const isConfirmed = !!user.email_confirmed_at; // Or checking session status
+    const isConfirmed = !!user.email_confirmed_at;
 
     if (isConfirmed && isComplete) {
       setEmailConfirmed(true);
+      setCodeMessage("Code bestätigt. Du wirst weitergeleitet...");
       setTimeout(() => {
-        router.push(redirectTo || "/app-home");
+        window.location.href = redirectTo || "/app-home";
       }, 1000); // Give user a moment to see success
       return true;
     }
 
     if (isConfirmed) {
       setEmailConfirmed(true);
-      // Small delay before moving on? Or immediate
-      const timer = setTimeout(() => {
-        if (profileTyped && !profileData.role) {
-          const inferred = inferOnboardingRole(profileTyped);
-          // Preserve existing state if present, only update if we got better data
+      setCodeMessage("Code bestätigt. Bitte wähle jetzt deine Rolle.");
+      setTimeout(() => {
+        if (profileTyped) {
           setProfileData((prev) => ({
             ...prev,
-            role: inferred || prev.role,
+            role: null,
             fullName: profileTyped.full_name || prev.fullName,
             birthdate: profileTyped.birthdate || prev.birthdate,
-            region: profileTyped.city || prev.region, // Important: Don't overwrite with null if we have it locally
+            region: profileTyped.city || prev.region,
             marketId: profileTyped.market_id || prev.marketId,
           }));
-          setStep("role");
         } else {
-          setStep("role");
+          setProfileData((prev) => ({
+            ...prev,
+            role: null,
+          }));
         }
+        setStep("role");
       }, 1000);
-      return () => clearTimeout(timer);
+      return true;
     }
 
     if (profileTyped) {
@@ -212,8 +236,8 @@ export function OnboardingWizard({
         marketId: profileTyped.market_id || prev.marketId,
       }));
     }
-    return true;
-  }, [router, redirectTo, profileData.role]);
+    return false;
+  }, [email, redirectTo, profileData.role]);
 
   // Listen for Auth State Changes (Magic Link Clicked in another tab/window)
   useEffect(() => {
@@ -221,8 +245,8 @@ export function OnboardingWizard({
 
     const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        if (session?.user.email_confirmed_at) {
-          await checkSessionAfterEmailConfirm();
+      if (session?.user.email_confirmed_at) {
+          await checkSessionAfterEmailConfirm(session.user);
         }
       }
     });
@@ -231,7 +255,7 @@ export function OnboardingWizard({
     const interval = setInterval(async () => {
       const { data: { session } } = await supabaseBrowser.auth.getSession();
       if (session?.user.email_confirmed_at) {
-        await checkSessionAfterEmailConfirm();
+        await checkSessionAfterEmailConfirm(session.user);
       }
     }, 3000);
 
@@ -322,6 +346,12 @@ export function OnboardingWizard({
       const { error: signOutError } = await supabaseBrowser.auth.signOut();
       if (signOutError) throw signOutError;
 
+      try {
+        await ensureConfirmationEmailTemplate();
+      } catch {
+        // Continue with signup; template sync is best-effort for the emergency fallback.
+      }
+
       const signUpData = {
         city: profileData.region,
         full_name: "",
@@ -339,6 +369,9 @@ export function OnboardingWizard({
 
       if (error) throw error;
 
+      markConfirmationEmailSent("Bestätigungs-E-Mail mit Code wurde gesendet.");
+      setShowCodeForm(false);
+      setCodeMessage(null);
       setStep("email-confirm");
     } catch (err: unknown) {
       setErrorType("general");
@@ -895,7 +928,7 @@ export function OnboardingWizard({
                 <div className="text-center space-y-4 max-w-lg mx-auto">
                   <CardHeader
                     title="Bestätige deine E-Mail"
-                    subtitle="Wir haben dir einen Bestätigungslink geschickt. Ohne Bestätigung oder Eingabe eines Codes kannst du nicht fortfahren."
+                    subtitle="Wir haben dir eine Bestätigungs-E-Mail geschickt. Bitte bestätige dich jetzt mit dem Code."
                     showLogo
                     spacing="compact"
                   />
@@ -919,9 +952,6 @@ export function OnboardingWizard({
                       {loading && <Loader text="Session wird geprüft..." />}
                       <div className="space-y-4 mt-2">
                         <div className="pt-2">
-                          <p className="text-xs text-slate-400 mb-2">
-                            Falls du nicht automatisch weitergeleitet wirst:
-                          </p>
                           <ButtonSecondary
                             disabled
                             className="w-full h-12 line-through decoration-2"
@@ -929,7 +959,7 @@ export function OnboardingWizard({
                             Per Link bestätigen
                           </ButtonSecondary>
                           <p className="mt-2 px-1 text-[11px] leading-5 text-slate-400/90">
-                            Ey, aktuell aufgrund von technischen Problemen nicht verfügbar. Bitte nutze die Code-Eingabe-Funktion.
+                            Aktuell technische Probleme. Deshalb klicke bitte unten auf &bdquo;Mit Code bestätigen&ldquo; und nutze die Code-Eingabe.
                           </p>
                         </div>
                         <div className="flex flex-col gap-3">
