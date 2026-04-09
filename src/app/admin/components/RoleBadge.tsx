@@ -1,4 +1,5 @@
 import { Shield, Eye, Gavel } from "lucide-react";
+import { formatStaffRole } from "@/lib/adminNavigation";
 
 export function RoleBadge({ role }: { role: string }) {
     const roleColors: Record<string, string> = {
@@ -20,7 +21,7 @@ export function RoleBadge({ role }: { role: string }) {
     return (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${style}`}>
             <Icon size={12} />
-            <span className="capitalize">{role}</span>
+            <span>{formatStaffRole(role)}</span>
         </span>
     );
 }

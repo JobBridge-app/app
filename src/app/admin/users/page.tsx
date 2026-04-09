@@ -1,8 +1,8 @@
-import { requireCompleteProfile } from "@/lib/auth";
-import { getAdminUser, getAdminUsers } from "@/lib/data/adminUsers";
+import { getAdminUsers } from "@/lib/data/adminUsers";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { UsersTable } from "./UsersTable";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -15,16 +15,10 @@ export default async function AdminUsersPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireCompleteProfile();
+  await requireStaffSectionAccess("management");
 
   const params = await searchParams;
   const query = readString(params.q).trim();
-  const userId = readString(params.userId);
-
-  /* const [usersResult, selectedUserResult] = await Promise.all([
-    getAdminUsers({ limit: 100, search: query }),
-    userId ? getAdminUser(userId) : Promise.resolve({ item: null, error: null }),
-  ]);*/
 
   // Only fetch list, detail is separate page now
   const usersResult = await getAdminUsers({ limit: 100, search: query });

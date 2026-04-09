@@ -1,8 +1,8 @@
-import { requireCompleteProfile } from "@/lib/auth";
 import { getAdminApplication, getAdminApplications } from "@/lib/data/adminApplications";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { ApplicationsTable } from "./ApplicationsTable";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -15,7 +15,7 @@ export default async function AdminApplicationsPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireCompleteProfile();
+  await requireStaffSectionAccess("management");
 
   const params = await searchParams;
   const query = readString(params.q).trim();

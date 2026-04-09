@@ -1,12 +1,12 @@
-import { requireCompleteProfile } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { TestOverrideControl } from "../components/TestOverrideControl";
 import { Database, Zap, RefreshCw, AlertTriangle } from "lucide-react";
 import { deactivateDemoMode, setDemoMode } from "../actions";
 import { revalidatePath } from "next/cache";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 
 export default async function DemoModePage() {
-    const { session } = await requireCompleteProfile();
+    const { session } = await requireStaffSectionAccess("system");
     const supabase = await supabaseServer();
 
     // Fetch current demo status

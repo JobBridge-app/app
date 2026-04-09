@@ -1,6 +1,9 @@
 import { Gift } from "lucide-react";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 
-export default function DropsPage() {
+export default async function DropsPage() {
+    await requireStaffSectionAccess("system");
+
     return (
         <div className="max-w-4xl mx-auto text-center py-20">
             <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">

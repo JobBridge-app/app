@@ -21,11 +21,11 @@ type StaffContext = {
   error: string | null;
 };
 
-const STAFF_ROLE_PRIORITY: Record<Exclude<StaffRole, "staff">, number> = {
+const STAFF_ROLE_PRIORITY = {
   admin: 1,
   moderator: 2,
   analyst: 3,
-};
+} as const;
 
 function normalizeError(error: unknown, fallback: string): string {
   if (!error) return fallback;
@@ -38,17 +38,20 @@ function normalizeError(error: unknown, fallback: string): string {
 }
 
 export function getHighestStaffRole(roles: string[]): StaffRole {
-  if (roles.includes("admin")) return "admin";
-  if (roles.includes("moderator")) return "moderator";
-  if (roles.includes("analyst")) return "analyst";
-  return "staff";
+  const sortedRoles = sortStaffRoles(roles);
+  return (sortedRoles[0] as StaffRole | undefined) ?? "staff";
 }
 
 export function sortStaffRoles(roles: string[]): string[] {
   return [...roles].sort((left, right) => {
-    const leftPriority = STAFF_ROLE_PRIORITY[left as Exclude<StaffRole, "staff">] ?? Number.POSITIVE_INFINITY;
-    const rightPriority = STAFF_ROLE_PRIORITY[right as Exclude<StaffRole, "staff">] ?? Number.POSITIVE_INFINITY;
-    return leftPriority - rightPriority;
+    const leftPriority = STAFF_ROLE_PRIORITY[left as keyof typeof STAFF_ROLE_PRIORITY] ?? Number.POSITIVE_INFINITY;
+    const rightPriority = STAFF_ROLE_PRIORITY[right as keyof typeof STAFF_ROLE_PRIORITY] ?? Number.POSITIVE_INFINITY;
+
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority;
+    }
+
+    return left.localeCompare(right);
   });
 }
 
@@ -102,8 +105,8 @@ export async function getCurrentStaffContext(): Promise<StaffContext> {
 
   const roleResult = await getStaffRolesForUser(user.id);
   const highestRole = getHighestStaffRole(roleResult.roles);
-  const isStaff = highestRole !== "staff";
-  const isAdmin = highestRole === "admin";
+  const isStaff = roleResult.roles.length > 0;
+  const isAdmin = roleResult.roles.includes("admin");
 
   return {
     userId: user.id,

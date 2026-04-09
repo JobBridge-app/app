@@ -1,7 +1,7 @@
-import { requireCompleteProfile } from "@/lib/auth";
 import { getAdminReport, getAdminReports } from "@/lib/data/adminModeration";
 import { Flag, X } from "lucide-react";
 import Link from "next/link";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -14,7 +14,7 @@ export default async function ModerationPage({
 }: {
     searchParams: SearchParams;
 }) {
-    await requireCompleteProfile();
+    await requireStaffSectionAccess("operations");
     const params = await searchParams;
     const reportId = readString(params.reportId);
     const { items: reports, error } = await getAdminReports({ limit: 100 });

@@ -1,8 +1,8 @@
-import { requireCompleteProfile } from "@/lib/auth";
 import { getRecentActivity } from "@/lib/data/adminDashboard";
 import { Clock } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -18,7 +18,7 @@ export default async function ActivityPage({
 }: {
     searchParams: SearchParams;
 }) {
-    await requireCompleteProfile();
+    await requireStaffSectionAccess("operations");
     const params = await searchParams;
     const limit = 25;
     const offset = parseOffset(params.offset);

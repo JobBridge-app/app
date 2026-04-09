@@ -66,7 +66,7 @@ export function StatsBento({
             <div className="flex items-start justify-between relative z-10 gap-4">
               <div>
                 <p className="text-slate-400 text-sm font-medium mb-1">{stat.label}</p>
-                <h3 className="text-4xl font-bold text-white tracking-tight">{stat.metric.value ?? "—"}</h3>
+                <h3 className="text-4xl font-bold text-white tracking-tight tabular-nums">{stat.metric.value ?? "—"}</h3>
                 {stat.metric.error ? (
                   <div className="mt-2">
                     <p className="text-xs text-rose-300">{stat.metric.error}</p>

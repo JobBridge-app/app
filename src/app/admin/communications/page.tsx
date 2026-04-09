@@ -1,16 +1,16 @@
 
-import { requireCompleteProfile } from "@/lib/auth";
 import { Metadata } from "next";
 import { MessageSquare } from "lucide-react";
 import { CommunicationsDashboard } from "./CommunicationsDashboard";
 import { getCommunicationLogs } from "@/lib/data/adminCommunications";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 
 export const metadata: Metadata = {
     title: "Communication Center | JobBridge Admin",
 };
 
 export default async function CommunicationsPage() {
-    await requireCompleteProfile();
+    await requireStaffSectionAccess("operations");
 
     // Fetch initial logs
     const { items: initialLogs } = await getCommunicationLogs({ limit: 50 });

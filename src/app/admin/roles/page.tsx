@@ -1,10 +1,10 @@
-import { requireCompleteProfile } from "@/lib/auth";
 import { getAdminRoleAssignments } from "@/lib/data/adminRoles";
 import { RolesDashboard } from "./RolesDashboard";
 import { Shield } from "lucide-react";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 
 export default async function RolesPage() {
-    await requireCompleteProfile();
+    await requireStaffSectionAccess("system");
     const { items: assignments } = await getAdminRoleAssignments();
 
     return (

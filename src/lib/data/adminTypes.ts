@@ -1,4 +1,4 @@
-export type StaffRole = "admin" | "moderator" | "analyst" | "staff";
+export type StaffRole = "admin" | "moderator" | "analyst" | "staff" | (string & {});
 
 export type DemoView = "job_seeker" | "job_provider";
 
