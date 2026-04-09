@@ -10,6 +10,12 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // Legal-Seiten vollständig statisch - Auth-Overhead überspringen
+  const path = request.nextUrl.pathname;
+  if (path.startsWith("/legal")) {
+    return response;
+  }
+
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -55,7 +61,6 @@ export async function middleware(request: NextRequest) {
     // The browser will get fresh tokens on next login.
   }
 
-  const path = request.nextUrl.pathname;
   const isProtectedPath =
     path.startsWith("/admin") ||
     path.startsWith("/staff") ||

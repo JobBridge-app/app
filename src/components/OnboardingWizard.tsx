@@ -95,6 +95,12 @@ export function OnboardingWizard({
   // const [regions, setRegions] = useState<Region[]>([]);
   // const [regionsLoading, setRegionsLoading] = useState(true);
 
+  // Seitenscrolling auf Mobile verhindern
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   // Initialize profile data. Important: prefer initialRegion/initialProfile city to ensure persistence.
   const [profileData, setProfileData] = useState({
     role: inferOnboardingRole(initialProfile),
@@ -500,12 +506,12 @@ export function OnboardingWizard({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#07090f]">
+    <div className="h-dvh flex items-center justify-center px-4 py-4 md:py-8 bg-[#07090f] overflow-hidden">
       {/* Toast removed as unused */}
 
 
       {/* Glass Card Container */}
-      <div className="relative z-10 max-w-2xl w-full">
+      <div className="relative z-10 max-w-2xl w-full max-h-[calc(100dvh-2rem)] md:max-h-[calc(100dvh-4rem)] overflow-y-auto no-scrollbar">
         <AnimatePresence mode="wait">
           {/* Schritt 1: Willkommen */}
           {step === "welcome" && (

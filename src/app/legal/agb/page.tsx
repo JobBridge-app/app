@@ -1,5 +1,7 @@
 import { Scale, Users, ShieldCheck, Handshake, AlertTriangle, FileText } from "lucide-react";
 
+export const dynamic = "force-static";
+
 export const metadata = {
   title: "AGB | JobBridge",
 };

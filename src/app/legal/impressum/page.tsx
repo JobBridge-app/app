@@ -1,5 +1,7 @@
 import { Building2, Mail, Phone } from "lucide-react";
 
+export const dynamic = "force-static";
+
 export const metadata = {
   title: "Impressum | JobBridge",
 };

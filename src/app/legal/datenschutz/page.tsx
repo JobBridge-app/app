@@ -1,5 +1,7 @@
 import { Shield, Server, Users, Globe, FileWarning, Mail } from "lucide-react";
 
+export const dynamic = "force-static";
+
 export const metadata = {
   title: "Datenschutzerklärung | JobBridge",
 };

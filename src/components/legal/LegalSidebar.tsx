@@ -40,6 +40,7 @@ export function LegalSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-sm font-medium whitespace-nowrap",
                   isActive
