@@ -11,7 +11,7 @@ type AuthBridgeProps = {
 
 export default function AuthBridge({ authState, redirectTo, initialMode }: AuthBridgeProps) {
   if (authState.state === "no-session") {
-    return <OnboardingWizard initialProfile={null} redirectTo={redirectTo} initialMode={initialMode} />;
+    return <OnboardingWizard initialProfile={null} redirectTo={redirectTo} initialMode={initialMode} reserveFooterSpace />;
   }
 
   if (authState.state === "email-unconfirmed") {
@@ -21,6 +21,7 @@ export default function AuthBridge({ authState, redirectTo, initialMode }: AuthB
         forcedStep="email-confirm"
         initialEmail={authState.session.user.email ?? ""}
         redirectTo={redirectTo}
+        reserveFooterSpace
       />
     );
   }
@@ -31,6 +32,7 @@ export default function AuthBridge({ authState, redirectTo, initialMode }: AuthB
         initialProfile={authState.profile}
         initialEmail={authState.session.user.email ?? ""}
         redirectTo={redirectTo}
+        reserveFooterSpace
       />
     );
   }

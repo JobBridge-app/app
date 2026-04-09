@@ -31,6 +31,7 @@ type OnboardingWizardProps = {
   redirectTo?: string;
   initialMode?: AuthMode;
   isJustVerified?: boolean;
+  reserveFooterSpace?: boolean;
 };
 
 const getErrorMessage = (err: unknown, fallback: string) =>
@@ -66,6 +67,7 @@ export function OnboardingWizard({
   redirectTo,
   initialMode = null,
   isJustVerified = false,
+  reserveFooterSpace = false,
 }: OnboardingWizardProps) {
   const [step, setStep] = useState<Step>(forcedStep || "welcome");
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -539,12 +541,26 @@ export function OnboardingWizard({
   };
 
   return (
-    <div className="h-dvh flex items-center justify-center px-4 py-4 md:py-8 bg-[#07090f] overflow-hidden">
+    <div
+      className={[
+        "min-h-dvh flex justify-center px-4 bg-[#07090f] overflow-x-hidden",
+        reserveFooterSpace
+          ? "items-start md:items-center py-4 pb-28 md:py-8 md:pb-24"
+          : "items-start md:items-center py-4 md:py-8",
+      ].join(" ")}
+    >
       {/* Toast removed as unused */}
 
 
       {/* Glass Card Container */}
-      <div className="relative z-10 max-w-2xl w-full max-h-[calc(100dvh-2rem)] md:max-h-[calc(100dvh-4rem)] overflow-y-auto no-scrollbar">
+      <div
+        className={[
+          "relative z-10 max-w-2xl w-full overflow-y-auto no-scrollbar",
+          reserveFooterSpace
+            ? "max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-8.5rem)]"
+            : "max-h-[calc(100dvh-2rem)] md:max-h-[calc(100dvh-4rem)]",
+        ].join(" ")}
+      >
         <AnimatePresence mode="wait">
           {/* Schritt 1: Willkommen */}
           {step === "welcome" && (

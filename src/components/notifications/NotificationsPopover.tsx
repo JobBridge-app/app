@@ -3,6 +3,7 @@
 import { Bell } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 import type { HeaderNotificationItem } from "@/lib/types/jobbridge";
@@ -21,6 +22,15 @@ export function NotificationsPopover({
     const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
     const [hasLoadedFresh, setHasLoadedFresh] = useState(false);
+    const router = useRouter();
+    const warmNotificationsRoute = useCallback(() => {
+        router.prefetch("/notifications");
+    }, [router]);
+
+    useEffect(() => {
+        const timeoutId = window.setTimeout(warmNotificationsRoute, 450);
+        return () => window.clearTimeout(timeoutId);
+    }, [warmNotificationsRoute]);
 
     const refreshNotifications = useCallback(async () => {
         const supabase = supabaseBrowser;
@@ -53,11 +63,12 @@ export function NotificationsPopover({
 
     useEffect(() => {
         if (!open) return;
+        warmNotificationsRoute();
         const frameId = requestAnimationFrame(() => {
             endPerfMark("notifications-open");
         });
         return () => cancelAnimationFrame(frameId);
-    }, [open]);
+    }, [open, warmNotificationsRoute]);
 
     const markAsRead = async (id: string) => {
         const supabase = supabaseBrowser;
@@ -77,6 +88,7 @@ export function NotificationsPopover({
                 onClick={() => {
                     if (!open) {
                         startPerfMark("notifications-open");
+                        warmNotificationsRoute();
                     }
                     setOpen((current) => !current);
                 }}
@@ -137,7 +149,13 @@ export function NotificationsPopover({
                         </div>
 
                         <div className="mt-4 border-t border-white/10 pt-2 text-center">
-                            <Link href="/notifications" className="text-xs font-medium text-indigo-300 hover:text-indigo-200">
+                            <Link
+                                href="/notifications"
+                                onPointerDown={warmNotificationsRoute}
+                                onMouseEnter={warmNotificationsRoute}
+                                onFocus={warmNotificationsRoute}
+                                className="text-xs font-medium text-indigo-300 hover:text-indigo-200"
+                            >
                                 Alle anzeigen
                             </Link>
                         </div>

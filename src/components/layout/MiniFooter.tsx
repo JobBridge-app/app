@@ -1,28 +1,56 @@
-import React from "react";
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect } from "react";
+
+const LEGAL_ITEMS = [
+  { href: "/legal/impressum", label: "Impressum" },
+  { href: "/legal/datenschutz", label: "Datenschutz" },
+  { href: "/legal/agb", label: "AGB" },
+  { href: "/legal/cookies", label: "Cookies" },
+];
 
 export function MiniFooter() {
+  const router = useRouter();
+
+  const warmRoute = useCallback(
+    (href: string) => {
+      router.prefetch(href);
+    },
+    [router],
+  );
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      LEGAL_ITEMS.forEach((item) => warmRoute(item.href));
+    }, 450);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [warmRoute]);
+
   return (
-    <div className="fixed bottom-6 w-full z-50 pointer-events-none px-6">
-      <div className="max-w-md mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pointer-events-auto text-[11px] font-medium text-slate-500/80">
-        <Link href="/legal/impressum" prefetch={true} className="hover:text-slate-300 dark:hover:text-slate-200 transition-colors">
-          Impressum
-        </Link>
-        <span className="text-slate-700/50 dark:text-slate-600/50">&middot;</span>
-        <Link href="/legal/datenschutz" prefetch={true} className="hover:text-slate-300 dark:hover:text-slate-200 transition-colors">
-          Datenschutz
-        </Link>
-        <span className="text-slate-700/50 dark:text-slate-600/50">&middot;</span>
-        <Link href="/legal/agb" prefetch={true} className="hover:text-slate-300 dark:hover:text-slate-200 transition-colors">
-          AGB
-        </Link>
-        <span className="text-slate-700/50 dark:text-slate-600/50">&middot;</span>
-        <Link href="/legal/cookies" prefetch={true} className="hover:text-slate-300 dark:hover:text-slate-200 transition-colors">
-          Cookies
-        </Link>
-      </div>
-      <div className="mt-2 text-center text-[10px] text-slate-600/40 pointer-events-auto">
-        &copy; {new Date().getFullYear()} JobBridge
+    <div className="fixed inset-x-0 bottom-0 z-40 pointer-events-none bg-gradient-to-t from-[#07090f] via-[#07090f]/96 to-transparent">
+      <div className="pointer-events-auto px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-8">
+        <div className="mx-auto flex max-w-md flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] font-medium text-slate-500/80">
+          {LEGAL_ITEMS.map((item, index) => (
+            <div key={item.href} className="flex items-center gap-4">
+              {index > 0 && <span className="text-slate-700/50 dark:text-slate-600/50">&middot;</span>}
+              <Link
+                href={item.href}
+                prefetch
+                onPointerDown={() => warmRoute(item.href)}
+                onMouseEnter={() => warmRoute(item.href)}
+                onFocus={() => warmRoute(item.href)}
+                style={{ touchAction: "manipulation" }}
+                className="transition-colors hover:text-slate-300 dark:hover:text-slate-200"
+              >
+                {item.label}
+              </Link>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 text-center text-[10px] text-slate-600/40">&copy; {new Date().getFullYear()} JobBridge</div>
       </div>
     </div>
   );

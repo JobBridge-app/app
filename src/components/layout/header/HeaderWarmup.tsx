@@ -25,8 +25,17 @@ export function HeaderWarmup({ routes }: { routes: string[] }) {
   const router = useRouter();
 
   useEffect(() => {
-    return scheduleIdle(() => {
-      routes.forEach((route) => {
+    const uniqueRoutes = Array.from(new Set(routes));
+    const criticalRoutes = uniqueRoutes.slice(0, 3);
+    const earlyWarmTimeout = window.setTimeout(() => {
+      criticalRoutes.forEach((route) => {
+        router.prefetch(route);
+        void warmRouteAdjacentUI(route);
+      });
+    }, 80);
+
+    const cancelIdle = scheduleIdle(() => {
+      uniqueRoutes.forEach((route) => {
         router.prefetch(route);
         void warmRouteAdjacentUI(route);
       });
@@ -34,6 +43,11 @@ export function HeaderWarmup({ routes }: { routes: string[] }) {
       void warmJobsUI();
       void warmActivityUI();
     });
+
+    return () => {
+      window.clearTimeout(earlyWarmTimeout);
+      cancelIdle();
+    };
   }, [router, routes]);
 
   return null;

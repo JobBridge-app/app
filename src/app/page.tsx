@@ -23,9 +23,9 @@ export default async function LandingPage({
 
   // Ansonsten Wizard anzeigen (no-session oder incomplete-profile)
   return (
-    <>
+    <div className="min-h-dvh bg-[#07090f]">
       <AuthBridge authState={authState} redirectTo={redirectTo} initialMode={authMode} />
       <MiniFooter />
-    </>
+    </div>
   );
 }
