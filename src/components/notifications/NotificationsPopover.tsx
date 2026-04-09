@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseClient";
@@ -23,6 +23,7 @@ export function NotificationsPopover({
     const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
     const [hasLoadedFresh, setHasLoadedFresh] = useState(false);
     const router = useRouter();
+    const skipNextClickRef = useRef(false);
     const warmNotificationsRoute = useCallback(() => {
         router.prefetch("/notifications");
     }, [router]);
@@ -63,12 +64,11 @@ export function NotificationsPopover({
 
     useEffect(() => {
         if (!open) return;
-        warmNotificationsRoute();
         const frameId = requestAnimationFrame(() => {
             endPerfMark("notifications-open");
         });
         return () => cancelAnimationFrame(frameId);
-    }, [open, warmNotificationsRoute]);
+    }, [open]);
 
     const markAsRead = async (id: string) => {
         const supabase = supabaseBrowser;
@@ -86,10 +86,22 @@ export function NotificationsPopover({
             <button
                 type="button"
                 onClick={() => {
+                    if (skipNextClickRef.current) {
+                        skipNextClickRef.current = false;
+                        return;
+                    }
                     if (!open) {
                         startPerfMark("notifications-open");
-                        warmNotificationsRoute();
                     }
+                    setOpen((current) => !current);
+                }}
+                onPointerDown={(event) => {
+                    if (event.pointerType !== "touch") return;
+                    event.preventDefault();
+                    if (!open) {
+                        startPerfMark("notifications-open");
+                    }
+                    skipNextClickRef.current = true;
                     setOpen((current) => !current);
                 }}
                 aria-label={open ? "Benachrichtigungen schließen" : "Benachrichtigungen öffnen"}

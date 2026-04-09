@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { ChevronDown, User, Building2, CheckCircle2, AlertCircle, Shield } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,7 @@ type ProfileChipProps = {
 export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail }: ProfileChipProps) {
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
+    const skipNextClickRef = useRef(false);
     const warmProfileLinks = useCallback(() => {
         router.prefetch("/app-home/profile");
         router.prefetch("/legal/impressum");
@@ -70,10 +71,23 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
     };
 
     const handleOpenChange = () => {
+        if (skipNextClickRef.current) {
+            skipNextClickRef.current = false;
+            return;
+        }
         if (!isOpen) {
             startPerfMark("profile-menu-open");
-            warmProfileLinks();
         }
+        setIsOpen((current) => !current);
+    };
+
+    const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+        if (event.pointerType !== "touch") return;
+        event.preventDefault();
+        if (!isOpen) {
+            startPerfMark("profile-menu-open");
+        }
+        skipNextClickRef.current = true;
         setIsOpen((current) => !current);
     };
 
@@ -82,9 +96,9 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
             <button
                 type="button"
                 onClick={handleOpenChange}
+                onPointerDown={handlePointerDown}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
-                style={{ touchAction: "manipulation" }}
                 className={cn(
                     "group flex h-[52px] items-center gap-2 rounded-full border border-white/10 bg-slate-900/40 pl-[6px] pr-2 shadow-xl backdrop-blur-md transition-colors duration-200 md:pr-3",
                     "hover:border-white/20 hover:bg-slate-900/50",

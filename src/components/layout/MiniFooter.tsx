@@ -42,7 +42,6 @@ export function MiniFooter() {
                 onPointerDown={() => warmRoute(item.href)}
                 onMouseEnter={() => warmRoute(item.href)}
                 onFocus={() => warmRoute(item.href)}
-                style={{ touchAction: "manipulation" }}
                 className="transition-colors hover:text-slate-300 dark:hover:text-slate-200"
               >
                 {item.label}

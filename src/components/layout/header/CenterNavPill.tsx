@@ -98,7 +98,6 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                         onMouseEnter={() => warmRoute(item.href)}
                         onFocus={() => warmRoute(item.href)}
                         onPointerDown={() => warmRoute(item.href)}
-                        style={{ touchAction: "manipulation" }}
                         className={cn(
                             "group relative flex h-10 items-center justify-center rounded-full px-3 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 md:px-5",
                             isActive

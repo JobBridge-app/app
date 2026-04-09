@@ -26,22 +26,30 @@ export function HeaderWarmup({ routes }: { routes: string[] }) {
 
   useEffect(() => {
     const uniqueRoutes = Array.from(new Set(routes));
-    const criticalRoutes = uniqueRoutes.slice(0, 3);
+    const isCoarsePointer =
+      typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
+    const criticalRoutes = uniqueRoutes.slice(0, isCoarsePointer ? 2 : 3);
     const earlyWarmTimeout = window.setTimeout(() => {
       criticalRoutes.forEach((route) => {
         router.prefetch(route);
-        void warmRouteAdjacentUI(route);
+        if (!isCoarsePointer) {
+          void warmRouteAdjacentUI(route);
+        }
       });
-    }, 80);
+    }, isCoarsePointer ? 180 : 80);
 
     const cancelIdle = scheduleIdle(() => {
       uniqueRoutes.forEach((route) => {
         router.prefetch(route);
-        void warmRouteAdjacentUI(route);
+        if (!isCoarsePointer) {
+          void warmRouteAdjacentUI(route);
+        }
       });
 
-      void warmJobsUI();
-      void warmActivityUI();
+      if (!isCoarsePointer) {
+        void warmJobsUI();
+        void warmActivityUI();
+      }
     });
 
     return () => {
