@@ -41,7 +41,7 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="text-white font-medium">Design Modus</h3>
-                                <p className="text-sm text-slate-400">Wähle deine bevorzugte Ansicht.</p>
+                                <p className="text-sm text-slate-400">Wähle Light, Dark oder System. Wird in deinem Konto gespeichert.</p>
                             </div>
                             <ThemeModeToggle />
                         </div>

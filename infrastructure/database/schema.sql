@@ -661,5 +661,27 @@ ALTER TABLE public.jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME 
 -- -----------------------------------------------------------------------------
 -- Profile Location Extensions (Distance Tracking)
 -- -----------------------------------------------------------------------------
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS theme_preference text;
+
+UPDATE public.profiles
+SET theme_preference = 'system'
+WHERE theme_preference IS NULL
+   OR theme_preference NOT IN ('light', 'dark', 'system');
+
+ALTER TABLE public.profiles
+  ALTER COLUMN theme_preference SET DEFAULT 'system',
+  ALTER COLUMN theme_preference SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'profiles_theme_preference_check'
+  ) THEN
+    ALTER TABLE public.profiles
+      ADD CONSTRAINT profiles_theme_preference_check
+      CHECK (theme_preference IN ('light', 'dark', 'system'));
+  END IF;
+END $$;
+
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS lat FLOAT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS lng FLOAT;

@@ -108,6 +108,9 @@ export function SettingsHub() {
                                 <span className="text-xs font-semibold">System</span>
                             </button>
                         </div>
+                        <p className="text-xs text-slate-500">
+                            Deine Auswahl wird mit deinem Konto synchronisiert und standardmäßig am System ausgerichtet.
+                        </p>
                     </div>
 
                     <div className="mt-8 pt-6 border-t border-white/5">

@@ -26,7 +26,7 @@ export default async function RootLayout({
   return (
     <html lang="de" suppressHydrationWarning>
       <body className={`${fontSans.variable} min-h-screen bg-background antialiased selection:bg-blue-500/30`}>
-        <ThemeProvider defaultTheme="dark" enableSystem={false} storageKey="jobbridge-theme">
+        <ThemeProvider defaultTheme="system" enableSystem={true} storageKey="jobbridge-theme">
           <TestModeBanner />
           {children}
         </ThemeProvider>

@@ -578,7 +578,7 @@ export type Database = {
           provider_verification_status: Database["public"]["Enums"]["provider_verification_status"]
           provider_verified_at: string | null
           skills: string | null
-          theme_preference: string | null
+          theme_preference: "light" | "dark" | "system"
           updated_at: string
           user_type: string | null
           avatar_url: string | null
@@ -613,7 +613,7 @@ export type Database = {
           provider_verification_status?: Database["public"]["Enums"]["provider_verification_status"]
           provider_verified_at?: string | null
           skills?: string | null
-          theme_preference?: string | null
+          theme_preference?: "light" | "dark" | "system"
           updated_at?: string
           user_type?: string | null
           avatar_url?: string | null
@@ -648,7 +648,7 @@ export type Database = {
           provider_verification_status?: Database["public"]["Enums"]["provider_verification_status"]
           provider_verified_at?: string | null
           skills?: string | null
-          theme_preference?: string | null
+          theme_preference?: "light" | "dark" | "system"
           updated_at?: string
           user_type?: string | null
           avatar_url?: string | null

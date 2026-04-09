@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 
 type Theme = "dark" | "light" | "system";
@@ -24,6 +24,10 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+function isTheme(value: string | null | undefined): value is Theme {
+    return value === "light" || value === "dark" || value === "system";
+}
+
 export function ThemeProvider({
     children,
     defaultTheme = "system",
@@ -31,24 +35,64 @@ export function ThemeProvider({
     storageKey = "vite-ui-theme",
     ...props
 }: ThemeProviderProps) {
-    // 1. Initialize state lazily to avoid heavy work in render
-    // However, for hydration mismatch prevention, we must start with a known state or 'undefined'
-    // but that causes layout shifts.
-    // The best Next.js pattern is to render the script in Head (next-themes does this).
-    // Here we are rolling our own. We will start with "dark" (safe default) or whatever defaultTheme is passed.
-    // To properly support system, we need to check window.matchMedia on client.
-
-    // Simplest hydration fix: Use stored value if available, else default.
-    // BUT we wrap in useEffect to only access localStorage on client.
-
     const [theme, setThemeState] = useState<Theme>(defaultTheme);
     const [isMounted, setIsMounted] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
+    const skipNextSyncRef = useRef(true);
 
     useEffect(() => {
-        setIsMounted(true);
-        const stored = typeof window !== 'undefined' ? localStorage.getItem(storageKey) as Theme : null;
-        if (stored) setThemeState(stored);
-    }, [storageKey]);
+        let cancelled = false;
+
+        const hydrateTheme = async () => {
+            setIsMounted(true);
+
+            const stored = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
+            if (isTheme(stored)) {
+                if (!cancelled) {
+                    setThemeState(stored);
+                    setIsHydrated(true);
+                }
+                return;
+            }
+
+            try {
+                const supabase = supabaseBrowser;
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (!user) {
+                    if (!cancelled) {
+                        setThemeState(defaultTheme);
+                        setIsHydrated(true);
+                    }
+                    return;
+                }
+
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("theme_preference")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+                const dbTheme = profile?.theme_preference;
+
+                if (!cancelled) {
+                    setThemeState(isTheme(dbTheme) ? dbTheme : defaultTheme);
+                    setIsHydrated(true);
+                }
+            } catch {
+                if (!cancelled) {
+                    setThemeState(defaultTheme);
+                    setIsHydrated(true);
+                }
+            }
+        };
+
+        hydrateTheme();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [defaultTheme, storageKey]);
 
     useEffect(() => {
         if (!isMounted) return;
@@ -64,31 +108,32 @@ export function ThemeProvider({
         } else {
             root.classList.add(theme);
         }
+    }, [theme, isMounted, enableSystem]);
+
+    useEffect(() => {
+        if (!isHydrated) return;
 
         localStorage.setItem(storageKey, theme);
-    }, [theme, isMounted, storageKey]);
 
-    // DB Syncer
-    useEffect(() => {
-        if (!isMounted) return;
+        if (skipNextSyncRef.current) {
+            skipNextSyncRef.current = false;
+            return;
+        }
 
         const syncTheme = async () => {
             const supabase = supabaseBrowser;
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                // Save preference if changed. We map 'system' to 'system' in DB too (if allowed) or resolve it.
-                // The DB type allows: "light" | "dark" | "system"
                 await supabase.from("profiles").update({ theme_preference: theme }).eq("id", user.id);
             }
         };
 
-        // Debounce sync to avoid spamming DB on rapid toggles
         const timeoutId = setTimeout(() => {
             syncTheme();
-        }, 2000);
+        }, 400);
 
         return () => clearTimeout(timeoutId);
-    }, [theme, isMounted]);
+    }, [theme, isHydrated, storageKey]);
 
     const value = {
         theme,
@@ -96,10 +141,6 @@ export function ThemeProvider({
             setThemeState(theme);
         },
     };
-
-    // Prevent hydration mismatch if we want, OR just render.
-    // Rending children immediately is usually better for UX even if theme flicks slightly.
-    // But since we defaulted to 'system' or 'dark' and layout is dark by default, it's fine.
 
     return (
         <ThemeProviderContext.Provider {...props} value={value}>
@@ -116,4 +157,3 @@ export const useTheme = () => {
 
     return context;
 };
-
