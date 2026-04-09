@@ -545,8 +545,8 @@ export function OnboardingWizard({
       className={[
         "min-h-dvh flex justify-center px-4 bg-[#07090f] overflow-x-hidden",
         reserveFooterSpace
-          ? "items-start md:items-center py-4 pb-28 md:py-8 md:pb-24"
-          : "items-start md:items-center py-4 md:py-8",
+          ? "items-center py-4 pb-28 md:py-8 md:pb-24"
+          : "items-center py-4 md:py-8",
       ].join(" ")}
     >
       {/* Toast removed as unused */}

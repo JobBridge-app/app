@@ -28,7 +28,7 @@ export function HeaderWarmup({ routes }: { routes: string[] }) {
     const uniqueRoutes = Array.from(new Set(routes));
     const isCoarsePointer =
       typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
-    const criticalRoutes = uniqueRoutes.slice(0, isCoarsePointer ? 2 : 3);
+    const criticalRoutes = uniqueRoutes.slice(0, isCoarsePointer ? 1 : 3);
     const earlyWarmTimeout = window.setTimeout(() => {
       criticalRoutes.forEach((route) => {
         router.prefetch(route);
@@ -36,20 +36,19 @@ export function HeaderWarmup({ routes }: { routes: string[] }) {
           void warmRouteAdjacentUI(route);
         }
       });
-    }, isCoarsePointer ? 180 : 80);
+    }, isCoarsePointer ? 320 : 80);
 
     const cancelIdle = scheduleIdle(() => {
+      if (isCoarsePointer) {
+        return;
+      }
       uniqueRoutes.forEach((route) => {
         router.prefetch(route);
-        if (!isCoarsePointer) {
-          void warmRouteAdjacentUI(route);
-        }
+        void warmRouteAdjacentUI(route);
       });
 
-      if (!isCoarsePointer) {
-        void warmJobsUI();
-        void warmActivityUI();
-      }
+      void warmJobsUI();
+      void warmActivityUI();
     });
 
     return () => {

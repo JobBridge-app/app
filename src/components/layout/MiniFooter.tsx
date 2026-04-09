@@ -22,9 +22,10 @@ export function MiniFooter() {
   );
 
   useEffect(() => {
+    const isCoarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
     const timeoutId = window.setTimeout(() => {
       LEGAL_ITEMS.forEach((item) => warmRoute(item.href));
-    }, 450);
+    }, isCoarsePointer ? 1200 : 450);
 
     return () => window.clearTimeout(timeoutId);
   }, [warmRoute]);
@@ -39,6 +40,7 @@ export function MiniFooter() {
               <Link
                 href={item.href}
                 prefetch
+                onTouchStart={() => warmRoute(item.href)}
                 onPointerDown={() => warmRoute(item.href)}
                 onMouseEnter={() => warmRoute(item.href)}
                 onFocus={() => warmRoute(item.href)}

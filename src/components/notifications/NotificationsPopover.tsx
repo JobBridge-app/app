@@ -29,7 +29,8 @@ export function NotificationsPopover({
     }, [router]);
 
     useEffect(() => {
-        const timeoutId = window.setTimeout(warmNotificationsRoute, 450);
+        const isCoarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+        const timeoutId = window.setTimeout(warmNotificationsRoute, isCoarsePointer ? 1200 : 450);
         return () => window.clearTimeout(timeoutId);
     }, [warmNotificationsRoute]);
 
@@ -81,6 +82,13 @@ export function NotificationsPopover({
         setUnreadCount((prev) => Math.max(0, prev - 1));
     };
 
+    const toggleOpen = () => {
+        if (!open) {
+            startPerfMark("notifications-open");
+        }
+        setOpen((current) => !current);
+    };
+
     return (
         <div className="relative">
             <button
@@ -90,19 +98,11 @@ export function NotificationsPopover({
                         skipNextClickRef.current = false;
                         return;
                     }
-                    if (!open) {
-                        startPerfMark("notifications-open");
-                    }
-                    setOpen((current) => !current);
+                    toggleOpen();
                 }}
-                onPointerDown={(event) => {
-                    if (event.pointerType !== "touch") return;
-                    event.preventDefault();
-                    if (!open) {
-                        startPerfMark("notifications-open");
-                    }
+                onTouchStart={() => {
                     skipNextClickRef.current = true;
-                    setOpen((current) => !current);
+                    toggleOpen();
                 }}
                 aria-label={open ? "Benachrichtigungen schließen" : "Benachrichtigungen öffnen"}
                 className={cn(
@@ -121,7 +121,7 @@ export function NotificationsPopover({
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
                     <div className={cn(
-                        "z-50 rounded-2xl border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-black/50 backdrop-blur-2xl",
+                        "z-50 rounded-2xl border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-black/50 backdrop-blur-md",
                         "fixed left-4 right-4 top-[72px] md:absolute md:left-auto md:right-0 md:top-[calc(100%+0.5rem)] md:w-[22rem]"
                     )}>
                         <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-2">
@@ -163,6 +163,8 @@ export function NotificationsPopover({
                         <div className="mt-4 border-t border-white/10 pt-2 text-center">
                             <Link
                                 href="/notifications"
+                                prefetch
+                                onTouchStart={warmNotificationsRoute}
                                 onPointerDown={warmNotificationsRoute}
                                 onMouseEnter={warmNotificationsRoute}
                                 onFocus={warmNotificationsRoute}

@@ -23,23 +23,33 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
     const skipNextClickRef = useRef(false);
-    const warmProfileLinks = useCallback(() => {
+    const warmProfileLinks = useCallback((mode: "full" | "minimal" = "full") => {
         router.prefetch("/app-home/profile");
-        router.prefetch("/legal/impressum");
-        if (isStaff) {
-            router.prefetch("/admin");
-            router.prefetch("/admin/demo");
+        if (mode === "full") {
+            router.prefetch("/legal/impressum");
+            if (isStaff) {
+                router.prefetch("/admin");
+                router.prefetch("/admin/demo");
+            }
         }
     }, [router, isStaff]);
 
     useEffect(() => {
+        const isCoarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+        const timeoutId = window.setTimeout(
+            () => warmProfileLinks(isCoarsePointer ? "minimal" : "full"),
+            isCoarsePointer ? 1200 : 450
+        );
+        return () => window.clearTimeout(timeoutId);
+    }, [warmProfileLinks]);
+
+    useEffect(() => {
         if (!isOpen) return;
-        warmProfileLinks();
         const frameId = requestAnimationFrame(() => {
             endPerfMark("profile-menu-open");
         });
         return () => cancelAnimationFrame(frameId);
-    }, [isOpen, warmProfileLinks]);
+    }, [isOpen]);
 
     if (!profile) {
         return (
@@ -81,9 +91,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
         setIsOpen((current) => !current);
     };
 
-    const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
-        if (event.pointerType !== "touch") return;
-        event.preventDefault();
+    const handleTouchStart = () => {
         if (!isOpen) {
             startPerfMark("profile-menu-open");
         }
@@ -96,7 +104,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
             <button
                 type="button"
                 onClick={handleOpenChange}
-                onPointerDown={handlePointerDown}
+                onTouchStart={handleTouchStart}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
                 className={cn(
@@ -147,11 +155,11 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             onClick={() => setIsOpen(false)}
                         />
                         <motion.div
-                            initial={{ opacity: 0, y: 6, scale: 0.97 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 6 }}
                             transition={{ duration: 0.1, ease: "easeOut" }}
-                            className="absolute right-0 top-full z-50 mt-2 flex w-[18rem] flex-col gap-1 rounded-2xl border border-white/10 bg-slate-950/95 p-2 shadow-xl shadow-black/50 backdrop-blur-3xl"
+                            className="absolute right-0 top-full z-50 mt-2 flex w-[18rem] flex-col gap-1 rounded-2xl border border-white/10 bg-slate-950/98 p-2 shadow-xl shadow-black/50 backdrop-blur-xl"
                         >
 
                             <div className="mb-1 border-b border-white/10 px-3 py-2">
@@ -171,10 +179,8 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
 
                             <Link
                                 href="/app-home/profile"
+                                prefetch
                                 onClick={() => setIsOpen(false)}
-                                onPointerDown={warmProfileLinks}
-                                onMouseEnter={warmProfileLinks}
-                                onFocus={warmProfileLinks}
                                 className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
                             >
                                 <User size={16} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
@@ -188,10 +194,10 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                                 <>
                                     <div className="my-1 h-px bg-white/5" />
                                     <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Team Console</p>
-                                    <Link href="/admin" onClick={() => setIsOpen(false)} onPointerDown={warmProfileLinks} onMouseEnter={warmProfileLinks} onFocus={warmProfileLinks} className="rounded-lg px-3 py-2 text-left text-sm font-medium text-indigo-400 transition-colors hover:bg-indigo-500/10 hover:text-indigo-300">
+                                    <Link href="/admin" prefetch onClick={() => setIsOpen(false)} className="rounded-lg px-3 py-2 text-left text-sm font-medium text-indigo-400 transition-colors hover:bg-indigo-500/10 hover:text-indigo-300">
                                         Team Console
                                     </Link>
-                                    <Link href="/admin/demo" onClick={() => setIsOpen(false)} onPointerDown={warmProfileLinks} onMouseEnter={warmProfileLinks} onFocus={warmProfileLinks} className="w-full rounded-lg px-3 py-2 text-left text-sm text-amber-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400">
+                                    <Link href="/admin/demo" prefetch onClick={() => setIsOpen(false)} className="w-full rounded-lg px-3 py-2 text-left text-sm text-amber-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400">
                                         Demo Mode
                                     </Link>
                                 </>
@@ -201,10 +207,8 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Rechtliches</p>
                             <Link
                                 href="/legal/impressum"
+                                prefetch
                                 onClick={() => setIsOpen(false)}
-                                onPointerDown={warmProfileLinks}
-                                onMouseEnter={warmProfileLinks}
-                                onFocus={warmProfileLinks}
                                 className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
                             >
                                 <Shield size={16} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />

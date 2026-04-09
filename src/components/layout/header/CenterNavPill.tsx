@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Briefcase, Activity, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Profile } from "@/lib/types";
@@ -22,6 +22,7 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
     const router = useRouter();
     const pathname = usePathname();
     const [pendingHref, setPendingHref] = useState<string | null>(null);
+    const isCoarsePointerRef = useRef(false);
     const currentPath = pendingHref || pathname || "";
     const activePillId = `active-pill-${instanceId}`;
 
@@ -77,9 +78,15 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
         endPerfMark("app-header-route");
     }, [pathname]);
 
+    useEffect(() => {
+        isCoarsePointerRef.current = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+    }, []);
+
     const warmRoute = (href: string) => {
         router.prefetch(href);
-        void warmRouteAdjacentUI(href);
+        if (!isCoarsePointerRef.current) {
+            void warmRouteAdjacentUI(href);
+        }
     };
 
     return (
@@ -97,6 +104,7 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                         }}
                         onMouseEnter={() => warmRoute(item.href)}
                         onFocus={() => warmRoute(item.href)}
+                        onTouchStart={() => warmRoute(item.href)}
                         onPointerDown={() => warmRoute(item.href)}
                         className={cn(
                             "group relative flex h-10 items-center justify-center rounded-full px-3 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 md:px-5",
