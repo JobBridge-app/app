@@ -13,7 +13,7 @@ import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useEmailResend } from "@/lib/hooks/useEmailResend";
 import { type AccountType, type OnboardingRole, type Profile, type ProviderKind } from "@/lib/types";
 import { BRAND_EMAIL } from "@/lib/constants";
-import { Sparkles, HandHeart, Building2, AlertCircle, Mail, UserX, KeyRound } from "lucide-react";
+import { Sparkles, HandHeart, Building2, Mail, UserX, KeyRound } from "lucide-react";
 import { LocationStep } from "./onboarding/LocationStep";
 import { checkEmailExists, ensureConfirmationEmailTemplate } from "@/lib/authServerActions";
 import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
@@ -87,7 +87,6 @@ export function OnboardingWizard({
   // const [toastMsg, setToastMsg] = useState("");
   // const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  const [showCodeForm, setShowCodeForm] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string | null>(null);
 
@@ -140,7 +139,7 @@ export function OnboardingWizard({
 
   const handleVerifyCode = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!code) return;
+    if (code.length < 8) return;
     setLoading(true);
     setCodeError(null);
     setCodeMessage(null);
@@ -372,7 +371,6 @@ export function OnboardingWizard({
       if (error) throw error;
 
       markConfirmationEmailSent("Bestätigungs-E-Mail mit Code wurde gesendet.");
-      setShowCodeForm(false);
       setCodeMessage(null);
       setStep("email-confirm");
     } catch (err: unknown) {
@@ -543,10 +541,10 @@ export function OnboardingWizard({
   return (
     <div
       className={[
-        "min-h-dvh flex justify-center px-4 bg-[#07090f] overflow-x-hidden",
+        "h-dvh flex justify-center overflow-y-auto overflow-x-hidden px-4 bg-[#07090f] no-scrollbar",
         reserveFooterSpace
-          ? "items-center py-4 pb-28 md:py-8 md:pb-24"
-          : "items-center py-4 md:py-8",
+          ? "py-4 pb-28 md:py-8 md:pb-24"
+          : "py-4 md:py-8",
       ].join(" ")}
     >
       {/* Toast removed as unused */}
@@ -555,10 +553,7 @@ export function OnboardingWizard({
       {/* Glass Card Container */}
       <div
         className={[
-          "relative z-10 max-w-2xl w-full overflow-y-auto no-scrollbar",
-          reserveFooterSpace
-            ? "max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-8.5rem)]"
-            : "max-h-[calc(100dvh-2rem)] md:max-h-[calc(100dvh-4rem)]",
+          "relative z-10 my-auto w-full max-w-2xl",
         ].join(" ")}
       >
         <AnimatePresence mode="wait">
@@ -966,56 +961,29 @@ export function OnboardingWizard({
                   {!emailConfirmed && (
                     <>
                       {loading && <Loader text="Session wird geprüft..." />}
-                      <div className="space-y-4 mt-2">
-                        <div className="pt-2">
+                      <div className="mt-3 space-y-5 text-left">
+                        <div className="space-y-2">
                           <ButtonSecondary
                             disabled
-                            className="w-full h-12 line-through decoration-2"
+                            className="w-full h-12 border-white/10 text-white/35 line-through decoration-2 decoration-white/35"
                           >
                             Per Link bestätigen
                           </ButtonSecondary>
-                          <p className="mt-2 px-1 text-[11px] leading-5 text-slate-400/90">
-                            Aktuell technische Probleme. Deshalb klicke bitte unten auf &bdquo;Mit Code bestätigen&ldquo; und nutze die Code-Eingabe.
+                          <p className="px-1 text-center text-[11px] leading-5 text-slate-500">
+                            Link-Bestätigung ist vorübergehend nicht verfügbar. Bitte nutze den Code aus deiner E-Mail.
                           </p>
                         </div>
-                        <div className="flex flex-col gap-3">
-                          <ButtonSecondary onClick={handleResendConfirmation} className="w-full" disabled={resendCooldown > 0 || resendLoading}>
-                            {resendCooldown > 0 ? `Erneut senden (${resendCooldown}s)` : "Bestätigung erneut senden"}
-                          </ButtonSecondary>
-                          <ButtonSecondary
-                            onClick={() => {
-                              setShowCodeForm((prev) => !prev);
-                              setCodeError(null);
-                              setCodeMessage(null);
-                            }}
-                            className="w-full"
-                          >
-                            {showCodeForm ? "Code-Eingabe schließen" : "Mit Code bestätigen"}
-                          </ButtonSecondary>
-                        </div>
-                      </div>
-                      {/* emailStatus removed */}
-                      {(resendMessage || resendError) && (
-                        <p className={`text-sm mt-2 font-medium ${resendError ? 'text-red-300' : 'text-cyan-200/90'}`}>
-                          {resendError || resendMessage}
-                        </p>
-                      )}
-                      {showCodeForm && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                          transition={{ duration: 0.3, ease: "easeOut" }}
-                          className="mt-6 space-y-4 rounded-3xl border border-white/20 bg-white/5 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-6 relative overflow-hidden group"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-                          <div className="flex items-center justify-between relative z-10">
-                            <label className="text-base font-medium text-white/90">Bestätigungscode eingeben</label>
+                        <form onSubmit={handleVerifyCode} className="space-y-3 rounded-[1.75rem] border border-white/12 bg-black/15 p-4">
+                          <div className="flex items-center">
+                            <label htmlFor="email-confirmation-code" className="text-sm font-semibold text-white">
+                              Mit Code bestätigen
+                            </label>
                           </div>
 
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 relative z-10">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                             <input
+                              id="email-confirmation-code"
                               type="text"
                               onChange={(e) => {
                                 const raw = e.target.value.replace(/[^0-9]/g, "");
@@ -1026,41 +994,57 @@ export function OnboardingWizard({
                               inputMode="numeric"
                               pattern="[0-9]*"
                               maxLength={8}
-                              className={`min-w-0 flex-1 rounded-2xl border ${codeError ? "border-rose-400/50 bg-rose-500/10 focus:ring-rose-500/30" : "border-white/20 bg-black/20 focus:border-cyan-400/50 focus:ring-cyan-400/30"} px-5 py-4 text-center text-xl tracking-[0.35em] text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all`}
+                              className={`min-w-0 flex-1 rounded-2xl border ${codeError ? "border-rose-400/50 bg-rose-500/10 focus:ring-rose-500/25" : "border-white/15 bg-[#0F0F12] focus:border-cyan-300/40 focus:ring-cyan-300/20"} px-5 py-4 text-center text-xl font-semibold tracking-[0.34em] text-white placeholder:text-slate-700 focus:outline-none focus:ring-2 transition-all`}
                               placeholder="12345678"
                               value={code}
                               autoFocus
-                            // disabled={codeLocked}
                             />
-                            <ButtonSecondary
-                              onClick={handleVerifyCode}
-                              className="w-full sm:w-auto flex-shrink-0 h-14 px-6 font-medium whitespace-nowrap"
-                              disabled={loading || code.length < 8 /* || codeLocked */}
+                            <ButtonPrimary
+                              type="submit"
+                              loading={loading}
+                              className="h-14 w-full rounded-2xl px-6 sm:w-auto"
+                              disabled={loading || code.length < 8}
                             >
                               Code prüfen
-                            </ButtonSecondary>
+                            </ButtonPrimary>
                           </div>
+                        </form>
 
-                          {codeError && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="text-sm text-rose-300 bg-rose-950/30 px-3 py-2 rounded-lg border border-rose-500/20 inline-block"
-                            >
-                              {codeError}
-                            </motion.div>
-                          )}
-                          {codeMessage && (
-                            <motion.p
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="text-sm text-green-300 font-medium bg-green-900/20 px-3 py-2 rounded-lg border border-green-500/20 inline-block"
-                            >
-                              {codeMessage}
-                            </motion.p>
-                          )}
-                        </motion.div>
-                      )}
+                        <button
+                          type="button"
+                          onClick={handleResendConfirmation}
+                          disabled={resendCooldown > 0 || resendLoading}
+                          className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-semibold text-slate-300 transition-all hover:border-white/20 hover:bg-white/[0.06] hover:text-white focus:outline-none focus:ring-2 focus:ring-white/20 disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          {resendCooldown > 0 ? `Code erneut senden (${resendCooldown}s)` : "Code erneut senden"}
+                        </button>
+
+                        {(resendMessage || resendError) && (
+                          <p className={`text-center text-sm font-medium ${resendError ? 'text-red-300' : 'text-cyan-200/90'}`}>
+                            {resendError || resendMessage}
+                          </p>
+                        )}
+
+                        {codeError && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="rounded-2xl border border-rose-500/20 bg-rose-950/30 px-4 py-3 text-center text-sm text-rose-200"
+                          >
+                            {codeError}
+                          </motion.div>
+                        )}
+
+                        {codeMessage && (
+                          <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="rounded-2xl border border-green-500/20 bg-green-900/20 px-4 py-3 text-center text-sm font-medium text-green-200"
+                          >
+                            {codeMessage}
+                          </motion.p>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
