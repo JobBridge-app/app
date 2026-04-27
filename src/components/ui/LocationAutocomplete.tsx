@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { MapPin, Search, Loader2, X, AlertTriangle } from "lucide-react";
+import { Check, MapPin, Search, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type LocationDetails = {
@@ -32,6 +32,8 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const selectedLabelRef = useRef(defaultValue);
+  const searchVersionRef = useRef(0);
 
   // Close on click outside
   useEffect(() => {
@@ -46,12 +48,26 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
 
   // Debounced Search
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (query.length < 3) {
-        setResults([]);
-        return;
-      }
+    const normalizedQuery = query.trim();
 
+    if (normalizedQuery.length < 3) {
+      setResults([]);
+      setIsOpen(false);
+      setIsLoading(false);
+      return;
+    }
+
+    if (selectedLabelRef.current === query) {
+      setResults([]);
+      setIsOpen(false);
+      setIsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const searchVersion = ++searchVersionRef.current;
+
+    const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
         // Priority to Rheinbach/Meckenheim/Bonn (Radius/Viewbox)
@@ -66,19 +82,28 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
           url.searchParams.set("cityOnly", "true");
         }
 
-        const response = await fetch(url.toString());
+        const response = await fetch(url.toString(), { signal: controller.signal });
         const data = await response.json();
+
+        if (searchVersion !== searchVersionRef.current) return;
+
         setResults(data);
-        setIsOpen(true);
+        setIsOpen(Array.isArray(data) && data.length > 0);
       } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
         console.error("Location search failed", error);
       } finally {
-        setIsLoading(false);
+        if (searchVersion === searchVersionRef.current) {
+          setIsLoading(false);
+        }
       }
     }, 500);
 
-    return () => clearTimeout(timer);
-  }, [query]);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, cityOnly]);
 
   const handleSelect = (item: any) => {
     const addr = item.address || {};
@@ -100,8 +125,8 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
     const zip = addr.postcode || "";
 
     // Construct a nice label
-    const start = fullStreet ? `${fullStreet}, ` : "";
-    const label = `${start}${zip} ${city}`;
+    const localityLabel = [zip, city].filter(Boolean).join(" ");
+    const label = fullStreet ? `${fullStreet}, ${localityLabel}` : localityLabel;
 
     const details: LocationDetails = {
       address_line1: street, // Just street name
@@ -116,9 +141,13 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
       house_number: houseNumber
     };
 
+    selectedLabelRef.current = label;
+    searchVersionRef.current += 1;
     setQuery(label);
-    onSelect(details);
+    setResults([]);
     setIsOpen(false);
+    setIsLoading(false);
+    onSelect(details);
     inputRef.current?.blur();
   };
 
@@ -136,10 +165,16 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
           type="text"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            setIsOpen(true);
+            const nextQuery = e.target.value;
+            selectedLabelRef.current = "";
+            setQuery(nextQuery);
+            setIsOpen(false);
           }}
-          onFocus={() => query.length >= 3 && setIsOpen(true)}
+          onFocus={() => {
+            if (query.trim().length >= 3 && selectedLabelRef.current !== query && results.length > 0) {
+              setIsOpen(true);
+            }
+          }}
           placeholder={placeholder || (cityOnly ? "Stadt eingeben (z.B. Bonn)..." : "Adresse suchen (z.B. Hauptstraße 12)...")}
           className="w-full pl-12 pr-10 h-14 rounded-2xl bg-[#0F0F12] border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all text-base font-medium shadow-sm"
         />
@@ -147,8 +182,12 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
           <button
             type="button"
             onClick={() => {
+              selectedLabelRef.current = "";
+              searchVersionRef.current += 1;
               setQuery("");
+              setResults([]);
               setIsOpen(false);
+              setIsLoading(false);
             }}
             className="absolute right-4 text-slate-500 hover:text-white transition-colors p-1"
           >
@@ -158,31 +197,36 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
       </div>
 
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A20] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#17171D] shadow-[0_24px_80px_rgba(0,0,0,0.55)] animate-in fade-in zoom-in-95 duration-200">
           <div className="max-h-[280px] overflow-y-auto p-2 space-y-1">
             {results.map((item, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => handleSelect(item)}
-                className="w-full text-left flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group"
+                className="w-full text-left flex items-start justify-between gap-3 p-3 rounded-xl hover:bg-white/[0.06] focus:bg-white/[0.06] focus:outline-none transition-colors group"
               >
-                <div className="mt-1 p-2 rounded-full bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
-                  <MapPin size={16} />
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="mt-1 p-2 rounded-full bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                    <MapPin size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
+                      {cityOnly
+                        ? (item.address?.city || item.address?.town || item.address?.village || item.display_name.split(",")[0])
+                        : (item.address?.road || item.display_name.split(",")[0])}
+                      {!cityOnly && item.address?.house_number && <span className="text-indigo-400"> {item.address.house_number}</span>}
+                    </div>
+                    <div className="truncate text-xs text-slate-500 mt-1 font-medium group-hover:text-slate-400">
+                      {cityOnly
+                        ? `${item.address?.postcode || ""} ${item.address?.state || ""}`.trim() || item.address?.country
+                        : `${item.address?.postcode || ""} ${item.address?.city || item.address?.town || item.address?.village}, ${item.address?.country}`.trim()
+                      }
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
-                    {cityOnly 
-                      ? (item.address?.city || item.address?.town || item.address?.village || item.display_name.split(",")[0])
-                      : (item.address?.road || item.display_name.split(",")[0])}
-                    {!cityOnly && item.address?.house_number && <span className="text-indigo-400"> {item.address.house_number}</span>}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1 font-medium group-hover:text-slate-400">
-                    {cityOnly 
-                      ? `${item.address?.postcode || ""} ${item.address?.state || ""}`.trim() || item.address?.country
-                      : `${item.address?.postcode || ""} ${item.address?.city || item.address?.town || item.address?.village}, ${item.address?.country}`.trim()
-                    }
-                  </div>
+                <div className="mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 text-slate-600 opacity-0 transition-all group-hover:opacity-100 group-hover:text-indigo-200 group-focus:opacity-100">
+                  <Check size={14} />
                 </div>
               </button>
             ))}
