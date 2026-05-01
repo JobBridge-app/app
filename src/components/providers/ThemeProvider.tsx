@@ -28,6 +28,14 @@ function isTheme(value: string | null | undefined): value is Theme {
     return value === "light" || value === "dark" || value === "system";
 }
 
+function persistTheme(storageKey: string, theme: Theme) {
+    try {
+        localStorage.setItem(storageKey, theme);
+    } catch {
+        // Storage can be unavailable in hardened browser contexts.
+    }
+}
+
 export function ThemeProvider({
     children,
     defaultTheme = "system",
@@ -46,21 +54,13 @@ export function ThemeProvider({
         const hydrateTheme = async () => {
             setIsMounted(true);
 
-            const stored = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null;
-            if (isTheme(stored)) {
-                if (!cancelled) {
-                    setThemeState(stored);
-                    setIsHydrated(true);
-                }
-                return;
-            }
-
             try {
                 const supabase = supabaseBrowser;
                 const { data: { user } } = await supabase.auth.getUser();
 
                 if (!user) {
                     if (!cancelled) {
+                        persistTheme(storageKey, defaultTheme);
                         setThemeState(defaultTheme);
                         setIsHydrated(true);
                     }
@@ -81,6 +81,7 @@ export function ThemeProvider({
                 }
             } catch {
                 if (!cancelled) {
+                    persistTheme(storageKey, defaultTheme);
                     setThemeState(defaultTheme);
                     setIsHydrated(true);
                 }
@@ -97,23 +98,30 @@ export function ThemeProvider({
     useEffect(() => {
         if (!isMounted) return;
 
-        const root = window.document.documentElement;
-        root.classList.remove("light", "dark");
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        const applyTheme = () => {
+            const root = window.document.documentElement;
+            root.classList.remove("light", "dark");
 
-        if (theme === "system" && enableSystem) {
-            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? "dark"
-                : "light";
-            root.classList.add(systemTheme);
-        } else {
-            root.classList.add(theme);
-        }
+            if (theme === "system" && enableSystem) {
+                root.classList.add(mediaQuery.matches ? "dark" : "light");
+            } else {
+                root.classList.add(theme);
+            }
+        };
+
+        applyTheme();
+
+        if (theme !== "system" || !enableSystem) return;
+
+        mediaQuery.addEventListener("change", applyTheme);
+        return () => mediaQuery.removeEventListener("change", applyTheme);
     }, [theme, isMounted, enableSystem]);
 
     useEffect(() => {
         if (!isHydrated) return;
 
-        localStorage.setItem(storageKey, theme);
+        persistTheme(storageKey, theme);
 
         if (skipNextSyncRef.current) {
             skipNextSyncRef.current = false;

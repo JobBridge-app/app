@@ -18,6 +18,16 @@ export const metadata: Metadata = {
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { TestModeBanner } from "@/components/admin/TestModeBanner";
 
+const themeBootstrapScript = `
+(() => {
+  try {
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  } catch {}
+})();
+`;
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -26,6 +36,7 @@ export default async function RootLayout({
   return (
     <html lang="de" suppressHydrationWarning>
       <body className={`${fontSans.variable} min-h-screen bg-background antialiased selection:bg-blue-500/30`}>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <ThemeProvider defaultTheme="system" enableSystem={true} storageKey="jobbridge-theme">
           <TestModeBanner />
           {children}

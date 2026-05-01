@@ -11,29 +11,21 @@ export default function LegalLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background selection:bg-indigo-500/30">
+    <div className="legal-shell min-h-screen overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_58%,#eaf0f8_100%)] text-slate-950 selection:bg-indigo-500/25 dark:bg-[linear-gradient(180deg,#020617_0%,#071022_56%,#020617_100%)] dark:text-slate-50">
 
-      {/* Background Ambient Glow */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/5 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/5 blur-[120px]" />
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(79,70,229,0.08)_0%,transparent_34%,rgba(14,165,233,0.09)_68%,transparent_100%)] dark:bg-[linear-gradient(115deg,rgba(99,102,241,0.16)_0%,transparent_38%,rgba(20,184,166,0.10)_72%,transparent_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-300/60 to-transparent dark:via-indigo-200/20" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-8 md:py-20 lg:px-8">
-        <div className="flex flex-col md:flex-row gap-8 md:gap-12 lg:gap-24">
+      <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 md:py-16 lg:px-8">
+        <div className="grid min-w-0 gap-6 md:grid-cols-[16rem_minmax(0,1fr)] md:gap-10 lg:gap-20">
 
           <LegalSidebar />
 
           <main className="flex-1 min-w-0">
-            <div className="glass-surface rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-14 shadow-2xl shadow-black/20 ring-1 ring-white/10">
-              <article className="prose prose-slate dark:prose-invert max-w-none 
-                prose-headings:font-bold prose-headings:tracking-tight 
-                prose-h1:text-3xl prose-h1:mb-8 prose-h1:bg-gradient-to-br prose-h1:from-white prose-h1:to-slate-400 prose-h1:text-transparent prose-h1:bg-clip-text
-                prose-h2:text-xl prose-h2:mt-12 prose-h2:border-b prose-h2:border-white/10 prose-h2:pb-4
-                prose-p:leading-relaxed prose-p:text-slate-300
-                prose-li:text-slate-300 prose-ul:mt-4
-                prose-a:text-indigo-400 hover:prose-a:text-indigo-300 prose-a:font-medium prose-a:transition-colors prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-slate-200">
+            <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/[0.88] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/80 dark:shadow-[0_30px_90px_rgba(0,0,0,0.45)] sm:p-8 sm:backdrop-blur-xl md:p-12 lg:p-14">
+              <article className="legal-document max-w-none">
                 {children}
               </article>
             </div>

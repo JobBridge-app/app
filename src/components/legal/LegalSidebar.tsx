@@ -16,22 +16,22 @@ export function LegalSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-full md:w-64 shrink-0">
+    <aside className="w-full min-w-0 shrink-0 md:sticky md:top-10 md:w-64 md:self-start">
       <div>
         <Link
           href="/"
-          className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-white transition-colors group mb-6"
+          className="group mb-6 inline-flex items-center text-sm font-semibold text-slate-500 transition-colors hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
         >
-          <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center mr-3 group-hover:bg-white/10 transition-colors">
+          <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/80 bg-white/75 text-slate-500 shadow-sm transition-colors group-hover:border-slate-300 group-hover:bg-white group-hover:text-slate-950 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:group-hover:bg-white/10 dark:group-hover:text-white">
             <ArrowLeft className="w-4 h-4" />
           </div>
           Zurück zur App
         </Link>
-        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-          <Shield className="w-6 h-6 text-indigo-400" />
+        <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-slate-950 dark:text-white">
+          <Shield className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           Trust Center
         </h2>
-        <nav className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible pb-3 md:pb-0 no-scrollbar">
+        <nav className="no-scrollbar flex max-w-full gap-1.5 overflow-x-auto pb-3 md:flex-col md:overflow-x-visible md:pb-0">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -42,13 +42,13 @@ export function LegalSidebar() {
                 href={item.href}
                 prefetch={true}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-sm font-medium whitespace-nowrap",
+                  "flex items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold whitespace-nowrap transition-colors duration-200",
                   isActive
-                    ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent"
+                    ? "border-indigo-200/80 bg-indigo-600/10 text-indigo-700 shadow-sm shadow-indigo-900/5 dark:border-indigo-400/25 dark:bg-indigo-400/10 dark:text-indigo-200"
+                    : "border-transparent text-slate-600 hover:border-slate-200/80 hover:bg-white/70 hover:text-slate-950 dark:text-slate-400 dark:hover:border-white/10 dark:hover:bg-white/[0.05] dark:hover:text-white"
                 )}
               >
-                <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-indigo-400" : "text-slate-500")} />
+                <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-indigo-600 dark:text-indigo-300" : "text-slate-500 dark:text-slate-500")} />
                 {item.label}
               </Link>
             );

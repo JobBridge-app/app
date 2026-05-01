@@ -13,11 +13,11 @@ function Section({ icon: Icon, title, children }: {
 }) {
   return (
     <section>
-      <div className="not-prose flex items-center gap-3 mb-4 mt-8 sm:mt-12 pb-4 border-b border-white/10">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10">
-          <Icon className="w-4 h-4 text-indigo-400" />
+      <div className="not-prose mb-4 mt-8 flex items-center gap-3 border-b border-slate-200/80 pb-4 dark:border-white/10 sm:mt-12">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600/10 text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-300">
+          <Icon className="h-4 w-4" />
         </div>
-        <h2 className="text-lg font-semibold text-white m-0">{title}</h2>
+        <h2 className="m-0 text-lg font-bold text-slate-950 dark:text-white">{title}</h2>
       </div>
       {children}
     </section>
@@ -29,12 +29,12 @@ export default function DatenschutzPage() {
     <>
       <div className="not-prose mb-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
-            <Shield className="w-6 h-6 text-indigo-400" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-200 bg-indigo-600/10 text-indigo-600 dark:border-indigo-400/20 dark:bg-indigo-400/10 dark:text-indigo-300">
+            <Shield className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-400">Transparenz</p>
-            <h1 className="text-2xl font-bold text-white break-words">Datenschutzerklärung</h1>
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">Transparenz</p>
+            <h1 className="break-words text-2xl font-bold text-slate-950 dark:text-white">Datenschutzerklärung</h1>
           </div>
         </div>
       </div>
@@ -125,7 +125,7 @@ export default function DatenschutzPage() {
         </p>
       </Section>
 
-      <div className="not-prose mt-8 text-xs text-slate-500">
+      <div className="not-prose mt-8 text-xs font-medium text-slate-500 dark:text-slate-400">
         Stand: April 2026
       </div>
     </>
