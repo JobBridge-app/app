@@ -246,6 +246,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                                                     onSelect={handleLocationSelect}
                                                                     placeholder="Straße suchen (z.B. Hauptstraße)..."
                                                                     className="w-full"
+                                                                    autoFocus
                                                                 />
                                                             </div>
                                                         </div>

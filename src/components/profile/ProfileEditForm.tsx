@@ -33,7 +33,7 @@ type ProfileEditFormProps = {
 
 export function ProfileEditForm({ profile, className, isStaff = false, guardians = [], lastLogin = null }: ProfileEditFormProps) {
     const isProvider = profile.account_type === "job_provider";
-    const isVerified = profile.provider_verification_status === 'verified';
+    const isVerified = profile.provider_verification_status === 'verified' || Boolean(profile.provider_verified_at);
 
     // Tiered Verification Logic
     // FIX v6: Users hate the red badge. "Incomplete" is visually treated as "Basic" (Indigo).
@@ -63,6 +63,8 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
     const [saveState, setSaveState] = useState<null | { type: "ok" | "error"; message: string }>(null);
     const [showPreview, setShowPreview] = useState(false);
     const [showVerificationModal, setShowVerificationModal] = useState(false);
+    const [verificationFocusActive, setVerificationFocusActive] = useState(false);
+    const verificationCtaRef = useRef<HTMLDivElement>(null);
 
     // Guardian Management
     const [guardiansList, setGuardiansList] = useState<GuardianDisplay[]>(guardians);
@@ -83,10 +85,29 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
         }
     };
 
-    // Auto-Scroll Logic for Missing Distance CTA
+    // Auto-scroll focus from contextual entry points.
     const searchParams = useSearchParams();
+    const focusTarget = searchParams.get("focus");
+    const shouldReturnToJobCreator = searchParams.get("from") === "create-job";
+
     useEffect(() => {
-        if (searchParams.get("focus") === "location") {
+        if (focusTarget === "provider-verification" && isProvider && !isVerified) {
+            const focusTimer = window.setTimeout(() => {
+                verificationCtaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                setVerificationFocusActive(true);
+            }, 260);
+
+            const fadeTimer = window.setTimeout(() => {
+                setVerificationFocusActive(false);
+            }, 3200);
+
+            return () => {
+                window.clearTimeout(focusTimer);
+                window.clearTimeout(fadeTimer);
+            };
+        }
+
+        if (focusTarget === "location") {
             const el = document.getElementById("location-section");
             if (el) {
                 // Slight delay ensures the DOM is fully rendered before scrolling
@@ -98,7 +119,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                 }, 300);
             }
         }
-    }, [searchParams]);
+    }, [focusTarget, isProvider, isVerified]);
 
     // Wards (Children) Management
     const [wardsList, setWardsList] = useState<GuardianDisplay[]>([]);
@@ -281,17 +302,53 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                     {isProvider ? (
                         // PROVIDER: Verification Call-To-Action (Replaces old badges)
                         !isVerified && (
-                            <div className="relative overflow-hidden rounded-[2rem] border border-indigo-500/30 bg-[#0F0F12] p-8 shadow-2xl group">
-                                {/* Background Glows */}
-                                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-                                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
+                            <div
+                                ref={verificationCtaRef}
+                                id="provider-verification-section"
+                                tabIndex={-1}
+                                className={cn(
+                                    "relative isolate overflow-hidden rounded-[2rem] border bg-[#0B0B10] p-6 shadow-2xl outline-none transition-all duration-700 group md:p-8",
+                                    verificationFocusActive
+                                        ? "border-indigo-300/55 shadow-[0_22px_72px_rgba(79,70,229,0.2),0_0_0_1px_rgba(129,140,248,0.2)]"
+                                        : "border-indigo-500/30 shadow-black/30"
+                                )}
+                            >
+                                {/* Border sweep follows the existing card frame. */}
+                                <div
+                                    className={cn(
+                                        "jobbridge-verification-shell-sweep pointer-events-none absolute inset-0 rounded-[2rem]",
+                                        verificationFocusActive && "jobbridge-verification-shell-sweep-active"
+                                    )}
+                                />
+
+                                {/* Background Light */}
+                                <div className="absolute inset-0 bg-[linear-gradient(130deg,rgba(79,70,229,0.16),transparent_42%,rgba(6,182,212,0.08)_78%,transparent)] pointer-events-none" />
+                                <div
+                                    className={cn(
+                                        "jobbridge-verification-guidance pointer-events-none absolute inset-y-0 left-0 w-2/3 opacity-0",
+                                        verificationFocusActive && "jobbridge-verification-guidance-active"
+                                    )}
+                                />
+                                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-40" />
 
                                 <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8">
                                     {/* Icon Box */}
-                                    <div className="w-20 h-20 rounded-3xl bg-[#15151A] border border-white/5 flex items-center justify-center shadow-2xl shrink-0 group-hover:scale-105 transition-transform duration-500">
-                                        <div className="relative">
-                                            <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 animate-pulse" />
-                                            <ShieldCheck size={36} className="relative z-10 text-indigo-500" />
+                                    <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
+                                        <div
+                                            className={cn(
+                                                "absolute inset-0 rounded-full border border-indigo-300/15 transition-all duration-700",
+                                                verificationFocusActive && "border-indigo-200/30 shadow-[0_0_32px_rgba(99,102,241,0.16)]"
+                                            )}
+                                        />
+                                        <div
+                                            className={cn(
+                                                "absolute inset-2 rounded-full border border-white/10 transition-all duration-700",
+                                                verificationFocusActive && "border-indigo-100/25"
+                                            )}
+                                        />
+                                        <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-[#15151A]/90 shadow-2xl transition-transform duration-500 group-hover:scale-105">
+                                            <div className="absolute inset-0 rounded-full border border-indigo-300/10 opacity-70" />
+                                            <ShieldCheck size={36} className={cn("relative z-10 transition-colors duration-500", verificationFocusActive ? "text-indigo-200" : "text-indigo-400")} />
                                         </div>
                                     </div>
 
@@ -305,18 +362,31 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                             </span>
                                         </div>
                                         <p className="text-slate-400 text-base font-medium leading-relaxed max-w-2xl">
-                                            Um Jobs auszuschreiben und vollen Zugriff auf die Plattform zu erhalten, musst du deine Identität bestätigen. Wir benötigen hierfür lediglich deine Adresse.
+                                            Um Jobs auszuschreiben und vollen Zugriff auf die Plattform zu erhalten, bestätigst du einmalig deine Wohnadresse.
                                         </p>
                                     </div>
 
-                                    <button
-                                        onClick={() => setShowVerificationModal(true)}
-                                        className="w-full md:w-auto px-8 py-4 rounded-2xl bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-sm tracking-wide shadow-xl shadow-indigo-900/20 hover:shadow-indigo-900/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 group/btn"
-                                    >
-                                        <MapPin size={18} className="text-indigo-200" />
-                                        <span>Adresse eingeben</span>
-                                        <ArrowRight size={16} className="text-indigo-200 group-hover/btn:translate-x-1 transition-transform" />
-                                    </button>
+                                    <div className="relative w-full md:w-auto">
+                                        <button
+                                            onClick={() => setShowVerificationModal(true)}
+                                            className={cn(
+                                                "relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl px-8 py-4 text-sm font-bold tracking-wide text-white shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] md:w-auto group/btn",
+                                                verificationFocusActive
+                                                    ? "bg-[#5853F2] shadow-[0_16px_46px_rgba(79,70,229,0.32)]"
+                                                    : "bg-[#4F46E5] hover:bg-[#4338CA] shadow-indigo-900/20 hover:shadow-indigo-900/30"
+                                            )}
+                                        >
+                                            <span
+                                                className={cn(
+                                                    "jobbridge-verification-button-sweep pointer-events-none absolute inset-0 rounded-2xl",
+                                                    verificationFocusActive && "jobbridge-verification-button-sweep-active"
+                                                )}
+                                            />
+                                            <MapPin size={18} className="relative z-10 text-indigo-100 transition-colors" />
+                                            <span className="relative z-10">Wohnadresse eingeben</span>
+                                            <ArrowRight size={16} className="relative z-10 text-indigo-100 transition-transform group-hover/btn:translate-x-1" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )
@@ -824,6 +894,11 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                 onClose={() => setShowVerificationModal(false)}
                 profileId={profile.id}
                 onVerified={() => {
+                    if (shouldReturnToJobCreator) {
+                        window.location.assign("/app-home/offers/new");
+                        return;
+                    }
+
                     window.location.reload();
                 }}
             />

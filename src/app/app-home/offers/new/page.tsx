@@ -24,10 +24,9 @@ export default async function NewOfferPage() {
     }
 
     // Provider Verification Guard
-    const isVerified = profile.provider_verification_status === 'verified';
+    const isVerified = profile.provider_verification_status === 'verified' || Boolean(profile.provider_verified_at);
     if (!isVerified) {
-        const { VerificationRequiredGuard } = await import("@/components/jobs/VerificationRequiredGuard");
-        return <VerificationRequiredGuard />;
+        redirect("/app-home/profile?focus=provider-verification&from=create-job");
     }
 
     const supabase = await supabaseServer();

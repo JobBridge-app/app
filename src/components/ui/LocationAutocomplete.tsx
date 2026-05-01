@@ -23,9 +23,10 @@ interface LocationAutocompleteProps {
   className?: string;
   placeholder?: string;
   cityOnly?: boolean;
+  autoFocus?: boolean;
 }
 
-export function LocationAutocomplete({ onSelect, defaultValue = "", className, placeholder, cityOnly = false }: LocationAutocompleteProps) {
+export function LocationAutocomplete({ onSelect, defaultValue = "", className, placeholder, cityOnly = false, autoFocus = false }: LocationAutocompleteProps) {
   const [query, setQuery] = useState(defaultValue);
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +35,16 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedLabelRef = useRef(defaultValue);
   const searchVersionRef = useRef(0);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+
+    const timer = window.setTimeout(() => {
+      inputRef.current?.focus();
+    }, 180);
+
+    return () => window.clearTimeout(timer);
+  }, [autoFocus]);
 
   // Close on click outside
   useEffect(() => {

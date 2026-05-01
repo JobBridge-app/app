@@ -197,6 +197,100 @@ button,
   scrollbar-width: none;
 }
 
+.jobbridge-verification-shell-sweep,
+.jobbridge-verification-button-sweep {
+  padding: 1px;
+  background:
+    conic-gradient(from -34deg,
+      transparent 0deg,
+      transparent 250deg,
+      rgba(129, 140, 248, 0) 276deg,
+      rgba(165, 180, 252, 0.85) 306deg,
+      rgba(34, 211, 238, 0.42) 326deg,
+      rgba(129, 140, 248, 0) 348deg,
+      transparent 360deg);
+  opacity: 0;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.jobbridge-verification-shell-sweep-active {
+  animation: jobbridge-verification-shell-sweep 1.55s cubic-bezier(0.2, 0.8, 0.2, 1) 1;
+}
+
+.jobbridge-verification-guidance {
+  background: linear-gradient(90deg, transparent 0%, rgba(129, 140, 248, 0.12) 44%, rgba(99, 102, 241, 0.18) 55%, transparent 100%);
+  filter: blur(18px);
+  transform: translateX(-70%);
+}
+
+.jobbridge-verification-guidance-active {
+  animation: jobbridge-verification-guidance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.85s 1;
+}
+
+.jobbridge-verification-button-sweep-active {
+  animation: jobbridge-verification-button-sweep 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) 1.35s 1;
+}
+
+@keyframes jobbridge-verification-shell-sweep {
+  0% {
+    opacity: 0;
+    transform: rotate(-10deg);
+  }
+
+  14%,
+  72% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(350deg);
+  }
+}
+
+@keyframes jobbridge-verification-guidance {
+  0% {
+    opacity: 0;
+    transform: translateX(-68%);
+  }
+
+  22% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(84%);
+  }
+}
+
+@keyframes jobbridge-verification-button-sweep {
+  0% {
+    opacity: 0;
+    transform: rotate(-80deg);
+  }
+
+  18%,
+  76% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(280deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="jobbridge-verification-"] {
+    animation: none !important;
+  }
+}
+
 .legal-document {
   color: rgb(51 65 85);
   font-size: 0.975rem;
