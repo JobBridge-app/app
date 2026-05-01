@@ -13,6 +13,11 @@ export default async function OnboardingPage(props: {
   // where the session is ready but we want to show the "Email Confirmed" state briefly
   // or ensure the user lands on the right step.
   const isJustVerified = searchParams?.verified === "true";
+  const redirectTo = typeof searchParams?.redirectTo === "string" ? searchParams.redirectTo : undefined;
+  const initialMode =
+    searchParams?.authMode === "signup" || searchParams?.authMode === "signin"
+      ? searchParams.authMode
+      : undefined;
 
   if (authState.state === "ready") {
     // If just verified, we allow rendering to show "Success" message if needed,
@@ -22,11 +27,6 @@ export default async function OnboardingPage(props: {
     if (!isJustVerified) {
       redirect("/app-home");
     }
-  }
-
-  if (authState.state === "no-session") {
-    // If we have an error param, maybe show it? For now redirect home.
-    redirect("/");
   }
 
   const initialProfile =
@@ -68,6 +68,8 @@ export default async function OnboardingPage(props: {
       forcedStep={forcedStep as any}
       initialEmail={initialEmail}
       initialRegion={initialRegion}
+      redirectTo={redirectTo}
+      initialMode={initialMode}
       isJustVerified={isJustVerified}
     />
   );

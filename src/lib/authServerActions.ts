@@ -101,34 +101,34 @@ export async function ensureConfirmationEmailTemplate(): Promise<boolean> {
     const headers = getManagementHeaders();
     if (!headers) return false;
 
-    let config: SupabaseAuthConfig | null = null;
     try {
-        config = await fetchAuthConfig();
+        let config: SupabaseAuthConfig | null = null;
+        try {
+            config = await fetchAuthConfig();
+        } catch {
+            config = null;
+        }
+
+        const repairedTemplate = repairConfirmationTemplate(config?.mailer_templates_confirmation_content);
+        if (config?.mailer_templates_confirmation_content === repairedTemplate) {
+            return true;
+        }
+
+        const projectRef = getSupabaseProjectRef();
+        const response = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/config/auth`, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({
+                mailer_subjects_confirmation: config?.mailer_subjects_confirmation || "Confirm Your Signup",
+                mailer_templates_confirmation_content: repairedTemplate,
+            }),
+            cache: "no-store",
+        });
+
+        return response.ok;
     } catch {
-        config = null;
+        return false;
     }
-
-    const repairedTemplate = repairConfirmationTemplate(config?.mailer_templates_confirmation_content);
-    if (config?.mailer_templates_confirmation_content === repairedTemplate) {
-        return true;
-    }
-
-    const projectRef = getSupabaseProjectRef();
-    const response = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/config/auth`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({
-            mailer_subjects_confirmation: config?.mailer_subjects_confirmation || "Confirm Your Signup",
-            mailer_templates_confirmation_content: repairedTemplate,
-        }),
-        cache: "no-store",
-    });
-
-    if (!response.ok) {
-        throw new Error(`Supabase confirmation template repair failed (${response.status}).`);
-    }
-
-    return true;
 }
 
 export async function checkEmailExists(email: string): Promise<boolean> {
@@ -170,4 +170,38 @@ export async function checkEmailExists(email: string): Promise<boolean> {
     // Trim check to handle manual database entries that might have trailing spaces
     const userExists = data.users.some(u => u.email?.toLowerCase().trim() === cleanEmail);
     return userExists;
+}
+
+export type EmailOnboardingStatus = "available" | "pending_confirmation" | "confirmed";
+
+export async function getEmailOnboardingStatus(email: string): Promise<EmailOnboardingStatus> {
+    if (!email) return "available";
+
+    const adminClient = supabaseAdmin();
+    const cleanEmail = email.trim().toLowerCase();
+
+    const { data: profile } = await adminClient
+        .from("profiles")
+        .select("email_verified_at")
+        .ilike("email", cleanEmail)
+        .limit(1)
+        .maybeSingle();
+
+    if (profile) {
+        return profile.email_verified_at ? "confirmed" : "pending_confirmation";
+    }
+
+    const { data, error } = await adminClient.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+    });
+
+    if (error || !data?.users) {
+        return "available";
+    }
+
+    const user = data.users.find((item) => item.email?.toLowerCase().trim() === cleanEmail);
+    if (!user) return "available";
+
+    return user.email_confirmed_at || user.confirmed_at ? "confirmed" : "pending_confirmation";
 }

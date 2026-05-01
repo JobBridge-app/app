@@ -8,20 +8,37 @@ import { ButtonPrimary } from "./ui/ButtonPrimary";
 import { ButtonSecondary } from "./ui/ButtonSecondary";
 import { Loader } from "./ui/Loader";
 import { signUpWithEmail, signInWithEmail } from "@/lib/authClient";
-import { saveProfile } from "@/lib/profile";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useEmailResend } from "@/lib/hooks/useEmailResend";
-import { type AccountType, type OnboardingRole, type Profile, type ProviderKind } from "@/lib/types";
+import { type OnboardingRole, type Profile } from "@/lib/types";
 import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2, Mail, UserX, KeyRound } from "lucide-react";
 import { LocationStep } from "./onboarding/LocationStep";
-import { checkEmailExists, ensureConfirmationEmailTemplate } from "@/lib/authServerActions";
+import { checkEmailExists, ensureConfirmationEmailTemplate, getEmailOnboardingStatus } from "@/lib/authServerActions";
 import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
 import type { User } from "@supabase/supabase-js";
 
 type Step = "location" | "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
 
 type AuthMode = "signup" | "signin" | null;
+
+type OnboardingDraft = {
+  version: 1;
+  step: Step;
+  mode: AuthMode;
+  email: string;
+  profileData: {
+    role: OnboardingRole | null;
+    fullName: string;
+    birthdate: string;
+    region: string;
+    marketId: string | null;
+    companyName: string;
+    companyEmail: string;
+    companyMessage: string;
+  };
+  updatedAt: number;
+};
 
 type OnboardingWizardProps = {
   initialProfile?: Profile | null;
@@ -41,6 +58,8 @@ const normalizeEmail = (value: string | null | undefined) => value?.trim().toLow
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || BRAND_EMAIL;
+const ONBOARDING_DRAFT_KEY = "jobbridge-onboarding-draft:v1";
+const DRAFT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 14;
 
 const isProfileComplete = (profile: Profile | null | undefined) => {
   return Boolean(
@@ -57,7 +76,45 @@ function inferOnboardingRole(profile: Profile | null | undefined): OnboardingRol
   return null;
 }
 
-// mapOnboardingRoleToAccount removed as logic moved to server action
+function readOnboardingDraft(): OnboardingDraft | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem(ONBOARDING_DRAFT_KEY);
+    if (!raw) return null;
+
+    const draft = JSON.parse(raw) as OnboardingDraft;
+    if (draft.version !== 1 || !draft.updatedAt) return null;
+
+    if (Date.now() - draft.updatedAt > DRAFT_MAX_AGE_MS) {
+      window.localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+      return null;
+    }
+
+    return draft;
+  } catch {
+    window.localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+    return null;
+  }
+}
+
+function writeOnboardingDraft(draft: Omit<OnboardingDraft, "version" | "updatedAt">) {
+  if (typeof window === "undefined") return;
+
+  window.localStorage.setItem(
+    ONBOARDING_DRAFT_KEY,
+    JSON.stringify({
+      ...draft,
+      version: 1,
+      updatedAt: Date.now(),
+    } satisfies OnboardingDraft),
+  );
+}
+
+function clearOnboardingDraft() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+}
 
 export function OnboardingWizard({
   initialProfile,
@@ -77,31 +134,23 @@ export function OnboardingWizard({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
-  // Password reset state
   const [resettingPassword, setResettingPassword] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
-  // If just verified, assume email is confirmed initially to show UI feedback
   const [emailConfirmed, setEmailConfirmed] = useState(isJustVerified);
   const [codeMessage, setCodeMessage] = useState<string | null>(null);
-  // Unused state variables removed for linting
-  // const [toastMsg, setToastMsg] = useState("");
-  // const [toastType, setToastType] = useState<"success" | "error">("success");
 
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string | null>(null);
 
-  // Email resend hook
   const {
     cooldown: resendCooldown,
     message: resendMessage,
     error: resendError,
     loading: resendLoading,
     resend: handleResendConfirmation,
+    forceResend: forceResendConfirmation,
     markSent: markConfirmationEmailSent,
   } = useEmailResend(email);
-
-  // const [regions, setRegions] = useState<Region[]>([]);
-  // const [regionsLoading, setRegionsLoading] = useState(true);
 
   // Seitenscrolling auf Mobile verhindern
   useEffect(() => {
@@ -109,7 +158,7 @@ export function OnboardingWizard({
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  // Initialize profile data. Important: prefer initialRegion/initialProfile city to ensure persistence.
+  // Initialwerte aus Session, Profil und lokalem Onboarding-Entwurf zusammenführen.
   const [profileData, setProfileData] = useState({
     role: inferOnboardingRole(initialProfile),
     fullName: initialProfile?.full_name || "",
@@ -120,23 +169,56 @@ export function OnboardingWizard({
     companyEmail: "",
     companyMessage: "",
   });
+  const [resumeChecked, setResumeChecked] = useState(Boolean(forcedStep || initialEmail || initialProfile));
 
-  // Regions fetch removed as unused
+  useEffect(() => {
+    const draft = readOnboardingDraft();
+    const normalizedInitialEmail = normalizeEmail(initialEmail);
+    const normalizedDraftEmail = normalizeEmail(draft?.email);
+    const draftMatchesSession = Boolean(draft && (!normalizedInitialEmail || normalizedDraftEmail === normalizedInitialEmail));
 
+    if (draft && draftMatchesSession) {
+      setEmail(draft.email);
+      setMode(draft.mode);
+      setProfileData((prev) => ({
+        ...prev,
+        ...draft.profileData,
+        role: draft.profileData.role || prev.role,
+        region: draft.profileData.region || prev.region,
+        marketId: draft.profileData.marketId || prev.marketId,
+      }));
 
-  // Make sure we jump to auth mode Step if initialMode is set
+      const serverNeedsEmailConfirmation = forcedStep === "email-confirm" && !isJustVerified;
+
+      if (!forcedStep || serverNeedsEmailConfirmation) {
+        setStep(draft.step === "welcome" ? "mode" : draft.step);
+      } else if (forcedStep === "role" && draft.profileData.role && draft.step !== "email-confirm") {
+        setStep(draft.step === "role" ? "profile" : draft.step);
+      }
+    }
+
+    setResumeChecked(true);
+  }, [forcedStep, initialEmail, initialProfile, isJustVerified]);
+
+  useEffect(() => {
+    if (!resumeChecked) return;
+    if (mode === "signin") return;
+    if (step === "welcome" && !email && !profileData.region && !profileData.role) return;
+
+    writeOnboardingDraft({
+      step,
+      mode,
+      email,
+      profileData,
+    });
+  }, [email, mode, profileData, resumeChecked, step]);
+
   useEffect(() => {
     if (initialMode && step === "welcome") {
       setStep("mode");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMode]);
-
-
-
-
-  // handleResendConfirmation is now provided by useEmailResend hook
-
   const handleVerifyCode = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (code.length < 8) return;
@@ -196,6 +278,7 @@ export function OnboardingWizard({
 
     if (isConfirmed && isComplete) {
       setEmailConfirmed(true);
+      clearOnboardingDraft();
       setCodeMessage("Code bestätigt. Du wirst weitergeleitet...");
       setTimeout(() => {
         window.location.href = redirectTo || "/app-home";
@@ -207,10 +290,11 @@ export function OnboardingWizard({
       setEmailConfirmed(true);
       setCodeMessage("Code bestätigt. Bitte wähle jetzt deine Rolle.");
       setTimeout(() => {
+        const nextRole = profileTyped ? inferOnboardingRole(profileTyped) || profileData.role : profileData.role;
         if (profileTyped) {
           setProfileData((prev) => ({
             ...prev,
-            role: null,
+            role: nextRole,
             fullName: profileTyped.full_name || prev.fullName,
             birthdate: profileTyped.birthdate || prev.birthdate,
             region: profileTyped.city || prev.region,
@@ -219,10 +303,10 @@ export function OnboardingWizard({
         } else {
           setProfileData((prev) => ({
             ...prev,
-            role: null,
+            role: nextRole,
           }));
         }
-        setStep("role");
+        setStep(nextRole ? "profile" : "role");
       }, 1000);
       return true;
     }
@@ -240,19 +324,17 @@ export function OnboardingWizard({
     return false;
   }, [email, redirectTo, profileData.role]);
 
-  // Listen for Auth State Changes (Magic Link Clicked in another tab/window)
   useEffect(() => {
     if (step !== "email-confirm") return;
 
     const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-      if (session?.user.email_confirmed_at) {
+        if (session?.user.email_confirmed_at) {
           await checkSessionAfterEmailConfirm(session.user);
         }
       }
     });
 
-    // Polling as backup (every 3s)
     const interval = setInterval(async () => {
       const { data: { session } } = await supabaseBrowser.auth.getSession();
       if (session?.user.email_confirmed_at) {
@@ -266,7 +348,6 @@ export function OnboardingWizard({
     };
   }, [step, checkSessionAfterEmailConfirm]);
 
-  // If just verified, we auto-advance after a short delay
   useEffect(() => {
     if (isJustVerified && step === "email-confirm") {
       const timer = setTimeout(() => {
@@ -277,6 +358,31 @@ export function OnboardingWizard({
   }, [isJustVerified, step, checkSessionAfterEmailConfirm]);
 
 
+  const resumePendingEmailConfirmation = useCallback(async (sourceMode: AuthMode = mode || "signup") => {
+    const nextMode = sourceMode || "signup";
+
+    setCode("");
+    setCodeError(null);
+    setErrorType(null);
+    setErrorMsg(null);
+    setEmailConfirmed(false);
+    writeOnboardingDraft({
+      step: "email-confirm",
+      mode: nextMode,
+      email,
+      profileData,
+    });
+    setMode(nextMode);
+    setStep("email-confirm");
+
+    const sent = await forceResendConfirmation("Neuer Bestätigungscode wurde gesendet.");
+    setCodeMessage(
+      sent
+        ? null
+        : "Wir haben dein Konto gefunden. Bitte bestätige deine E-Mail mit dem Code. Falls kein neuer Code ankommt, ist der Versand gleich erneut möglich.",
+    );
+  }, [email, forceResendConfirmation, mode, profileData]);
+
   const handleSignIn = async () => {
     setLoading(true);
     setErrorType(null);
@@ -284,7 +390,6 @@ export function OnboardingWizard({
     setResetSuccess(false);
 
     try {
-      // 1. Check if email exists
       const emailExists = await checkEmailExists(email);
 
       if (!emailExists) {
@@ -294,16 +399,28 @@ export function OnboardingWizard({
         return;
       }
 
-      // 2. Email exists, try password sign in
+      const emailStatus = await getEmailOnboardingStatus(email);
+      if (emailStatus === "pending_confirmation") {
+        await resumePendingEmailConfirmation("signin");
+        return;
+      }
+
       const { error } = await signInWithEmail(email, password);
 
       if (error) {
+        const message = error.message.toLowerCase();
+        if (message.includes("email not confirmed") || message.includes("not confirmed")) {
+          await resumePendingEmailConfirmation("signin");
+          return;
+        }
+
         setErrorType("wrong_password");
         setErrorMsg("Passwort falsch. Die Anmeldedaten stimmen nicht.");
         setLoading(false);
         return;
       }
 
+      clearOnboardingDraft();
       window.location.href = redirectTo || "/app-home";
     } catch (err: unknown) {
       setErrorType("general");
@@ -344,13 +461,26 @@ export function OnboardingWizard({
     setEmailConfirmed(false);
     setCodeError(null);
     try {
+      const emailStatus = await getEmailOnboardingStatus(email);
+      if (emailStatus === "pending_confirmation") {
+        await resumePendingEmailConfirmation("signup");
+        return;
+      }
+
+      if (emailStatus === "confirmed") {
+        setMode("signin");
+        setErrorType("general");
+        setErrorMsg("Für diese E-Mail gibt es bereits ein bestätigtes Konto. Bitte melde dich mit deinem Passwort an.");
+        return;
+      }
+
       const { error: signOutError } = await supabaseBrowser.auth.signOut();
       if (signOutError) throw signOutError;
 
       try {
         await ensureConfirmationEmailTemplate();
       } catch {
-        // Continue with signup; template sync is best-effort for the emergency fallback.
+        // Template-Sync ist best effort; Registrierung läuft mit der aktuellen Supabase-Konfiguration weiter.
       }
 
       const signUpData = {
@@ -371,6 +501,12 @@ export function OnboardingWizard({
       if (error) throw error;
 
       markConfirmationEmailSent("Bestätigungs-E-Mail mit Code wurde gesendet.");
+      writeOnboardingDraft({
+        step: "email-confirm",
+        mode: "signup",
+        email,
+        profileData,
+      });
       setCodeMessage(null);
       setStep("email-confirm");
     } catch (err: unknown) {
@@ -391,24 +527,10 @@ export function OnboardingWizard({
     setStep("summary");
   };
 
-  // Import server action dynamically or at top-level. 
-  // We need to move the import to top level in real code, but for this edit block i'll assume it's imported or I add it.
-  // Actually, I cannot easily add imports at the top with this tool if I'm targeting this block.
-  // I will use `require` or assume I need to do a separate edit for imports if strict ESM.
-  // OR better: I will replace the whole file content in 2 chunks if needed, or 
-  // I will just add the import in a separate tool call. 
-  // Wait, I can't add imports easily without touching top of file.
-  // I will use a multi-replace to add the import and update the component.
-
   const handleCompleteOnboarding = async () => {
     setIsSaving(true);
     setErrorType(null);
     setErrorMsg(null);
-
-    // Lazy import or assume it handles it? Next.js server actions can be imported.
-    // I will need to make sure the import is present at the top of the file.
-    // For now, I will use the standard import in standard way.
-    // I'll rely on a second edit to add the import if I can't fit it here.
 
     try {
       if (!profileData.role) throw new Error("Keine Rolle ausgewählt.");
@@ -431,6 +553,7 @@ export function OnboardingWizard({
         throw new Error(result.error);
       }
 
+      clearOnboardingDraft();
       window.location.href = redirectTo || "/app-home";
     } catch (err: unknown) {
       setErrorType("general");
@@ -450,7 +573,6 @@ export function OnboardingWizard({
         setStep("location");
       }
     } else if (step === "location") {
-      // Logic handled in LocationStep onComplete, but if we need a fallback:
       setStep("auth");
     } else if (step === "auth") {
       if (mode === "signup") {
@@ -486,7 +608,6 @@ export function OnboardingWizard({
       const m = now.getMonth() - d.getMonth();
       if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
 
-      // Clear existing errors since we made it to validation check
       setErrorMsg(null);
       setErrorType(null);
 
@@ -527,6 +648,13 @@ export function OnboardingWizard({
       } else {
         setStep("mode");
       }
+    } else if (step === "email-confirm") {
+      if (!emailConfirmed && !loading) {
+        setCode("");
+        setCodeError(null);
+        setCodeMessage(null);
+        setStep("auth");
+      }
     } else if (step === "profile") {
       setStep("role");
     } else if (step === "contact") {
@@ -538,19 +666,37 @@ export function OnboardingWizard({
     setErrorMsg(null);
   };
 
+  const panelClass = "onboarding-panel relative rounded-3xl p-8 md:p-12 overflow-hidden";
+  const panelGlowClass = "onboarding-panel-glow pointer-events-none absolute -top-16 -left-16 w-56 h-56";
+  const panelTextureClass = "onboarding-panel-texture pointer-events-none absolute inset-0";
+  const emailConfirmStatus = codeMessage || resendError || resendMessage;
+  const emailConfirmStatusClass = codeMessage
+    ? "rounded-2xl border border-green-500/20 bg-green-900/20 px-4 py-3 text-green-200"
+    : resendError
+      ? "text-red-300"
+      : "text-cyan-200/90";
+
+  if (!resumeChecked) {
+    return (
+      <div className="dark onboarding-shell flex items-center justify-center overflow-hidden px-4 py-4 no-scrollbar md:py-8">
+        <div className={`${panelClass} w-full max-w-md`}>
+          <div className={panelGlowClass} />
+          <div className={panelTextureClass} />
+          <Loader text="Onboarding wird geladen..." />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={[
-        "h-dvh flex justify-center overflow-y-auto overflow-x-hidden px-4 bg-[#07090f] no-scrollbar",
+        "dark onboarding-shell flex justify-center overflow-y-auto overflow-x-hidden px-4 no-scrollbar",
         reserveFooterSpace
           ? "py-4 pb-28 md:py-8 md:pb-24"
           : "py-4 md:py-8",
       ].join(" ")}
     >
-      {/* Toast removed as unused */}
-
-
-      {/* Glass Card Container */}
       <div
         className={[
           "relative z-10 my-auto w-full max-w-2xl",
@@ -566,17 +712,9 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
+              <div className={panelClass}>
+                <div className={panelGlowClass} />
+                <div className={panelTextureClass} />
 
                 <div className="flex flex-col items-start gap-4 text-left">
                   <CardHeader
@@ -604,24 +742,15 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
+              <div className={panelClass}>
+                <div className={panelGlowClass} />
+                <div className={panelTextureClass} />
 
                 <CardHeader
                   title="Warst du schon bei JobBridge?"
                   subtitle="Damit wir dich richtig weiterleiten können."
                 />
 
-                {/* Choice Tiles */}
                 <div className="grid gap-4 mb-8">
                   <ChoiceTile
                     onClick={() => {
@@ -630,10 +759,11 @@ export function OnboardingWizard({
                       setErrorMsg(null);
                     }}
                     selected={mode === "signup"}
+                    className="onboarding-choice"
                   >
                     <div className="space-y-1">
-                      <div className="text-lg font-semibold text-white">Ich bin neu hier</div>
-                      <div className="text-sm text-slate-300">Ich möchte ein neues Konto erstellen.</div>
+                      <div className="onboarding-choice-title text-lg font-semibold">Ich bin neu hier</div>
+                      <div className="onboarding-choice-text text-sm">Ich möchte ein neues Konto erstellen.</div>
                     </div>
                   </ChoiceTile>
                   <ChoiceTile
@@ -643,15 +773,15 @@ export function OnboardingWizard({
                       setErrorMsg(null);
                     }}
                     selected={mode === "signin"}
+                    className="onboarding-choice"
                   >
                     <div className="space-y-1">
-                      <div className="text-lg font-semibold text-white">Ich war schon hier</div>
-                      <div className="text-sm text-slate-300">Ich habe bereits ein Konto.</div>
+                      <div className="onboarding-choice-title text-lg font-semibold">Ich war schon hier</div>
+                      <div className="onboarding-choice-text text-sm">Ich habe bereits ein Konto.</div>
                     </div>
                   </ChoiceTile>
                 </div>
 
-                {/* Navigation */}
                 <div className="flex gap-4">
                   <ButtonSecondary onClick={prevStep} className="flex-1">
                     Zurück
@@ -673,17 +803,9 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden min-h-[400px]">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
+              <div className={`${panelClass} min-h-[400px]`}>
+                <div className={panelGlowClass} />
+                <div className={panelTextureClass} />
                 <LocationStep
                   onComplete={(regionData) => {
                     setProfileData((prev) => ({
@@ -712,17 +834,9 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
+              <div className={panelClass}>
+                <div className={panelGlowClass} />
+                <div className={panelTextureClass} />
 
                 <CardHeader
                   title="Dein Konto"
@@ -869,8 +983,6 @@ export function OnboardingWizard({
                               type="button"
                               onClick={() => {
                                 setMode("signup");
-                                setStep("mode"); // First they choose they are new, then we want them to go to the onboarding flow starting point properly.
-                                // Actually, if we just setStep("location"), it goes precisely to the "Wo möchtest du JobBridge nutzen" step.
                                 setStep("location");
                                 setErrorType(null);
                                 setErrorMsg(null);
@@ -924,18 +1036,9 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
-
+              <div className={panelClass}>
+                <div className={panelGlowClass} />
+                <div className={panelTextureClass} />
                 <div className="text-center space-y-4 max-w-lg mx-auto">
                   <CardHeader
                     title="Bestätige deine E-Mail"
@@ -948,7 +1051,6 @@ export function OnboardingWizard({
                       <div className="rounded-2xl border border-green-400/50 bg-green-500/20 px-5 py-4 text-green-100">
                         E-Mail erfolgreich bestätigt! Du wirst weitergeleitet...
                       </div>
-                      {/* Fallback button if redirect hangs */}
                       <ButtonPrimary
                         onClick={() => checkSessionAfterEmailConfirm()}
                         loading={loading}
@@ -960,7 +1062,7 @@ export function OnboardingWizard({
                   )}
                   {!emailConfirmed && (
                     <>
-                      {loading && <Loader text="Session wird geprüft..." />}
+                      {loading && <Loader text={resendLoading ? "Code wird gesendet..." : "Session wird geprüft..."} />}
                       <div className="mt-3 space-y-5 text-left">
                         <div className="space-y-2">
                           <ButtonSecondary
@@ -1010,20 +1112,25 @@ export function OnboardingWizard({
                           </div>
                         </form>
 
-                        <button
-                          type="button"
-                          onClick={handleResendConfirmation}
-                          disabled={resendCooldown > 0 || resendLoading}
-                          className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-semibold text-slate-300 transition-all hover:border-white/20 hover:bg-white/[0.06] hover:text-white focus:outline-none focus:ring-2 focus:ring-white/20 disabled:cursor-not-allowed disabled:opacity-45"
-                        >
-                          {resendCooldown > 0 ? `Code erneut senden (${resendCooldown}s)` : "Code erneut senden"}
-                        </button>
+                        <div className="space-y-2">
+                          <ButtonSecondary
+                            onClick={handleResendConfirmation}
+                            disabled={resendCooldown > 0 || resendLoading}
+                            className="w-full border-white/[0.08] bg-white/[0.025] text-sm text-slate-400 hover:bg-white/[0.055] hover:text-slate-200"
+                          >
+                            {resendCooldown > 0 ? `Code erneut senden (${resendCooldown}s)` : "Code erneut senden"}
+                          </ButtonSecondary>
 
-                        {(resendMessage || resendError) && (
-                          <p className={`text-center text-sm font-medium ${resendError ? 'text-red-300' : 'text-cyan-200/90'}`}>
-                            {resendError || resendMessage}
-                          </p>
-                        )}
+                          {emailConfirmStatus && (
+                            <motion.p
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className={`text-center text-sm font-medium ${emailConfirmStatusClass}`}
+                            >
+                              {emailConfirmStatus}
+                            </motion.p>
+                          )}
+                        </div>
 
                         {codeError && (
                           <motion.div
@@ -1035,15 +1142,13 @@ export function OnboardingWizard({
                           </motion.div>
                         )}
 
-                        {codeMessage && (
-                          <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="rounded-2xl border border-green-500/20 bg-green-900/20 px-4 py-3 text-center text-sm font-medium text-green-200"
-                          >
-                            {codeMessage}
-                          </motion.p>
-                        )}
+                        <ButtonSecondary
+                          onClick={prevStep}
+                          disabled={loading}
+                          className="w-full border-white/[0.07] bg-transparent text-slate-500 hover:bg-white/[0.03] hover:text-slate-300"
+                        >
+                          Zurück
+                        </ButtonSecondary>
                       </div>
                     </>
                   )}
@@ -1061,23 +1166,14 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
+              <div className={panelClass}>
+                <div className={panelGlowClass} />
+                <div className={panelTextureClass} />
 
                 <CardHeader
                   title="Welche Rolle passt zu dir?"
                 />
 
-                {/* Choice Tiles */}
                 <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-2">
                   {[
                     {
@@ -1088,7 +1184,7 @@ export function OnboardingWizard({
                     },
                     {
                       value: "adult" as OnboardingRole,
-                      title: "Privatperson / Eltern / Anbieter",
+                      title: "Privatperson / Elternteil",
                       description: "Ich möchte Aufträge vergeben",
                       icon: <HandHeart className="h-6 w-6 text-cyan-300" />,
                     },
@@ -1108,17 +1204,23 @@ export function OnboardingWizard({
                           setErrorMsg("");
                         }}
                         selected={active}
-                        className={`h-full ${idx === 2 ? "sm:col-span-2" : ""}`}
+                        className={[
+                          "onboarding-choice h-full !rounded-[1.65rem]",
+                          active
+                            ? "!border-cyan-300/50 !bg-[#151923] !shadow-[0_16px_48px_rgba(0,0,0,0.42)] !ring-0"
+                            : "!border-white/[0.09] !bg-white/[0.045] hover:!border-white/[0.16] hover:!bg-white/[0.06]",
+                          idx === 2 ? "sm:col-span-2" : "",
+                        ].join(" ")}
                       >
                         <div className="flex items-start gap-4">
-                          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white/10">
+                          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-[#111318]">
                             {role.icon}
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="text-base font-semibold text-white leading-tight break-words sm:text-lg">
                               {role.title}
                             </div>
-                            <div className="text-sm text-slate-300 leading-snug">
+                            <div className="text-sm text-slate-400 leading-snug">
                               {role.description}
                             </div>
                           </div>
@@ -1152,17 +1254,9 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                {/* Lichtkante */}
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                {/* Subtile Textur */}
-                <div
-                  className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                  }}
-                />
+              <div className={panelClass}>
+                <div className={panelGlowClass} />
+                <div className={panelTextureClass} />
 
                 <CardHeader
                   title="Erzähl uns etwas über dich"
@@ -1234,17 +1328,9 @@ export function OnboardingWizard({
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
               >
-                <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                  {/* Lichtkante */}
-                  <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                  {/* Subtile Textur */}
-                  <div
-                    className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                    }}
-                  />
+                <div className={panelClass}>
+                  <div className={panelGlowClass} />
+                  <div className={panelTextureClass} />
 
                   <CardHeader
                     title="Kontaktiere uns"
@@ -1360,17 +1446,9 @@ export function OnboardingWizard({
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
               >
-                <div className="relative bg-white/10 backdrop-blur-[28px] backdrop-saturate-[180%] border border-white/10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.75)] p-8 md:p-12 overflow-hidden">
-                  {/* Lichtkante */}
-                  <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_60%)] opacity-70 mix-blend-screen" />
-                  {/* Subtile Textur */}
-                  <div
-                    className="pointer-events-none absolute inset-0 opacity-15 mix-blend-soft-light"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                    }}
-                  />
+                <div className={panelClass}>
+                  <div className={panelGlowClass} />
+                  <div className={panelTextureClass} />
 
                   <CardHeader
                     title="Überblick vor dem Start"

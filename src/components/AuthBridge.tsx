@@ -30,6 +30,7 @@ export default function AuthBridge({ authState, redirectTo, initialMode }: AuthB
     return (
       <OnboardingWizard
         initialProfile={authState.profile}
+        forcedStep="role"
         initialEmail={authState.session.user.email ?? ""}
         redirectTo={redirectTo}
         reserveFooterSpace

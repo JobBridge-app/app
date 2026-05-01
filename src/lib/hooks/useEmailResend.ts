@@ -34,7 +34,8 @@ interface UseEmailResendReturn {
     message: string;
     error: string | null;
     loading: boolean;
-    resend: () => Promise<void>;
+    resend: () => Promise<boolean>;
+    forceResend: (successMessage?: string) => Promise<boolean>;
     markSent: (message?: string) => void;
 }
 
@@ -71,8 +72,11 @@ export function useEmailResend(email: string): UseEmailResendReturn {
         setMessage(nextMessage);
     }, [email]);
 
-    const resend = useCallback(async () => {
-        if (cooldown > 0 || !email) return;
+    const sendConfirmationEmail = useCallback(async (options?: {
+        ignoreCooldown?: boolean;
+        successMessage?: string;
+    }) => {
+        if ((!options?.ignoreCooldown && cooldown > 0) || !email) return false;
 
         setLoading(true);
         setMessage("");
@@ -107,7 +111,8 @@ export function useEmailResend(email: string): UseEmailResendReturn {
 
             if (err) throw err;
 
-            markSent("Bestätigungs-E-Mail mit Code wurde erneut gesendet.");
+            markSent(options?.successMessage || "Bestätigungs-E-Mail mit Code wurde erneut gesendet.");
+            return true;
         } catch (err) {
             const isRateLimit =
                 (err as { status?: number })?.status === 429 ||
@@ -120,10 +125,20 @@ export function useEmailResend(email: string): UseEmailResendReturn {
             } else {
                 setError((err as Error)?.message || "Fehler beim Senden.");
             }
+            return false;
         } finally {
             setLoading(false);
         }
     }, [email, cooldown, markSent]);
 
-    return { cooldown, message, error, loading, resend, markSent };
+    const resend = useCallback(() => sendConfirmationEmail(), [sendConfirmationEmail]);
+
+    const forceResend = useCallback((successMessage = "Neuer Bestätigungscode wurde gesendet.") => {
+        return sendConfirmationEmail({
+            ignoreCooldown: true,
+            successMessage,
+        });
+    }, [sendConfirmationEmail]);
+
+    return { cooldown, message, error, loading, resend, forceResend, markSent };
 }

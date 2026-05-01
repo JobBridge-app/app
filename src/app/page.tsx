@@ -21,7 +21,11 @@ export default async function LandingPage({
     redirect(redirectTo || "/app-home");
   }
 
-  // Ansonsten Wizard anzeigen (no-session oder incomplete-profile)
+  if (authState.state === "email-unconfirmed" || authState.state === "incomplete-profile") {
+    redirect(redirectTo ? `/onboarding?redirectTo=${encodeURIComponent(redirectTo)}` : "/onboarding");
+  }
+
+  // Ohne Session zeigt der Client-Wizard ggf. einen lokal gespeicherten Pending-Onboarding-Stand.
   return (
     <div className="min-h-dvh bg-[#07090f]">
       <AuthBridge authState={authState} redirectTo={redirectTo} initialMode={authMode} />

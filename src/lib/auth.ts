@@ -159,14 +159,16 @@ export async function getAuthState(): Promise<AuthState> {
 
 export const requireSession = async () => {
   const state = await getAuthState();
-  if (state.state === "no-session" || state.state === "email-unconfirmed") redirect("/");
+  if (state.state === "no-session") redirect("/");
+  if (state.state === "email-unconfirmed") redirect("/onboarding");
   return { session: state.session!, profile: state.profile ?? null, systemRoles: state.systemRoles };
 };
 
 export const requireCompleteProfile = async () => {
   const state = await getAuthState();
-  if (state.state === "no-session" || state.state === "email-unconfirmed")
-    redirect("/");
+  if (state.state === "no-session") redirect("/");
+  if (state.state === "email-unconfirmed")
+    redirect("/onboarding");
   if (state.state === "incomplete-profile") redirect("/onboarding");
   return { session: state.session!, profile: state.profile!, systemRoles: state.systemRoles };
 };

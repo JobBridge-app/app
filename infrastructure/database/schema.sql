@@ -414,13 +414,24 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  metadata_city text := NULLIF(TRIM(COALESCE(NEW.raw_user_meta_data->>'city', '')), '');
+  metadata_market_id uuid := NULL;
 BEGIN
-  INSERT INTO public.profiles (id, email, email_verified_at, phone_verified_at)
-  VALUES (NEW.id, NEW.email, NEW.email_confirmed_at, NEW.phone_confirmed_at)
+  BEGIN
+    metadata_market_id := NULLIF(NEW.raw_user_meta_data->>'market_id', '')::uuid;
+  EXCEPTION WHEN invalid_text_representation THEN
+    metadata_market_id := NULL;
+  END;
+
+  INSERT INTO public.profiles (id, email, email_verified_at, phone_verified_at, city, market_id)
+  VALUES (NEW.id, NEW.email, NEW.email_confirmed_at, NEW.phone_confirmed_at, metadata_city, metadata_market_id)
   ON CONFLICT (id) DO UPDATE
     SET email = COALESCE(EXCLUDED.email, public.profiles.email),
         email_verified_at = COALESCE(EXCLUDED.email_verified_at, public.profiles.email_verified_at),
         phone_verified_at = COALESCE(EXCLUDED.phone_verified_at, public.profiles.phone_verified_at),
+        city = COALESCE(NULLIF(public.profiles.city, ''), EXCLUDED.city),
+        market_id = COALESCE(public.profiles.market_id, EXCLUDED.market_id),
         updated_at = NOW();
 
   RETURN NEW;
@@ -439,7 +450,16 @@ UPDATE public.profiles p
 SET
   email = COALESCE(p.email, u.email),
   email_verified_at = COALESCE(p.email_verified_at, u.email_confirmed_at),
-  phone_verified_at = COALESCE(p.phone_verified_at, u.phone_confirmed_at)
+  phone_verified_at = COALESCE(p.phone_verified_at, u.phone_confirmed_at),
+  city = COALESCE(NULLIF(p.city, ''), NULLIF(TRIM(COALESCE(u.raw_user_meta_data->>'city', '')), '')),
+  market_id = COALESCE(
+    p.market_id,
+    CASE
+      WHEN COALESCE(u.raw_user_meta_data->>'market_id', '') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        THEN (u.raw_user_meta_data->>'market_id')::uuid
+      ELSE NULL
+    END
+  )
 FROM auth.users u
 WHERE u.id = p.id;
 
