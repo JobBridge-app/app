@@ -17,8 +17,14 @@ import { LocationStep } from "./onboarding/LocationStep";
 import { checkEmailExists, ensureConfirmationEmailTemplate, getEmailOnboardingStatus } from "@/lib/authServerActions";
 import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
 import type { User } from "@supabase/supabase-js";
+import {
+  getInitialOnboardingRole,
+  inferOnboardingRole,
+  mustChooseOnboardingRole,
+  type OnboardingStep,
+} from "@/lib/onboardingFlow";
 
-type Step = "location" | "welcome" | "mode" | "auth" | "email-confirm" | "role" | "profile" | "contact" | "summary";
+type Step = OnboardingStep;
 
 type AuthMode = "signup" | "signin" | null;
 
@@ -66,15 +72,6 @@ const isProfileComplete = (profile: Profile | null | undefined) => {
     profile?.full_name && profile.birthdate && profile.city && profile.account_type
   );
 };
-
-function inferOnboardingRole(profile: Profile | null | undefined): OnboardingRole | null {
-  if (!profile?.account_type) return null;
-  if (profile.account_type === "job_seeker") return "youth";
-  if (profile.account_type === "job_provider") {
-    return profile.provider_kind === "company" ? "company" : "adult";
-  }
-  return null;
-}
 
 function readOnboardingDraft(): OnboardingDraft | null {
   if (typeof window === "undefined") return null;
@@ -151,6 +148,7 @@ export function OnboardingWizard({
     forceResend: forceResendConfirmation,
     markSent: markConfirmationEmailSent,
   } = useEmailResend(email);
+  const mustChooseRole = mustChooseOnboardingRole(forcedStep, isJustVerified);
 
   // Seitenscrolling auf Mobile verhindern
   useEffect(() => {
@@ -160,7 +158,7 @@ export function OnboardingWizard({
 
   // Initialwerte aus Session, Profil und lokalem Onboarding-Entwurf zusammenführen.
   const [profileData, setProfileData] = useState({
-    role: inferOnboardingRole(initialProfile),
+    role: getInitialOnboardingRole({ profile: initialProfile, forcedStep, isJustVerified }),
     fullName: initialProfile?.full_name || "",
     birthdate: initialProfile?.birthdate || "",
     region: initialProfile?.city || initialRegion || "",
@@ -183,22 +181,18 @@ export function OnboardingWizard({
       setProfileData((prev) => ({
         ...prev,
         ...draft.profileData,
-        role: draft.profileData.role || prev.role,
+        role: mustChooseRole ? null : draft.profileData.role || prev.role,
         region: draft.profileData.region || prev.region,
         marketId: draft.profileData.marketId || prev.marketId,
       }));
 
-      const serverNeedsEmailConfirmation = forcedStep === "email-confirm" && !isJustVerified;
-
-      if (!forcedStep || serverNeedsEmailConfirmation) {
+      if (!forcedStep) {
         setStep(draft.step === "welcome" ? "mode" : draft.step);
-      } else if (forcedStep === "role" && draft.profileData.role && draft.step !== "email-confirm") {
-        setStep(draft.step === "role" ? "profile" : draft.step);
       }
     }
 
     setResumeChecked(true);
-  }, [forcedStep, initialEmail, initialProfile, isJustVerified]);
+  }, [forcedStep, initialEmail, initialProfile, isJustVerified, mustChooseRole]);
 
   useEffect(() => {
     if (!resumeChecked) return;
@@ -290,11 +284,10 @@ export function OnboardingWizard({
       setEmailConfirmed(true);
       setCodeMessage("Code bestätigt. Bitte wähle jetzt deine Rolle.");
       setTimeout(() => {
-        const nextRole = profileTyped ? inferOnboardingRole(profileTyped) || profileData.role : profileData.role;
         if (profileTyped) {
           setProfileData((prev) => ({
             ...prev,
-            role: nextRole,
+            role: null,
             fullName: profileTyped.full_name || prev.fullName,
             birthdate: profileTyped.birthdate || prev.birthdate,
             region: profileTyped.city || prev.region,
@@ -303,10 +296,10 @@ export function OnboardingWizard({
         } else {
           setProfileData((prev) => ({
             ...prev,
-            role: nextRole,
+            role: null,
           }));
         }
-        setStep(nextRole ? "profile" : "role");
+        setStep("role");
       }, 1000);
       return true;
     }
@@ -314,7 +307,7 @@ export function OnboardingWizard({
     if (profileTyped) {
       setProfileData((prev) => ({
         ...prev,
-        role: inferOnboardingRole(profileTyped) || prev.role,
+        role: mustChooseRole ? null : inferOnboardingRole(profileTyped) || prev.role,
         fullName: profileTyped.full_name || prev.fullName,
         birthdate: profileTyped.birthdate || prev.birthdate,
         region: profileTyped.city || prev.region,
@@ -322,7 +315,7 @@ export function OnboardingWizard({
       }));
     }
     return false;
-  }, [email, redirectTo, profileData.role]);
+  }, [email, redirectTo, mustChooseRole]);
 
   useEffect(() => {
     if (step !== "email-confirm") return;
