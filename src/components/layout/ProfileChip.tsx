@@ -128,12 +128,12 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                 </div>
 
                 <div className="hidden min-w-0 md:flex md:flex-col md:items-start md:text-left">
-                    <span className="max-w-[120px] truncate text-sm font-medium leading-tight text-slate-100">
+                    <span className="max-w-[120px] truncate text-[15px] font-semibold leading-[1.05] tracking-[-0.025em] text-white">
                         {profile.full_name}
                     </span>
-                    <div className="mt-0.5 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-300">
-                            <RoleIcon size={10} />
+                    <div className="mt-1 flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium leading-none tracking-[-0.01em] text-sky-100/62">
+                            <RoleIcon size={12} strokeWidth={2.1} />
                             {label}
                         </span>
                         {isDemo && (

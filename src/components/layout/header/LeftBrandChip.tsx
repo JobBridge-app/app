@@ -18,17 +18,17 @@ export function LeftBrandChip({ market }: { market: Market | null }) {
                         alt="JobBridge Logo"
                         width={44}
                         height={44}
-                        className="h-full w-full scale-105 object-cover"
+                        className="h-full w-full scale-[1.22] object-cover object-center"
                     />
                 </div>
             </div>
 
             <div className="app-brand-chip-label hidden flex-col justify-center md:flex">
-                <span className="app-brand-chip-title max-w-[7.5rem] truncate text-sm font-bold leading-none tracking-tight text-white md:max-w-none md:text-lg">
+                <span className="app-brand-chip-title max-w-[7.5rem] truncate text-base font-semibold leading-[1.02] tracking-[-0.035em] text-white md:max-w-none md:text-[19px]">
                     {market?.brand_prefix || BRAND_NAME}
                 </span>
                 {market?.display_name && (
-                    <span className="app-brand-chip-subtitle hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-200/90 md:block">
+                    <span className="app-brand-chip-subtitle hidden text-xs font-medium leading-[1.15] tracking-[-0.01em] text-sky-100/70 md:block">
                         {market.display_name}
                     </span>
                 )}
