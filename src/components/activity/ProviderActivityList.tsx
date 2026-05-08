@@ -9,6 +9,7 @@ import type { Database } from "@/lib/types/supabase";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 const ApplicationChatModal = dynamic(
     () => import("@/components/activity/ApplicationChatModal").then((mod) => mod.ApplicationChatModal),
@@ -19,12 +20,23 @@ const ApplicationChatModal = dynamic(
 export type ProviderApplication = Database["public"]["Tables"]["applications"]["Row"] & {
     applicant?: (Database["public"]["Tables"]["profiles"]["Row"] & { avatar_url?: string | null }) | null;
     job?: {
+        id: string;
         title: string;
         status: Database["public"]["Enums"]["job_status"];
     } | null;
 };
 
-export function ProviderActivityList({ applications, userId }: { applications: ProviderApplication[], userId: string }) {
+export function ProviderActivityList({
+    applications,
+    userId,
+    selectedJobId,
+    selectedJobTitle,
+}: {
+    applications: ProviderApplication[];
+    userId: string;
+    selectedJobId?: string | null;
+    selectedJobTitle?: string | null;
+}) {
     const [items, setItems] = useState(applications);
     const [selectedApp, setSelectedApp] = useState<ProviderApplication | null>(null);
     const [viewProfile, setViewProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
@@ -89,8 +101,22 @@ export function ProviderActivityList({ applications, userId }: { applications: P
                 <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/5">
                     <MessageSquare size={32} className="text-indigo-400" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Keine Aktivitäten</h3>
-                <p className="text-slate-400 max-w-md mx-auto">Aktuell liegen keine Bewerbungen für deine Inserate vor.</p>
+                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                    {selectedJobId ? "Keine Bewerbungen für diesen Job" : "Keine Aktivitäten"}
+                </h3>
+                <p className="text-slate-400 max-w-md mx-auto">
+                    {selectedJobId
+                        ? "Sobald sich jemand auf dieses Angebot bewirbt, erscheint die Konversation hier."
+                        : "Aktuell liegen keine Bewerbungen für deine Inserate vor."}
+                </p>
+                {selectedJobId && (
+                    <Link
+                        href="/app-home/activities"
+                        className="mt-8 inline-flex h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-sm font-semibold text-slate-200 transition-colors hover:bg-white/[0.06]"
+                    >
+                        Alle Aktivitäten anzeigen
+                    </Link>
+                )}
             </div>
         );
     }
@@ -208,6 +234,21 @@ export function ProviderActivityList({ applications, userId }: { applications: P
     return (
         <>
             <div className="space-y-12">
+                {selectedJobId && (
+                    <div className="flex flex-col gap-3 rounded-2xl border border-indigo-300/15 bg-indigo-400/10 px-5 py-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-200/70">Gefiltert nach Job</p>
+                            <p className="mt-1 text-sm font-semibold text-white">{selectedJobTitle || "Ausgewähltes Angebot"}</p>
+                        </div>
+                        <Link
+                            href="/app-home/activities"
+                            className="inline-flex w-fit items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:bg-white/[0.06]"
+                        >
+                            Alle Aktivitäten
+                        </Link>
+                    </div>
+                )}
+
                 {activeApps.length > 0 && (
                     <div className="space-y-6">
                         <div className="flex items-center gap-3 px-2">

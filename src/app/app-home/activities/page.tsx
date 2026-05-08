@@ -5,11 +5,17 @@ import { ActivitiesPageClient } from "@/components/activity/ActivitiesPageClient
 import { ProviderActivityList } from "@/components/activity/ProviderActivityList";
 import { getAppHomeSnapshot } from "@/lib/app-shell";
 
-export default async function ActivityPage() {
+export default async function ActivityPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
     const snapshot = await getAppHomeSnapshot();
     const profile = snapshot.profile;
     const viewRole = snapshot.effectiveView.viewRole;
     const source = snapshot.effectiveView.source;
+    const params = searchParams ? await searchParams : {};
+    const selectedJobId = typeof params.jobId === "string" ? params.jobId : null;
 
     const supabase = await supabaseServer();
     const appsTable: "applications" | "demo_applications" = source === "demo" ? "demo_applications" : "applications";
@@ -34,6 +40,7 @@ export default async function ActivityPage() {
             .select(`
                 *,
                 job:${jobsRelation}!inner(
+                    id,
                     title, 
                     status, 
                     posted_by
@@ -71,6 +78,12 @@ export default async function ActivityPage() {
             job: Array.isArray(row.job) ? row.job[0] : row.job, // Handle potential array return from join
             applicant: Array.isArray(row.applicant) ? row.applicant[0] : row.applicant
         }));
+        const selectedJobTitle = selectedJobId
+            ? applications.find((app) => app.job?.id === selectedJobId)?.job?.title ?? null
+            : null;
+        const visibleApplications = selectedJobId
+            ? applications.filter((app) => app.job?.id === selectedJobId)
+            : applications;
 
         return (
             <div className="container mx-auto py-12 px-4 md:px-6">
@@ -82,7 +95,12 @@ export default async function ActivityPage() {
                         </div>
                     </div>
                     {/* @ts-ignore - Supabase types are tricky with joins, verified manually */}
-                    <ProviderActivityList applications={applications} userId={profile.id} />
+                    <ProviderActivityList
+                        applications={visibleApplications}
+                        userId={profile.id}
+                        selectedJobId={selectedJobId}
+                        selectedJobTitle={selectedJobTitle}
+                    />
                 </div>
             </div>
         );

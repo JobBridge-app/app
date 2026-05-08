@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { X, MapPin, Building2, ShieldCheck, Info, CheckCircle2, Search, ArrowRight, Loader2, AlertTriangle } from "lucide-react";
+import { X, ShieldCheck, CheckCircle2, Search, Loader2, AlertTriangle, ChevronDown } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 import { LocationAutocomplete, LocationDetails } from "@/components/ui/LocationAutocomplete";
@@ -20,6 +20,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [isNoticeOpen, setIsNoticeOpen] = useState(false);
 
     // New state for "Locked/Confirmed" address from API
     const [isAddressLocked, setIsAddressLocked] = useState(false);
@@ -34,6 +35,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
             setZip("");
             setIsAddressLocked(false);
             setError(null);
+            setIsNoticeOpen(false);
         }
     }, [isOpen]);
 
@@ -101,8 +103,6 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
         }
     };
 
-    const supportMailto = `mailto:support@jobbridge.de?subject=${encodeURIComponent("Problem bei der Adress-Verifizierung")}&body=${encodeURIComponent("Hallo Support,\n\nich habe ein Problem mit meiner Adresse...")}`;
-
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -129,11 +129,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                             leaveFrom="opacity-100 scale-100 translate-y-0"
                             leaveTo="opacity-0 scale-95 translate-y-4"
                         >
-                            <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-[2rem] bg-[#0A0A0C] border border-white/10 p-0 text-left align-middle shadow-2xl transition-all relative">
-                                {/* Ambient Background Glow */}
-                                <div className="absolute top-[-20%] left-[-10%] w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
-                                <div className="absolute bottom-[-10%] right-[-10%] w-[250px] h-[250px] bg-purple-500/10 rounded-full blur-[80px] pointer-events-none" />
-
+                            <Dialog.Panel className="relative w-full max-w-xl transform overflow-visible rounded-[2rem] border border-white/10 bg-[#090A0F] p-0 text-left align-middle shadow-[0_36px_110px_rgba(0,0,0,0.66)] transition-all">
                                 {isSuccess ? (
                                     <div className="flex flex-col items-center justify-center py-16 px-6 space-y-8 relative z-10">
                                         <div className="relative">
@@ -149,59 +145,82 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                     </div>
                                 ) : (
                                     <>
-                                        {/* Header */}
-                                        <div className="relative p-6 px-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-                                            <Dialog.Title as="h3" className="text-xl font-bold text-white flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                                                    <ShieldCheck className="text-indigo-400" size={20} />
+                                        <div className="relative border-b border-white/[0.06] bg-white/[0.018] px-6 py-5">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <div className="flex min-w-0 items-center gap-3">
+                                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-400/10 text-indigo-200">
+                                                        <ShieldCheck size={20} />
+                                                    </span>
+                                                    <Dialog.Title as="h3" className="text-2xl font-semibold tracking-tight text-white">
+                                                        Adresse verifizieren
+                                                    </Dialog.Title>
                                                 </div>
-                                                <span>Adresse verifizieren</span>
-                                            </Dialog.Title>
-                                            <button
-                                                onClick={onClose}
-                                                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-                                            >
-                                                <X size={16} />
-                                            </button>
+                                                <button
+                                                    onClick={onClose}
+                                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 transition-colors hover:bg-white/[0.08] hover:text-white"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
                                         </div>
 
-                                        <div className="p-8 space-y-8 relative z-10">
-                                            {/* Info Box */}
-                                            <div className="rounded-2xl bg-indigo-500/5 border border-indigo-500/10 p-5 flex gap-4">
-                                                <div className="flex-shrink-0 mt-0.5">
-                                                    <Info className="text-indigo-400" size={20} />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-sm font-bold text-indigo-200">
-                                                        Wahre Identität
-                                                    </p>
-                                                    <p className="text-xs text-indigo-300/70 leading-relaxed">
-                                                        Bitte gib deine <span className="font-bold text-indigo-200">richtige Wohnadresse</span> an. Diese Angabe ist verbindlich und erhöht deinen <span className="font-bold text-indigo-200">Trust Score</span>. Falschangaben führen zur Sperrung.
-                                                    </p>
-                                                </div>
+                                        <div className="relative z-10 space-y-5 p-6">
+                                            <div className="overflow-hidden rounded-2xl border border-amber-200/15 bg-[#12100B]">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsNoticeOpen((open) => !open)}
+                                                    aria-expanded={isNoticeOpen}
+                                                    className="flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.025] focus:outline-none focus:ring-2 focus:ring-amber-200/20"
+                                                >
+                                                    <span className="flex min-w-0 items-center gap-3">
+                                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-200/15 bg-amber-200/[0.08] text-amber-200">
+                                                            <AlertTriangle size={14} />
+                                                        </span>
+                                                        <span className="min-w-0">
+                                                            <span className="block text-sm font-semibold text-white">Echte Wohnadresse angeben</span>
+                                                            <span className="block text-xs leading-5 text-slate-500">Falsche Angaben können zur Sperrung führen.</span>
+                                                        </span>
+                                                    </span>
+                                                    <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-amber-100/80">
+                                                        Warum?
+                                                        <ChevronDown
+                                                            size={16}
+                                                            className={cn("transition-transform duration-200", isNoticeOpen && "rotate-180")}
+                                                        />
+                                                    </span>
+                                                </button>
+
+                                                {isNoticeOpen && (
+                                                    <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
+                                                        <p className="text-sm leading-6 text-slate-400">
+                                                            Gib deine echte Wohnadresse an. Sie ist nicht öffentlich sichtbar; andere sehen nur die Entfernung.
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
 
-                                            <div className="space-y-6">
+                                            <div className="space-y-3">
+                                                <label className="ml-1 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                                                    Wohnadresse
+                                                </label>
                                                 {isAddressLocked ? (
-                                                    // LOCKED STATE (Address Found)
-                                                    <div className="p-1 rounded-2xl bg-[#0F0F12] border border-emerald-500/20 p-5 space-y-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                                                                <CheckCircle2 size={20} />
+                                                    <div className="space-y-4 rounded-2xl border border-emerald-400/18 bg-emerald-400/[0.045] p-4">
+                                                        <div className="flex items-start gap-3">
+                                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300">
+                                                                <CheckCircle2 size={18} />
                                                             </div>
-                                                            <div>
-                                                                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Ausgewählte Adresse</p>
-                                                                <p className="text-base font-bold text-white">
-                                                                    {street} <span className="text-emerald-400">{houseNumber || "?"}</span>
+                                                            <div className="min-w-0">
+                                                                <p className="text-base font-semibold text-white">
+                                                                    {street} <span className="text-emerald-300">{houseNumber || "?"}</span>
                                                                 </p>
+                                                                <p className="mt-1 text-sm text-slate-500">{[zip, city].filter(Boolean).join(" ")}</p>
                                                             </div>
                                                         </div>
 
-                                                        {/* Fallback for missing House Number (v12) */}
                                                         {!houseNumber && (
                                                             <div className="animate-in fade-in slide-in-from-top-1">
-                                                                <label className="text-[10px] uppercase font-bold text-amber-500 tracking-wider mb-1 block">
-                                                                    <AlertTriangle size={10} className="inline mr-1" /> Hausnummer fehlt
+                                                                <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                                                                    <AlertTriangle size={10} className="mr-1 inline" /> Hausnummer fehlt
                                                                 </label>
                                                                 <div className="flex gap-2">
                                                                     <input
@@ -209,84 +228,63 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                                                         placeholder="Nr."
                                                                         value={houseNumber}
                                                                         onChange={(e) => setHouseNumber(e.target.value)}
-                                                                        className="w-20 h-10 rounded-lg bg-[#15151A] border border-amber-500/30 text-white text-center font-bold focus:outline-none focus:border-amber-500/60"
+                                                                        className="h-10 w-24 rounded-xl border border-amber-500/30 bg-[#111217] text-center font-bold text-white focus:border-amber-500/60 focus:outline-none"
                                                                     />
-                                                                    <div className="flex items-center text-xs text-slate-500">
+                                                                    <div className="flex items-center text-xs leading-5 text-slate-500">
                                                                         Bitte ergänzen.
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         )}
 
-                                                        <div className="flex items-center gap-3 pt-2">
+                                                        <div className="border-t border-white/[0.06] pt-3">
                                                             <button
                                                                 onClick={handleResetAddress}
-                                                                className="text-xs font-bold text-slate-500 hover:text-white transition-colors underline decoration-slate-700 underline-offset-4"
+                                                                className="text-xs font-bold text-slate-400 underline decoration-slate-700 underline-offset-4 transition-colors hover:text-white"
                                                             >
                                                                 Andere Adresse suchen
                                                             </button>
-                                                            <div className="h-3 w-px bg-white/10" />
-                                                            <a href={supportMailto} className="text-xs font-bold text-slate-500 hover:text-indigo-400 transition-colors">
-                                                                Daten falsch? Melden
-                                                            </a>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    // SEARCH & MANUAL ENTRY
-                                                    <>
-                                                        <div>
-                                                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                                                                Adresse suchen
-                                                            </label>
-                                                            <div className="relative group">
-                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none z-10">
-                                                                    <Search size={18} />
-                                                                </div>
-                                                                <LocationAutocomplete
-                                                                    onSelect={handleLocationSelect}
-                                                                    placeholder="Straße suchen (z.B. Hauptstraße)..."
-                                                                    className="w-full"
-                                                                    autoFocus
-                                                                />
-                                                            </div>
+                                                    <div className="relative">
+                                                        <div className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-indigo-400">
+                                                            <Search size={18} />
                                                         </div>
-
-                                                        {/* Legacy Manual Inputs REMOVED (v12) */}
-                                                        {/* User requested removal of manual fields below search. */}
-
-                                                        <div className="flex justify-end pt-2">
-                                                            <a href={supportMailto} className="text-[10px] font-bold text-slate-600 hover:text-slate-400 transition-colors">
-                                                                Daten falsch? Fehler melden
-                                                            </a>
-                                                        </div>
-                                                    </>
+                                                        <LocationAutocomplete
+                                                            onSelect={handleLocationSelect}
+                                                            placeholder="Straße und Hausnummer"
+                                                            className="w-full"
+                                                            autoFocus
+                                                        />
+                                                    </div>
                                                 )}
                                             </div>
 
                                             {error && (
-                                                <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-medium animate-in fade-in slide-in-from-top-1">
+                                                <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs font-medium text-rose-300 animate-in fade-in slide-in-from-top-1">
                                                     <AlertTriangle size={14} />
                                                     {error}
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="p-6 px-8 border-t border-white/5 bg-white/[0.02] flex justify-end gap-3">
+                                        <div className="flex flex-col-reverse gap-3 border-t border-white/[0.06] bg-white/[0.018] px-6 py-5 sm:flex-row sm:justify-end">
                                             <button
                                                 type="button"
                                                 onClick={onClose}
-                                                className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                                                className="h-11 rounded-xl px-5 text-sm font-bold text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
                                             >
                                                 Abbrechen
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={handleSubmit}
-                                                disabled={isSubmitting}
-                                                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                                                disabled={isSubmitting || !street.trim() || !houseNumber.trim()}
+                                                className="flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-slate-950 shadow-lg shadow-white/10 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45"
                                             >
                                                 {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                                                <span>Jetzt bestätigen</span>
+                                                <span>Adresse bestätigen</span>
                                             </button>
                                         </div>
                                     </>

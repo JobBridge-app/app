@@ -313,14 +313,6 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                         : "border-indigo-500/30 shadow-black/30"
                                 )}
                             >
-                                {/* Border sweep follows the existing card frame. */}
-                                <div
-                                    className={cn(
-                                        "jobbridge-verification-shell-sweep pointer-events-none absolute inset-0 rounded-[2rem]",
-                                        verificationFocusActive && "jobbridge-verification-shell-sweep-active"
-                                    )}
-                                />
-
                                 {/* Background Light */}
                                 <div className="absolute inset-0 bg-[linear-gradient(130deg,rgba(79,70,229,0.16),transparent_42%,rgba(6,182,212,0.08)_78%,transparent)] pointer-events-none" />
                                 <div
@@ -357,9 +349,6 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                             <h3 className="text-2xl font-bold text-white tracking-tight">
                                                 Basisverifizierung abschließen
                                             </h3>
-                                            <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold uppercase tracking-wider">
-                                                Wichtig
-                                            </span>
                                         </div>
                                         <p className="text-slate-400 text-base font-medium leading-relaxed max-w-2xl">
                                             Um Jobs auszuschreiben und vollen Zugriff auf die Plattform zu erhalten, bestätigst du einmalig deine Wohnadresse.
@@ -376,12 +365,6 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                     : "bg-[#4F46E5] hover:bg-[#4338CA] shadow-indigo-900/20 hover:shadow-indigo-900/30"
                                             )}
                                         >
-                                            <span
-                                                className={cn(
-                                                    "jobbridge-verification-button-sweep pointer-events-none absolute inset-0 rounded-2xl",
-                                                    verificationFocusActive && "jobbridge-verification-button-sweep-active"
-                                                )}
-                                            />
                                             <MapPin size={18} className="relative z-10 text-indigo-100 transition-colors" />
                                             <span className="relative z-10">Wohnadresse eingeben</span>
                                             <ArrowRight size={16} className="relative z-10 text-indigo-100 transition-transform group-hover/btn:translate-x-1" />

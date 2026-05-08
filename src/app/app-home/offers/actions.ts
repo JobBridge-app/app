@@ -277,7 +277,6 @@ export async function acceptApplicant(
     if (!result?.ok) return { ok: false, error: { message: result?.error || "Unbekannter Fehler" } };
 
     revalidatePath("/app-home/offers");
-    revalidatePath("/app-home/applications");
     revalidatePath("/app-home/activities");
 
     return {
@@ -343,7 +342,7 @@ export async function respondToApplication(
     });
 
     revalidatePath("/app-home/offers");
-    revalidatePath("/app-home/applications");
+    revalidatePath("/app-home/activities");
 
     return { ok: true, data: { message_id: msg.id } };
 }
@@ -415,7 +414,7 @@ export async function rejectApplicant(
             type: "application_new",
             title: "Nachrücker aus Warteliste",
             body: `Ein Platz wurde frei! Ein Bewerber ist von der Warteliste nachgerückt und ist nun im Gespräch.`,
-            data: { route: "/app-home/applications" }
+            data: { route: `/app-home/activities?jobId=${app.job.id}` }
         });
         // Notify Candidate
         await (supabase as any).from("notifications").insert({
@@ -439,7 +438,6 @@ export async function rejectApplicant(
     }
 
     revalidatePath("/app-home/offers");
-    revalidatePath("/app-home/applications");
     revalidatePath("/app-home/activities");
 
     return { ok: true, data: undefined };

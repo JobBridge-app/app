@@ -144,7 +144,7 @@ export async function applyToJob(formData: FormData | string) {
             body: isWaitlist
                 ? `Jemand hat sich auf die Warteliste für '${job.title}' gesetzt.`
                 : `Jemand hat sich auf '${job.title}' beworben.`,
-            data: { route: "/app-home/applications" }
+            data: { route: `/app-home/activities?jobId=${jobId}` }
         });
     }
 

@@ -197,30 +197,6 @@ button,
   scrollbar-width: none;
 }
 
-.jobbridge-verification-shell-sweep,
-.jobbridge-verification-button-sweep {
-  padding: 1px;
-  background:
-    conic-gradient(from -34deg,
-      transparent 0deg,
-      transparent 250deg,
-      rgba(129, 140, 248, 0) 276deg,
-      rgba(165, 180, 252, 0.85) 306deg,
-      rgba(34, 211, 238, 0.42) 326deg,
-      rgba(129, 140, 248, 0) 348deg,
-      transparent 360deg);
-  opacity: 0;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-
-.jobbridge-verification-shell-sweep-active {
-  animation: jobbridge-verification-shell-sweep 1.55s cubic-bezier(0.2, 0.8, 0.2, 1) 1;
-}
-
 .jobbridge-verification-guidance {
   background: linear-gradient(90deg, transparent 0%, rgba(129, 140, 248, 0.12) 44%, rgba(99, 102, 241, 0.18) 55%, transparent 100%);
   filter: blur(18px);
@@ -231,25 +207,22 @@ button,
   animation: jobbridge-verification-guidance 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.85s 1;
 }
 
-.jobbridge-verification-button-sweep-active {
-  animation: jobbridge-verification-button-sweep 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) 1.35s 1;
+.jobbridge-verification-card {
+  animation: jobbridge-verification-card 7s ease-in-out infinite;
 }
 
-@keyframes jobbridge-verification-shell-sweep {
-  0% {
-    opacity: 0;
-    transform: rotate(-10deg);
-  }
+.jobbridge-verification-seal {
+  animation: jobbridge-verification-seal 7s ease-in-out infinite;
+}
 
-  14%,
-  72% {
-    opacity: 1;
-  }
+.jobbridge-verification-aura {
+  animation: jobbridge-verification-aura 8s ease-in-out infinite;
+}
 
-  100% {
-    opacity: 0;
-    transform: rotate(350deg);
-  }
+.jobbridge-verification-sheen {
+  animation: jobbridge-verification-sheen 7.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  mix-blend-mode: screen;
+  transform-origin: 34% 22%;
 }
 
 @keyframes jobbridge-verification-guidance {
@@ -268,20 +241,53 @@ button,
   }
 }
 
-@keyframes jobbridge-verification-button-sweep {
-  0% {
-    opacity: 0;
-    transform: rotate(-80deg);
-  }
-
-  18%,
-  76% {
-    opacity: 1;
-  }
-
+@keyframes jobbridge-verification-card {
+  0%,
   100% {
-    opacity: 0;
-    transform: rotate(280deg);
+    transform: rotateY(-18deg) rotateX(9deg) rotateZ(-7deg) translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: rotateY(-16.5deg) rotateX(8.4deg) rotateZ(-6.6deg) translate3d(4px, 0, 0);
+  }
+}
+
+@keyframes jobbridge-verification-seal {
+  0%,
+  100% {
+    transform: rotateY(-16deg) rotateX(8deg) rotateZ(-7deg) translate3d(0, 0, 90px) scale(1);
+    filter: drop-shadow(0 0 14px rgba(199, 210, 254, 0.18));
+  }
+
+  50% {
+    transform: rotateY(-14.8deg) rotateX(7.2deg) rotateZ(-6.4deg) translate3d(2px, 0, 96px) scale(1.018);
+    filter: drop-shadow(0 0 22px rgba(199, 210, 254, 0.3));
+  }
+}
+
+@keyframes jobbridge-verification-aura {
+  0%,
+  100% {
+    opacity: 0.76;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+}
+
+@keyframes jobbridge-verification-sheen {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translate3d(-10px, -6px, 0) scale(0.98);
+  }
+
+  52% {
+    opacity: 0.82;
+    transform: translate3d(12px, 8px, 0) scale(1.02);
   }
 }
 

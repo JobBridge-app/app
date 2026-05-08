@@ -46,7 +46,7 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
         data: { route: "/app-home/activities" }
     });
 
-    revalidatePath("/app-home/applications");
+    revalidatePath("/app-home/activities");
     return { success: true };
 }
 
@@ -128,7 +128,7 @@ export async function rejectApplication(applicationId: string, reason: string) {
         data: { route: "/app-home/activities" }
     });
 
-    revalidatePath("/app-home/applications");
+    revalidatePath("/app-home/activities");
     return { success: true };
 }
 
@@ -204,7 +204,7 @@ export async function withdrawApplication(applicationId: string, reason: string 
         }
     }
 
-    revalidatePath("/app-home/applications");
+    revalidatePath("/app-home/activities");
     revalidatePath("/app-home/jobs");
     return { success: true };
 }
@@ -258,7 +258,7 @@ export async function sendMessage(applicationId: string, content: string) {
         type: "chat_message",
         title: `Neue Nachricht zu '${app.job.title}'`,
         body: isApplicant ? "Du hast eine neue Nachricht vom Bewerber erhalten." : "Du hast eine neue Nachricht vom Arbeitgeber erhalten.",
-        data: { route: isApplicant ? "/app-home/offers" : "/app-home/activities" }
+        data: { route: "/app-home/activities" }
     });
 
     revalidatePath("/app-home/activities");

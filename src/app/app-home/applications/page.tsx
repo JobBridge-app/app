@@ -9,9 +9,8 @@ export default async function ApplicationsPage() {
     const viewRole = viewRes.ok ? viewRes.data.viewRole : (profile.account_type ?? "job_seeker");
 
     if (viewRole === "job_seeker") {
-        redirect("/app-home/activity");
+        redirect("/app-home/activities");
     }
 
-    // Providers should use the Hub
-    redirect("/app-home/offers?view=applications");
+    redirect("/app-home/activities");
 }
