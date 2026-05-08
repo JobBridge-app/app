@@ -703,5 +703,27 @@ BEGIN
   END IF;
 END $$;
 
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS mobile_nav_preference text;
+
+UPDATE public.profiles
+SET mobile_nav_preference = 'top'
+WHERE mobile_nav_preference IS NULL
+   OR mobile_nav_preference NOT IN ('top', 'bottom');
+
+ALTER TABLE public.profiles
+  ALTER COLUMN mobile_nav_preference SET DEFAULT 'top',
+  ALTER COLUMN mobile_nav_preference SET NOT NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'profiles_mobile_nav_preference_check'
+  ) THEN
+    ALTER TABLE public.profiles
+      ADD CONSTRAINT profiles_mobile_nav_preference_check
+      CHECK (mobile_nav_preference IN ('top', 'bottom'));
+  END IF;
+END $$;
+
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS lat FLOAT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS lng FLOAT;

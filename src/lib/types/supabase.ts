@@ -579,6 +579,7 @@ export type Database = {
           provider_verified_at: string | null
           skills: string | null
           theme_preference: "light" | "dark" | "system"
+          mobile_nav_preference: "top" | "bottom"
           updated_at: string
           user_type: string | null
           avatar_url: string | null
@@ -614,6 +615,7 @@ export type Database = {
           provider_verified_at?: string | null
           skills?: string | null
           theme_preference?: "light" | "dark" | "system"
+          mobile_nav_preference?: "top" | "bottom"
           updated_at?: string
           user_type?: string | null
           avatar_url?: string | null
@@ -649,6 +651,7 @@ export type Database = {
           provider_verified_at?: string | null
           skills?: string | null
           theme_preference?: "light" | "dark" | "system"
+          mobile_nav_preference?: "top" | "bottom"
           updated_at?: string
           user_type?: string | null
           avatar_url?: string | null

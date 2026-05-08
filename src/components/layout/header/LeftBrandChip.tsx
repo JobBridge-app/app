@@ -23,12 +23,12 @@ export function LeftBrandChip({ market }: { market: Market | null }) {
                 </div>
             </div>
 
-            <div className="hidden md:flex flex-col justify-center">
-                <span className="text-lg font-bold leading-none tracking-tight text-white">
+            <div className="app-brand-chip-label hidden flex-col justify-center md:flex">
+                <span className="app-brand-chip-title max-w-[7.5rem] truncate text-sm font-bold leading-none tracking-tight text-white md:max-w-none md:text-lg">
                     {market?.brand_prefix || BRAND_NAME}
                 </span>
                 {market?.display_name && (
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-200/90">
+                    <span className="app-brand-chip-subtitle hidden text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-200/90 md:block">
                         {market.display_name}
                     </span>
                 )}

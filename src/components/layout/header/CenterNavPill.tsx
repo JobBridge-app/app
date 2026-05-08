@@ -3,20 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Briefcase, Activity, Settings } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Profile } from "@/lib/types";
 import { motion } from "framer-motion";
-import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Profile } from "@/lib/types";
 import { warmRouteAdjacentUI } from "@/lib/ui-warmup";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
-
-type NavItem = {
-    label: string;
-    icon: LucideIcon;
-    href: string;
-    activePattern: RegExp;
-};
+import { getAppNavItems } from "./navItems";
 
 export function CenterNavPill({ profile, instanceId = "default" }: { profile: Profile | null; instanceId?: string }) {
     const router = useRouter();
@@ -26,52 +18,7 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
     const currentPath = pendingHref || pathname || "";
     const activePillId = `active-pill-${instanceId}`;
 
-    const commonItems: NavItem[] = [
-        {
-            label: "Einstellungen",
-            icon: Settings,
-            href: "/app-home/settings",
-            activePattern: /^\/app-home\/settings/,
-        }
-    ];
-
-    let navItems: NavItem[] = [];
-
-    const isProvider = profile?.account_type === "job_provider";
-
-    if (isProvider) {
-        navItems = [
-            {
-                label: "Jobs",
-                icon: Briefcase,
-                href: "/app-home/offers",
-                activePattern: /^\/app-home\/offers/,
-            },
-            {
-                label: "Aktivität",
-                icon: Activity,
-                href: "/app-home/activities",
-                activePattern: /^\/app-home\/activities/,
-            },
-            ...commonItems
-        ];
-    } else {
-        navItems = [
-            {
-                label: "Jobs",
-                icon: Briefcase,
-                href: "/app-home/jobs",
-                activePattern: /^\/app-home\/jobs/,
-            },
-            {
-                label: "Aktivität",
-                icon: Activity,
-                href: "/app-home/activities",
-                activePattern: /^\/app-home\/activities/,
-            },
-            ...commonItems
-        ];
-    }
+    const navItems = getAppNavItems(profile);
 
     useEffect(() => {
         setPendingHref(null);
@@ -89,6 +36,11 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
         }
     };
 
+    const activateRoute = (href: string) => {
+        startPerfMark("app-header-route");
+        setPendingHref(href);
+    };
+
     return (
         <nav className="flex h-[52px] items-center gap-1 rounded-full border border-white/10 bg-slate-900/40 p-[6px] shadow-xl backdrop-blur-md">
             {navItems.map((item) => {
@@ -98,14 +50,14 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                         key={item.href}
                         href={item.href}
                         prefetch
-                        onClick={() => {
-                            startPerfMark("app-header-route");
-                            setPendingHref(item.href);
-                        }}
+                        onClick={() => activateRoute(item.href)}
                         onMouseEnter={() => warmRoute(item.href)}
                         onFocus={() => warmRoute(item.href)}
                         onTouchStart={() => warmRoute(item.href)}
-                        onPointerDown={() => warmRoute(item.href)}
+                        onPointerDown={() => {
+                            warmRoute(item.href);
+                            activateRoute(item.href);
+                        }}
                         className={cn(
                             "group relative flex h-10 items-center justify-center rounded-full px-3 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 md:px-5",
                             isActive

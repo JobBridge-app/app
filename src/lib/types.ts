@@ -8,6 +8,7 @@ export type ProviderVerificationStatus = "none" | "pending" | "verified" | "reje
 export type JobStatus = "draft" | "open" | "closed" | "reviewing" | "reserved" | "filled";
 export type ApplicationStatus = "submitted" | "withdrawn" | "accepted" | "rejected";
 export type SystemRoleType = "admin" | "moderator" | "analyst";
+export type MobileNavPreference = "top" | "bottom";
 
 export type Profile = {
   id: string;
@@ -32,6 +33,7 @@ export type Profile = {
   guardian_verified_at: string | null;
   market_id: string | null;
   theme_preference?: "light" | "dark" | "system";
+  mobile_nav_preference?: MobileNavPreference;
   created_at: string | null;
   updated_at?: string | null;
   email?: string; // Often joined from auth.users or waitlist, keeping optional
@@ -44,10 +46,6 @@ export type Profile = {
   lat?: number | null;
   lng?: number | null;
 };
-
-// ... (skipping types not modified, but replace_file_content needs contiguous block)
-// I will split this into two replacements or use multi_replace if I can't reach isProfileComplete in one go? 
-// They are far apart (lines 6-17 vs 303-308). I will use multi_replace.
 
 export type Job = {
   id: string;
@@ -123,6 +121,7 @@ export type Database = {
           guardian_verified_at?: string | null;
           market_id?: string | null;
           theme_preference?: "light" | "dark" | "system";
+          mobile_nav_preference?: MobileNavPreference;
           created_at?: string | null;
           updated_at?: string | null;
           email?: string | null;

@@ -26,7 +26,7 @@ export default async function AppHomeLayout({
             <AppHeader snapshot={snapshot} />
 
             {/* Page Content */}
-            <main className="relative z-10 flex-1 pt-24">
+            <main className="app-shell-main relative z-10 flex-1 pt-24">
                 {children}
             </main>
 
