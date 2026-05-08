@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -13,6 +13,24 @@ export const metadata: Metadata = {
   title: "JobBridge",
   description:
     "JobBridge – Plattform für sichere Taschengeldjobs und Alltagshilfe.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "JobBridge",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#020617" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
 };
 
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -34,7 +52,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de" suppressHydrationWarning>
+    <html lang="de" className="bg-slate-950" suppressHydrationWarning>
       <body className={`${fontSans.variable} min-h-screen bg-background antialiased selection:bg-blue-500/30`}>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <ThemeProvider defaultTheme="system" enableSystem={true} storageKey="jobbridge-theme">

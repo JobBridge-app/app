@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { ThemeModeToggle } from "@/components/settings/ThemeModeToggle";
 import { MobileNavPreferenceControl } from "@/components/settings/MobileNavPreferenceControl";
 import type { MobileNavPreference } from "@/lib/mobile-nav-preference";
 
@@ -41,7 +40,7 @@ export function SettingsSurface({ mobileNavPreference, themePreference = "system
                         title="Design-Modus"
                         description={themeStatus}
                     >
-                        <ThemeModeToggle />
+                        <UnavailableSettingNotice />
                     </SettingsRow>
                 </SettingsGroup>
 
@@ -80,6 +79,17 @@ export function SettingsSurface({ mobileNavPreference, themePreference = "system
                     />
                 </SettingsGroup>
             </div>
+        </div>
+    );
+}
+
+function UnavailableSettingNotice() {
+    return (
+        <div
+            aria-disabled="true"
+            className="rounded-[1.05rem] border border-white/[0.065] bg-white/[0.018] px-4 py-3 text-sm font-medium text-slate-500"
+        >
+            Momentan nicht verfügbar.
         </div>
     );
 }

@@ -22,6 +22,10 @@
   --glass-bg: rgba(255, 255, 255, 0.6);
 }
 
+html {
+  background: #020617;
+}
+
 .dark {
   color-scheme: dark;
 
@@ -62,6 +66,23 @@ body {
   font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   transition: background 0.3s ease, color 0.3s ease;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset-x: 0;
+  bottom: 0;
+  height: env(safe-area-inset-bottom);
+  min-height: env(safe-area-inset-bottom);
+  background: #020617;
+  pointer-events: none;
+  z-index: 2147483647;
 }
 
 /* 300ms-Tap-Delay auf Mobile für alle interaktiven Elemente eliminieren */
