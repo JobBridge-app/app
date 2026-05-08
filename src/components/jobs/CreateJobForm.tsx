@@ -14,16 +14,26 @@ import { JOB_CATEGORIES, PaymentType } from "@/lib/constants/jobCategories";
 
 function SubmitButtons() {
     const { pending } = useFormStatus();
+    const [activeIntent, setActiveIntent] = useState<"draft" | "create" | null>(null);
+
+    useEffect(() => {
+        if (!pending) setActiveIntent(null);
+    }, [pending]);
+
+    const draftPending = pending && activeIntent === "draft";
+    const publishPending = pending && activeIntent === "create";
+
     return (
-        <div className="flex gap-3">
+        <div className="grid w-full grid-cols-1 gap-3 sm:w-auto sm:min-w-[430px] sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.25fr)]">
             <button
                 type="submit"
                 name="intent"
                 value="draft"
                 disabled={pending}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 hover:border-white/20"
+                onClick={() => setActiveIntent("draft")}
+                className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.035] px-4 text-sm font-semibold text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-[background-color,border-color,color,transform] hover:-translate-y-0.5 hover:border-white/18 hover:bg-white/[0.065] hover:text-white focus:outline-none focus:ring-2 focus:ring-white/15 disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:translate-y-0"
             >
-                {pending ? <Loader2 size={18} className="animate-spin" /> : <FileEdit size={18} />}
+                {draftPending ? <Loader2 size={17} className="animate-spin" /> : <FileEdit size={17} className="text-slate-400 transition-colors group-hover:text-white" />}
                 <span>Entwurf</span>
             </button>
             <button
@@ -31,9 +41,10 @@ function SubmitButtons() {
                 name="intent"
                 value="create"
                 disabled={pending}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20"
+                onClick={() => setActiveIntent("create")}
+                className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-2xl border border-indigo-300/20 bg-[linear-gradient(135deg,#4f46e5,#6366f1)] px-5 text-sm font-bold text-white shadow-[0_18px_42px_rgba(79,70,229,0.24),inset_0_1px_0_rgba(255,255,255,0.16)] transition-[filter,transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_22px_52px_rgba(79,70,229,0.32),inset_0_1px_0_rgba(255,255,255,0.2)] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-indigo-200/35 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:brightness-100"
             >
-                {pending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                {publishPending ? <Loader2 size={17} className="animate-spin" /> : <Save size={17} className="transition-transform group-hover:scale-105" />}
                 <span>Veröffentlichen</span>
             </button>
         </div>
