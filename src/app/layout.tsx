@@ -27,6 +27,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  colorScheme: "dark",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#020617" },
     { media: "(prefers-color-scheme: dark)", color: "#020617" },
@@ -53,7 +54,7 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="de" className="bg-slate-950" suppressHydrationWarning>
-      <body className={`${fontSans.variable} min-h-screen bg-background antialiased selection:bg-blue-500/30`}>
+      <body className={`${fontSans.variable} min-h-screen bg-slate-950 text-slate-50 antialiased selection:bg-blue-500/30`}>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <ThemeProvider defaultTheme="system" enableSystem={true} storageKey="jobbridge-theme">
           <TestModeBanner />

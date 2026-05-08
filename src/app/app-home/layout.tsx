@@ -13,7 +13,7 @@ export default async function AppHomeLayout({
     const snapshot = await getAppHomeSnapshot();
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-slate-950 text-slate-50">
+        <div className="relative flex min-h-dvh flex-col bg-slate-950 text-slate-50">
             {/* Shared Background for the entire app area */}
             <LiquidBackground />
 

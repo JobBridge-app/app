@@ -3,13 +3,11 @@
 
 :root,
 .light {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* Default (Light Mode) Blue-Toned Trustworthy */
-  --background: #f0f4f8;
-  /* Slate-50/100 mix */
-  --foreground: #0f172a;
-  /* Slate-900 */
+  /* App chrome stays dark while appearance switching is unavailable. */
+  --background: #020617;
+  --foreground: #f8fafc;
 
   /* Accent/Brand */
   --primary: #2563eb;
@@ -17,9 +15,8 @@
   --primary-foreground: #ffffff;
 
   /* Glass Borders */
-  --glass-border: rgba(30, 64, 175, 0.1);
-  /* Blue-800 low opacity */
-  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(2, 6, 23, 0.7);
 }
 
 html {
