@@ -1,5 +1,8 @@
 "use server";
 
+import "server-only";
+
+import { requireCurrentStaffContext } from "@/lib/data/adminAuth";
 import { supabaseAdmin } from "./supabaseAdmin";
 
 const DEFAULT_BRANDED_CONFIRMATION_TEMPLATE = `<!DOCTYPE html>
@@ -98,6 +101,9 @@ function repairConfirmationTemplate(template: string | null | undefined): string
 }
 
 export async function ensureConfirmationEmailTemplate(): Promise<boolean> {
+    const context = await requireCurrentStaffContext({ requireAdmin: true });
+    if (context.error) return false;
+
     const headers = getManagementHeaders();
     if (!headers) return false;
 
@@ -133,6 +139,9 @@ export async function ensureConfirmationEmailTemplate(): Promise<boolean> {
 
 export async function checkEmailExists(email: string): Promise<boolean> {
     if (!email) return false;
+
+    const context = await requireCurrentStaffContext({ requireAdmin: true });
+    if (context.error) return false;
 
     // wir können entweder die auth.users durchsuchen, wenn wir admin rechte haben, 
     // oder wir schauen in der öffentlichen (oder durch service_role zugänglichen) profiles tabelle.
@@ -176,6 +185,9 @@ export type EmailOnboardingStatus = "available" | "pending_confirmation" | "conf
 
 export async function getEmailOnboardingStatus(email: string): Promise<EmailOnboardingStatus> {
     if (!email) return "available";
+
+    const context = await requireCurrentStaffContext({ requireAdmin: true });
+    if (context.error) return "available";
 
     const adminClient = supabaseAdmin();
     const cleanEmail = email.trim().toLowerCase();

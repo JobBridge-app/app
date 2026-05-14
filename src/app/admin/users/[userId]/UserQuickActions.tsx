@@ -22,7 +22,17 @@ import {
 } from "@/app/staff/users/actions";
 import { useRouter } from "next/navigation";
 
-export function UserQuickActions({ userId, isBanned, isVerified }: { userId: string, isBanned: boolean, isVerified: boolean }) {
+export function UserQuickActions({
+    userId,
+    isBanned,
+    isVerified,
+    canManageUsers,
+}: {
+    userId: string,
+    isBanned: boolean,
+    isVerified: boolean,
+    canManageUsers: boolean,
+}) {
     const [loading, setLoading] = useState<string | null>(null);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const router = useRouter();
@@ -61,6 +71,13 @@ export function UserQuickActions({ userId, isBanned, isVerified }: { userId: str
                 </div>
             )}
 
+            {!canManageUsers && (
+                <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/10 text-sm text-amber-200 flex items-center gap-2">
+                    <AlertTriangle size={16} />
+                    Admin role required for account actions.
+                </div>
+            )}
+
             {/* Auth Actions */}
             <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -72,12 +89,14 @@ export function UserQuickActions({ userId, isBanned, isVerified }: { userId: str
                         icon={Mail}
                         label="Send Password Reset Email"
                         loading={loading === 'reset'}
+                        disabled={!canManageUsers}
                         onClick={() => handleAction('reset', () => sendPasswordResetEmail(userId), "Send password reset email to user?")}
                     />
                     <ActionButton
                         icon={Zap}
                         label="Send Magic Link (Login)"
                         loading={loading === 'magic'}
+                        disabled={!canManageUsers}
                         onClick={() => handleAction('magic', () => sendMagicLinkEmail(userId), "Send magic login link?")}
                     />
 
@@ -87,6 +106,7 @@ export function UserQuickActions({ userId, isBanned, isVerified }: { userId: str
                             label="Unban User"
                             className="text-emerald-400 hover:bg-emerald-500/10 border-emerald-500/20"
                             loading={loading === 'unban'}
+                            disabled={!canManageUsers}
                             onClick={() => handleAction('unban', () => unbanUser(userId), "Unban this user?")}
                         />
                     ) : (
@@ -95,6 +115,7 @@ export function UserQuickActions({ userId, isBanned, isVerified }: { userId: str
                             label="Ban User (100 Years)"
                             className="text-amber-400 hover:bg-amber-500/10 border-amber-500/20"
                             loading={loading === 'ban'}
+                            disabled={!canManageUsers}
                             onClick={() => handleAction('ban', () => banUser(userId), "Are you sure you want to BAN this user unreasonably?")}
                         />
                     )}
@@ -119,6 +140,7 @@ export function UserQuickActions({ userId, isBanned, isVerified }: { userId: str
                             label="Grant Verification (God Mode)"
                             className="text-emerald-400 hover:bg-emerald-500/10 border-emerald-500/20"
                             loading={loading === 'verify'}
+                            disabled={!canManageUsers}
                             onClick={() => handleAction('verify', () => updateUserProfile(userId, { verified: true }), "Force verify this user?")}
                         />
                     )}
@@ -136,6 +158,7 @@ export function UserQuickActions({ userId, isBanned, isVerified }: { userId: str
                     label="Delete User (Irreversible)"
                     className="bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300"
                     loading={loading === 'delete'}
+                    disabled={!canManageUsers}
                     onClick={() => handleAction('delete', () => deleteUser(userId), "WARNING: This will permanently delete the user and all their data. Continue?")}
                 />
             </div>
@@ -148,18 +171,20 @@ function ActionButton({
     label,
     onClick,
     loading,
+    disabled = false,
     className = ""
 }: {
     icon: any,
     label: string,
     onClick: () => void,
     loading: boolean,
+    disabled?: boolean,
     className?: string
 }) {
     return (
         <button
             onClick={onClick}
-            disabled={loading}
+            disabled={loading || disabled}
             className={`w-full py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium transition-all flex items-center justify-between group ${className}`}
         >
             <span className="flex items-center gap-3">

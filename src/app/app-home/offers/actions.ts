@@ -242,6 +242,25 @@ export async function updateApplicationStatus(
     rejectionReason?: string
 ): Promise<Result<void>> {
     const supabase = await supabaseServer();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { ok: false, error: { message: "Nicht authentifiziert" } };
+    }
+
+    const { data: application, error: applicationError } = await supabase
+        .from("applications")
+        .select("job:jobs(posted_by)")
+        .eq("id", applicationId)
+        .single<any>();
+
+    if (applicationError) {
+        return { ok: false, error: toErrorInfo(applicationError) };
+    }
+
+    if (!application || application.job?.posted_by !== user.id) {
+        return { ok: false, error: { message: "Nicht berechtigt." } };
+    }
 
     const updatePayload: any = { status };
     if (status === 'rejected' && rejectionReason) {

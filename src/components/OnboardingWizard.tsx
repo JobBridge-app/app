@@ -14,7 +14,6 @@ import { type OnboardingRole, type Profile } from "@/lib/types";
 import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2, Mail, UserX, KeyRound } from "lucide-react";
 import { LocationStep } from "./onboarding/LocationStep";
-import { checkEmailExists, ensureConfirmationEmailTemplate, getEmailOnboardingStatus } from "@/lib/authServerActions";
 import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -383,21 +382,6 @@ export function OnboardingWizard({
     setResetSuccess(false);
 
     try {
-      const emailExists = await checkEmailExists(email);
-
-      if (!emailExists) {
-        setErrorType("account_not_found");
-        setErrorMsg("Dieser Account existiert nicht. Möchtest du stattdessen ein neues Konto erstellen?");
-        setLoading(false);
-        return;
-      }
-
-      const emailStatus = await getEmailOnboardingStatus(email);
-      if (emailStatus === "pending_confirmation") {
-        await resumePendingEmailConfirmation("signin");
-        return;
-      }
-
       const { error } = await signInWithEmail(email, password);
 
       if (error) {
@@ -408,7 +392,7 @@ export function OnboardingWizard({
         }
 
         setErrorType("wrong_password");
-        setErrorMsg("Passwort falsch. Die Anmeldedaten stimmen nicht.");
+        setErrorMsg("E-Mail oder Passwort stimmen nicht.");
         setLoading(false);
         return;
       }
@@ -454,41 +438,18 @@ export function OnboardingWizard({
     setEmailConfirmed(false);
     setCodeError(null);
     try {
-      const emailStatus = await getEmailOnboardingStatus(email);
-      if (emailStatus === "pending_confirmation") {
-        await resumePendingEmailConfirmation("signup");
-        return;
-      }
-
-      if (emailStatus === "confirmed") {
-        setMode("signin");
-        setErrorType("general");
-        setErrorMsg("Für diese E-Mail gibt es bereits ein bestätigtes Konto. Bitte melde dich mit deinem Passwort an.");
-        return;
-      }
-
       const { error: signOutError } = await supabaseBrowser.auth.signOut();
       if (signOutError) throw signOutError;
-
-      try {
-        await ensureConfirmationEmailTemplate();
-      } catch {
-        // Template-Sync ist best effort; Registrierung läuft mit der aktuellen Supabase-Konfiguration weiter.
-      }
 
       const signUpData = {
         city: profileData.region,
         full_name: "",
         market_id: profileData.marketId
       };
-      let { error } = await signUpWithEmail(email, password, signUpData);
+      const { error } = await signUpWithEmail(email, password, signUpData);
 
       if (error?.message === "Error sending confirmation email") {
-        const repaired = await ensureConfirmationEmailTemplate();
-        if (repaired) {
-          const retry = await signUpWithEmail(email, password, signUpData);
-          error = retry.error;
-        }
+        throw new Error("Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut oder kontaktiere den Support.");
       }
 
       if (error) throw error;

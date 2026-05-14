@@ -5,7 +5,6 @@ import { MessageSquare, LayoutList, RefreshCw } from "lucide-react";
 import { CommunicationLogItem } from "@/lib/data/adminTypes";
 import { NewMessageWizard } from "./NewMessageWizard";
 import { NotificationHistoryTable } from "./NotificationHistoryTable";
-import { getCommunicationLogs } from "@/lib/data/adminCommunications";
 
 // Actually, `getCommunicationLogs` is server-side. We should use a Server Action wrapper or just router.refresh() for simplicity.
 

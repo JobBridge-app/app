@@ -1,4 +1,4 @@
-import { requireCompleteProfile } from "@/lib/auth";
+import { requireStaffSectionAccess } from "@/lib/data/adminAccess";
 import { getAdminUser } from "@/lib/data/adminUsers";
 import { ArrowLeft, Mail, MapPin, Calendar, CheckCircle, Shield, Briefcase, FileText, MessageCircle } from "lucide-react";
 import Link from "next/link";
@@ -11,7 +11,7 @@ type UserRoleEntry = {
 };
 
 export default async function UserDetailPage({ params }: { params: Promise<{ userId: string }> }) {
-    await requireCompleteProfile();
+    const { highestRole } = await requireStaffSectionAccess("management");
     const { userId } = await params;
 
     const { item: profile } = await getAdminUser(userId);
@@ -200,6 +200,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ use
                         userId={profile.id}
                         isBanned={false}
                         isVerified={verifiedBadge || false}
+                        canManageUsers={highestRole === "admin"}
                     />
                 </div>
             </div>

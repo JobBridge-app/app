@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -15,11 +15,12 @@ type MapLibreMapProps = {
 export default function MapLibreMap({ lat, lng, radiusKm, zoom = 12, markers = [] }: MapLibreMapProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<maplibregl.Map | null>(null);
-    const [apiKey] = useState(process.env.NEXT_PUBLIC_MAPTILER_KEY || "get_your_own_OpIi9ZULNHzrESv6T2vL"); // Fallback for dev
+    const apiKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
 
     useEffect(() => {
         if (map.current) return;
         if (!mapContainer.current) return;
+        if (!apiKey) return;
 
         map.current = new maplibregl.Map({
             container: mapContainer.current,
@@ -108,7 +109,13 @@ export default function MapLibreMap({ lat, lng, radiusKm, zoom = 12, markers = [
 
     return (
         <div className="relative w-full h-full min-h-[400px] rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-slate-950">
-            <div ref={mapContainer} className="w-full h-full" />
+            {apiKey ? (
+                <div ref={mapContainer} className="w-full h-full" />
+            ) : (
+                <div className="flex h-full min-h-[400px] items-center justify-center px-6 text-center text-sm text-slate-400">
+                    Karte nicht verfügbar.
+                </div>
+            )}
             <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-950/80 via-transparent to-transparent z-10" />
 
             {/* Attribution fallback if needed or custom overlay */}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Search, User, X, Check, Loader2, Send, Radio } from "lucide-react";
-import { searchUsersForMessage, getCommunicationLogs } from "@/lib/data/adminCommunications";
+import { searchUsersForMessage } from "@/lib/data/adminCommunications";
 import { sendDirectMessage, sendGlobalBroadcast } from "./actions";
 import { AdminUserListItem } from "@/lib/data/adminTypes";
 import { useRouter } from "next/navigation";

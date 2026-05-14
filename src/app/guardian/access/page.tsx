@@ -12,7 +12,6 @@ function GuardianAccessContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const token = searchParams.get("token");
-    console.log("GuardianAccessPage mounted. Token:", token);
     const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [error, setError] = useState<string | null>(null);
     const [childName, setChildName] = useState<string | null>(null);
@@ -64,31 +63,17 @@ function GuardianAccessContent() {
         setState("loading");
         setError(null);
         try {
-            console.log("Attempting to redeem token:", token);
             const { data, error } = await supabaseBrowser.rpc("redeem_guardian_invitation", { token_input: token });
-
-            console.log("RPC Response - Data:", data);
-            console.log("RPC Response - Error:", error);
 
             if (error) throw error;
 
             const res = data as unknown as { success?: boolean; error?: string } | null;
             if (!res?.success) {
-                console.error("Redemption failed with business logic error:", res?.error);
                 throw new Error(res?.error || "Bestätigung fehlgeschlagen.");
             }
             setState("success");
         } catch (e: any) {
-            // Detailed error logging
             console.error("Redemption Catch Block:", e);
-            if (typeof e === 'object') {
-                try {
-                    console.error("Redemption Error Stringified:", JSON.stringify(e, Object.getOwnPropertyNames(e)));
-                } catch (jsonError) {
-                    console.error("Could not stringify error:", jsonError);
-                }
-            }
-
             setState("error");
             let msg = "Unbekannter Fehler";
             if (e instanceof Error) {
@@ -104,7 +89,6 @@ function GuardianAccessContent() {
                     msg = "Fehler konnte nicht dargestellt werden";
                 }
             }
-            console.log("Setting error message to:", msg);
             setError(msg);
         }
     };

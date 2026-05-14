@@ -2,6 +2,8 @@
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { canAccessAdminSection } from "@/lib/adminNavigation";
+import { requireCurrentStaffContext } from "@/lib/data/adminAuth";
 import { revalidatePath } from "next/cache";
 
 type ActionState = {
@@ -10,7 +12,23 @@ type ActionState = {
     details?: string;
 };
 
+async function requireOperationsAction(): Promise<ActionState | null> {
+    const context = await requireCurrentStaffContext();
+    if (context.error) {
+        return { success: false, message: context.error };
+    }
+
+    if (!canAccessAdminSection(context.highestRole, "operations")) {
+        return { success: false, message: "Forbidden." };
+    }
+
+    return null;
+}
+
 export async function sendGlobalBroadcast(title: string, body: string, targetRoute?: string): Promise<ActionState> {
+    const denied = await requireOperationsAction();
+    if (denied) return denied;
+
     const admin = supabaseAdmin();
 
     // 1. Get ALL users. This is heavy for a real app, but for "God Mode" in early stage it's fine.
@@ -42,6 +60,9 @@ export async function sendGlobalBroadcast(title: string, body: string, targetRou
 }
 
 export async function sendDirectMessage(emailOrId: string, title: string, body: string): Promise<ActionState> {
+    const denied = await requireOperationsAction();
+    if (denied) return denied;
+
     const admin = supabaseAdmin();
 
     let targetUserId = emailOrId;

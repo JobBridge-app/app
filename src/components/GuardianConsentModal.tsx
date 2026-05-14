@@ -3,7 +3,7 @@
 import { useState, useEffect, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
-import { createGuardianInvitation, getActiveGuardianInvitation } from "@/app/actions/guardian";
+import { createGuardianInvitation } from "@/app/actions/guardian";
 import { Copy, X, CheckCircle, ShieldCheck, UserPlus, Link as LinkIcon, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,20 +46,13 @@ export function GuardianConsentModal({ isOpen, onClose, variant = "initial" }: G
         return () => clearInterval(interval);
     }, [expiresAt]); // Run when expiresAt changes
 
-    // Check for existing invitation on mount
     useEffect(() => {
         if (isOpen) {
-            setIsLoading(true);
-            getActiveGuardianInvitation().then(res => {
-                setIsLoading(false);
-                if (res.token) {
-                    const url = `${window.location.origin}/guardian/access?token=${res.token}`;
-                    setLink(url);
-                    setExpiresAt(res.expires_at || null);
-                    setStep("generated");
-                }
-                // If no active token, we stay in "initial" step.
-            });
+            setStep("initial");
+            setLink("");
+            setExpiresAt(null);
+            setError(null);
+            setCopied(false);
         }
     }, [isOpen]);
 

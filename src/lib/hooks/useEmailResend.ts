@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabaseBrowser } from "@/lib/supabaseClient";
-import { ensureConfirmationEmailTemplate } from "@/lib/authServerActions";
 
 const COOLDOWN_SECONDS = 60;
 const STORAGE_PREFIX = "jobbridge-confirmation-email-last-sent:";
@@ -83,30 +82,13 @@ export function useEmailResend(email: string): UseEmailResendReturn {
         setError(null);
 
         try {
-            try {
-                await ensureConfirmationEmailTemplate();
-            } catch {
-                // Emergency fallback: continue with resend even if template sync is temporarily unavailable.
-            }
-
             let { error: err } = await supabaseBrowser.auth.resend({
                 type: "signup",
                 email,
             });
 
             if (err?.message === "Error sending confirmation email") {
-                try {
-                    const repaired = await ensureConfirmationEmailTemplate();
-                    if (repaired) {
-                        const retry = await supabaseBrowser.auth.resend({
-                            type: "signup",
-                            email,
-                        });
-                        err = retry.error;
-                    }
-                } catch {
-                    // Keep the original resend error if template sync also fails.
-                }
+                throw new Error("Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später erneut.");
             }
 
             if (err) throw err;

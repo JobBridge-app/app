@@ -112,6 +112,9 @@ export async function searchUsersForRole(term: string) {
     if (!term || term.length < 2) return [];
 
     try {
+        const context = await requireCurrentStaffContext({ requireAdmin: true });
+        if (context.error) return [];
+
         const supabase = await supabaseServer();
         const sanitized = term.replace(/[,%]/g, " ").trim();
 

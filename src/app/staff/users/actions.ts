@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { requireCurrentStaffContext } from "@/lib/data/adminAuth";
 import { revalidatePath } from "next/cache";
 
 export type AdminActionState = {
@@ -10,9 +11,21 @@ export type AdminActionState = {
     details?: string;
 };
 
+async function requireAdminAction(): Promise<AdminActionState | null> {
+    const context = await requireCurrentStaffContext({ requireAdmin: true });
+    if (context.error) {
+        return { success: false, message: context.error };
+    }
+
+    return null;
+}
+
 // --- Auth Operations ---
 
 export async function sendPasswordResetEmail(userId: string): Promise<AdminActionState> {
+    const denied = await requireAdminAction();
+    if (denied) return denied;
+
     const admin = supabaseAdmin();
 
     // Get user email first
@@ -63,6 +76,9 @@ export async function sendPasswordResetEmail(userId: string): Promise<AdminActio
 }
 
 export async function sendMagicLinkEmail(userId: string): Promise<AdminActionState> {
+    const denied = await requireAdminAction();
+    if (denied) return denied;
+
     const admin = supabaseAdmin();
     const { data: { user }, error: fetchError } = await admin.auth.admin.getUserById(userId);
 
@@ -93,6 +109,9 @@ export async function sendMagicLinkEmail(userId: string): Promise<AdminActionSta
 // --- User Management ---
 
 export async function banUser(userId: string): Promise<AdminActionState> {
+    const denied = await requireAdminAction();
+    if (denied) return denied;
+
     const admin = supabaseAdmin();
     // Ban by setting `banned_until` to infinity (or far future)
     const { error } = await admin.auth.admin.updateUserById(userId, {
@@ -107,6 +126,9 @@ export async function banUser(userId: string): Promise<AdminActionState> {
 }
 
 export async function unbanUser(userId: string): Promise<AdminActionState> {
+    const denied = await requireAdminAction();
+    if (denied) return denied;
+
     const admin = supabaseAdmin();
     const { error } = await admin.auth.admin.updateUserById(userId, {
         ban_duration: "0", // Lift ban
@@ -118,6 +140,9 @@ export async function unbanUser(userId: string): Promise<AdminActionState> {
 }
 
 export async function deleteUser(userId: string): Promise<AdminActionState> {
+    const denied = await requireAdminAction();
+    if (denied) return denied;
+
     // Soft delete is handled by app logic usually, but here request is for "God Mode". 
     // Hard delete via Auth Admin.
     const admin = supabaseAdmin();
@@ -135,6 +160,9 @@ export async function updateUserProfile(userId: string, updates: {
     email?: string;
     verified?: boolean; // Toggles 'provider_verification_status' or 'guardian_status'
 }): Promise<AdminActionState> {
+    const denied = await requireAdminAction();
+    if (denied) return denied;
+
     const admin = supabaseAdmin();
 
     // 1. Update Auth Email if changed

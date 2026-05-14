@@ -2,6 +2,8 @@
 
 import { supabaseServer } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { canAccessAdminSection } from "@/lib/adminNavigation";
+import { requireCurrentStaffContext } from "@/lib/data/adminAuth";
 import { CommunicationLogItem, AdminUserListItem } from "@/lib/data/adminTypes";
 
 function normalizeError(error: unknown, fallback: string): string {
@@ -12,6 +14,13 @@ function normalizeError(error: unknown, fallback: string): string {
         if (message) return message;
     }
     return fallback;
+}
+
+async function requireOperationsAccess(): Promise<string | null> {
+    const context = await requireCurrentStaffContext();
+    if (context.error) return context.error;
+    if (!canAccessAdminSection(context.highestRole, "operations")) return "Forbidden.";
+    return null;
 }
 
 export async function getCommunicationLogs({
@@ -26,6 +35,11 @@ export async function getCommunicationLogs({
     type?: string;
 } = {}): Promise<{ items: CommunicationLogItem[]; total: number; error: string | null }> {
     try {
+        const denied = await requireOperationsAccess();
+        if (denied) {
+            return { items: [], total: 0, error: denied };
+        }
+
         const supabase = await supabaseServer();
         const from = (page - 1) * limit;
         const to = from + limit - 1;
@@ -82,6 +96,9 @@ export async function searchUsersForMessage(term: string): Promise<AdminUserList
     if (!term || term.length < 2) return [];
 
     try {
+        const denied = await requireOperationsAccess();
+        if (denied) return [];
+
         const supabase = await supabaseServer();
         const sanitized = term.replace(/[,%]/g, " ").trim();
 
@@ -117,6 +134,9 @@ export async function searchUsersForMessage(term: string): Promise<AdminUserList
 
 export async function deleteNotificationAction(id: string): Promise<{ success: boolean; error: string | null }> {
     try {
+        const denied = await requireOperationsAccess();
+        if (denied) return { success: false, error: denied };
+
         const supabase = await supabaseAdmin();
         const { error } = await supabase
             .from("notifications")
