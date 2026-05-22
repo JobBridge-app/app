@@ -1574,6 +1574,145 @@ textarea.profile-field-control {
   background: var(--brand-soft);
 }
 
+.job-detail-meta-row {
+  color: var(--text-default);
+}
+
+.job-detail-meta-item {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.job-detail-meta-icon {
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.14);
+  color: #818cf8;
+}
+
+.job-detail-meta-value {
+  color: var(--text-strong) !important;
+}
+
+.job-detail-meta-muted,
+.job-detail-creator-label {
+  color: var(--text-muted) !important;
+}
+
+.job-detail-meta-divider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.job-detail-meta-distance {
+  color: var(--text-default) !important;
+}
+
+.job-detail-creator-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.job-detail-creator-avatar {
+  background: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+  --tw-ring-color: rgba(129, 140, 248, 0.22);
+}
+
+.job-detail-creator-button:hover .job-detail-creator-avatar {
+  --tw-ring-color: rgba(129, 140, 248, 0.42);
+}
+
+.job-detail-creator-name {
+  color: var(--text-strong) !important;
+}
+
+.job-detail-creator-button:hover .job-detail-creator-name {
+  color: #c7d2fe !important;
+}
+
+@media (min-width: 640px) {
+  .job-detail-meta-item {
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+}
+
+.light .job-detail-meta-item {
+  border-color: var(--border-subtle);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.light .job-detail-meta-icon {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.light .job-detail-meta-divider {
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.light .job-detail-meta-distance {
+  color: var(--text-default) !important;
+}
+
+.light .job-detail-creator-button:hover {
+  background: rgba(36, 87, 214, 0.075);
+}
+
+.light .job-detail-creator-avatar {
+  background: var(--brand-soft);
+  color: var(--brand);
+  --tw-ring-color: var(--brand-border);
+}
+
+.light .job-detail-creator-name {
+  color: var(--text-strong) !important;
+}
+
+.light .job-detail-creator-button:hover .job-detail-creator-name {
+  color: var(--brand) !important;
+}
+
+@media (min-width: 640px) {
+  .light .job-detail-meta-item {
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+}
+
+.job-detail-waitlist-callout {
+  border-color: rgba(245, 158, 11, 0.2) !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: #fde68a !important;
+}
+
+.job-detail-waitlist-copy {
+  color: inherit !important;
+}
+
+.job-detail-waitlist-title,
+.job-detail-waitlist-icon {
+  color: #fbbf24 !important;
+}
+
+.light .job-detail-waitlist-callout {
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 255, 0.92)) !important;
+  color: #334155 !important;
+  box-shadow:
+    0 16px 40px rgba(31, 45, 74, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.light .job-detail-waitlist-title,
+.light .job-detail-waitlist-icon {
+  color: #173b98 !important;
+}
+
 .job-detail-close {
   border: 1px solid var(--border-subtle);
   background: color-mix(in srgb, var(--surface-raised) 76%, transparent);
@@ -1599,10 +1738,25 @@ textarea.profile-field-control {
 }
 
 .job-detail-map-note {
+  display: inline-flex;
+  min-height: 1.65rem;
+  align-items: center;
+  justify-content: center;
   border-color: var(--map-control-border) !important;
-  background: var(--map-attribution-bg);
+  background: color-mix(in srgb, var(--map-attribution-bg) 84%, transparent);
+  padding: 0 0.72rem;
   color: var(--text-muted);
-  box-shadow: var(--map-control-shadow);
+  font-size: 0.62rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0.015em;
+  text-transform: none;
+  box-shadow: 0 8px 20px rgb(var(--shadow-color) / 0.1);
+}
+
+.job-detail-map-note span {
+  display: block;
+  transform: translateY(0.01em);
 }
 
 .job-detail-footer {

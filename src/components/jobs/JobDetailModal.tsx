@@ -195,61 +195,61 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                             </Dialog.Title>
 
                                             {isWaitlistMode && (
-                                                <div className="mt-6 mb-2 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 flex gap-3 text-amber-200">
+                                                <div className="job-detail-waitlist-callout mt-6 mb-2 rounded-xl border p-4 flex gap-3">
                                                     <div className="mt-0.5 shrink-0">
-                                                        <Clock size={20} className="text-amber-400" />
+                                                        <Clock size={20} className="job-detail-waitlist-icon" />
                                                     </div>
-                                                    <div className="text-sm leading-relaxed">
-                                                        <strong className="block text-amber-400 mb-1">Momentan reserviert</strong>
+                                                    <div className="job-detail-waitlist-copy text-sm leading-relaxed">
+                                                        <strong className="job-detail-waitlist-title block mb-1">Momentan reserviert</strong>
                                                         Dieses Angebot ist aktuell für {job.active_applicant ? `${job.active_applicant.full_name?.split(' ')[0]} ` : 'einen anderen Nutzer '}reserviert. Trage dich unverbindlich auf die Warteliste ein, um sofort nachzurücken, falls der Platz wieder frei wird.
                                                     </div>
                                                 </div>
                                             )}
 
-                                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 sm:gap-6 text-slate-300 font-medium w-full sm:w-auto mt-6">
-                                                <div className="flex items-center justify-center sm:justify-start gap-2 bg-white/5 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-white/5 sm:border-none">
-                                                    <div className="p-1.5 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
+                                            <div className="job-detail-meta-row grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 sm:gap-6 text-slate-300 font-medium w-full sm:w-auto mt-6">
+                                                <div className="job-detail-meta-item flex items-center justify-center sm:justify-start gap-2 p-3 sm:p-0 rounded-xl sm:rounded-none">
+                                                    <div className="job-detail-meta-icon shrink-0">
                                                         <Euro size={18} />
                                                     </div>
-                                                    <span className="text-lg text-white">
-                                                        {job.wage_hourly} € <span className="text-slate-500 text-sm">
+                                                    <span className="job-detail-meta-value text-lg text-white">
+                                                        {job.wage_hourly} € <span className="job-detail-meta-muted text-slate-500 text-sm">
                                                             {job.payment_type === 'fixed' ? 'pauschal' : '/ Std.'}
                                                         </span>
                                                     </span>
                                                 </div>
 
-                                                <div className="w-px h-8 bg-white/10 hidden sm:block" />
+                                                <div className="job-detail-meta-divider w-px h-8 hidden sm:block" />
 
-                                                <div className="flex items-center justify-center sm:justify-start gap-2 bg-white/5 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-white/5 sm:border-none">
-                                                    <div className="p-1.5 rounded-full bg-blue-500/10 text-blue-400 shrink-0">
+                                                <div className="job-detail-meta-item flex items-center justify-center sm:justify-start gap-2 p-3 sm:p-0 rounded-xl sm:rounded-none">
+                                                    <div className="job-detail-meta-icon shrink-0">
                                                         <MapPin size={18} />
                                                     </div>
                                                     {/* Context Check: Since we don't have direct provider checking here, if it's the provider viewing it, 
                                                     they would be in the offers context. In the youth view, we never show exact street names. */}
-                                                    <span className="truncate max-w-[120px] sm:max-w-none">
+                                                    <span className="job-detail-meta-value truncate max-w-[120px] sm:max-w-none">
                                                         {context === 'activity' ? (job.public_location_label || job.market_name || "Privatadresse") : (job.market_name || "Ungefährer Standort")}
                                                     </span>
                                                 </div>
 
                                                 {job.distance_km != null && context !== 'activity' && (
                                                     <>
-                                                        <div className="w-px h-8 bg-white/10 hidden sm:block" />
-                                                        <div className="col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 text-slate-300 mt-1 sm:mt-0">
+                                                        <div className="job-detail-meta-divider w-px h-8 hidden sm:block" />
+                                                        <div className="job-detail-meta-distance col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 text-slate-300 mt-1 sm:mt-0">
                                                             <Clock size={16} />
-                                                            <span>{`${(Math.round(job.distance_km * 10) / 10).toFixed(1).replace('.', ',')} km entfernt`}</span>
+                                                            <span className="job-detail-meta-value">{`${(Math.round(job.distance_km * 10) / 10).toFixed(1).replace('.', ',')} km entfernt`}</span>
                                                         </div>
                                                     </>
                                                 )}
 
                                                 {job.creator && (
                                                     <>
-                                                        <div className="w-px h-8 bg-white/10 hidden sm:block" />
+                                                        <div className="job-detail-meta-divider w-px h-8 hidden sm:block" />
                                                         <button
                                                             onClick={handleProfileClick}
                                                             disabled={isProfileLoading}
-                                                            className="col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 group hover:bg-white/5 p-1 rounded-lg transition-colors mt-2 sm:mt-0 text-left disabled:opacity-50"
+                                                            className="job-detail-creator-button col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 group p-1 rounded-lg transition-colors mt-2 sm:mt-0 text-left disabled:opacity-50"
                                                         >
-                                                            <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 ring-2 ring-indigo-500/20 group-hover:ring-indigo-500/40 transition-all overflow-hidden">
+                                                            <div className="job-detail-creator-avatar w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-2 transition-all overflow-hidden">
                                                                 {job.creator.avatar_url ? (
                                                                     <img src={job.creator.avatar_url} alt="" className="w-full h-full object-cover" />
                                                                 ) : (
@@ -257,8 +257,8 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                                 )}
                                                             </div>
                                                             <div className="flex flex-col items-start">
-                                                                <span className="text-xs text-slate-500 uppercase tracking-wider font-bold">Erstellt von</span>
-                                                                <span className="text-sm text-white group-hover:text-indigo-300 transition-colors">{job.creator.company_name || job.creator.full_name || "Unbekannt"}</span>
+                                                                <span className="job-detail-creator-label text-xs text-slate-500 uppercase tracking-wider font-bold">Erstellt von</span>
+                                                                <span className="job-detail-creator-name text-sm text-white transition-colors">{job.creator.company_name || job.creator.full_name || "Unbekannt"}</span>
                                                             </div>
                                                         </button>
                                                     </>
@@ -333,9 +333,8 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                         />
                                                     )}
 
-                                                    {/* Overlay for "Approximate Location" text style if desired, or relying on map visual */}
-                                                    <div className="job-detail-map-note absolute left-2 top-2 z-[400] rounded-full border px-2.5 py-1 backdrop-blur-md">
-                                                        <span className="text-[10px] uppercase tracking-widest font-semibold">Ungefähre Lage</span>
+                                                    <div className="job-detail-map-note absolute left-2 top-2 z-[400] rounded-full border backdrop-blur-md">
+                                                        <span>Ungefähre Lage</span>
                                                     </div>
                                                 </div>
                                             </div>
