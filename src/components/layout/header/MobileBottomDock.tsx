@@ -66,14 +66,14 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
                             onFocus={() => warmRoute(item.href)}
                             onClick={() => activateRoute(item.href)}
                             className={cn(
-                                "group relative flex h-[2.8rem] min-w-0 items-center justify-center rounded-[0.92rem] text-slate-500 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-indigo-200/35",
+                                "group relative flex h-[2.8rem] min-w-0 items-center justify-center rounded-[0.92rem] text-slate-500 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-blue-300/45",
                                 isActive ? "text-white" : "hover:text-slate-200"
                             )}
                         >
                             {isActive && (
                                 <motion.div
                                     layoutId="mobile-dock-active"
-                                    className="absolute inset-0 rounded-[0.92rem] bg-white/[0.08] shadow-[0_10px_28px_rgba(99,102,241,0.16),inset_0_1px_0_rgba(255,255,255,0.1)]"
+                                    className="absolute inset-0 rounded-[0.92rem] bg-blue-500/14 shadow-[0_10px_28px_rgba(37,99,235,0.18),inset_0_1px_0_rgba(255,255,255,0.1)]"
                                     initial={false}
                                     transition={prefersReducedMotion ? { duration: 0.12 } : {
                                         type: "spring",
@@ -89,7 +89,7 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
                                     strokeWidth={2.4}
                                     className={cn(
                                         "transition-[color,transform] duration-150",
-                                        isActive ? "text-indigo-100" : "text-slate-500 group-hover:text-slate-300"
+                                        isActive ? "text-blue-100" : "text-slate-500 group-hover:text-slate-300"
                                     )}
                                 />
                                 <span className={cn(

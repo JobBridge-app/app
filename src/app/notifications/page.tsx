@@ -17,19 +17,19 @@ export default async function NotificationsPage() {
         .limit(100);
 
     return (
-        <div className="container mx-auto py-12 px-4 max-w-4xl">
+        <div className="notification-center-page container mx-auto py-12 px-4 max-w-4xl">
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Benachrichtigungen</h1>
-                    <p className="text-slate-400">Deine Historie aller Aktivitäten und Meldungen.</p>
+                    <h1 className="notification-center-title text-3xl font-bold text-white mb-2">Benachrichtigungen</h1>
+                    <p className="notification-center-copy text-slate-400">Deine Historie aller Aktivitäten und Meldungen.</p>
                 </div>
                 {/* Potential Future Feature: Mark all as read button */}
             </div>
 
             <div className="space-y-4">
                 {!notifications || notifications.length === 0 ? (
-                    <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 text-slate-400">
-                        <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <div className="notification-center-empty p-12 text-center bg-white/5 rounded-3xl border border-white/10 text-slate-400">
+                        <div className="notification-center-empty-icon w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
                             <span className="text-2xl">📭</span>
                         </div>
                         <h3 className="text-lg font-medium text-white mb-1">Keine Benachrichtigungen</h3>
@@ -45,10 +45,10 @@ export default async function NotificationsPage() {
                         return (
                             <div
                                 key={n.id}
-                                className={`relative p-5 sm:p-6 rounded-2xl border transition-all duration-300 group
+                                className={`notification-center-card relative p-5 sm:p-6 rounded-2xl border transition-all duration-300 group
                                     ${isRead
-                                        ? 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
-                                        : 'bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border-indigo-500/20 hover:border-indigo-500/30'
+                                        ? 'is-read bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
+                                        : 'is-unread bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border-indigo-500/20 hover:border-indigo-500/30'
                                     }
                                 `}
                             >
@@ -59,7 +59,7 @@ export default async function NotificationsPage() {
 
                                 <div className="flex items-start gap-4 sm:gap-6 pr-8">
                                     {/* Icon Box */}
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border
+                                    <div className={`notification-center-card-icon w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border
                                         ${isSuccess ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
                                             isWarning ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
                                                 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}
@@ -76,16 +76,16 @@ export default async function NotificationsPage() {
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mb-1">
-                                            <h3 className={`text-lg font-bold leading-tight ${isRead ? 'text-slate-200' : 'text-white'}`}>
+                                            <h3 className={`notification-center-card-title text-lg font-bold leading-tight ${isRead ? 'text-slate-200' : 'text-white'}`}>
                                                 {n.title}
                                             </h3>
-                                            <span className="text-xs font-medium text-slate-500">
+                                            <span className="notification-center-card-date text-xs font-medium text-slate-500">
                                                 {n.created_at ? new Date(n.created_at).toLocaleString("de-DE", {
                                                     day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
                                                 }) : ""}
                                             </span>
                                         </div>
-                                        <p className={`text-base leading-relaxed ${isRead ? 'text-slate-400' : 'text-slate-300'}`}>
+                                        <p className={`notification-center-card-body text-base leading-relaxed ${isRead ? 'text-slate-400' : 'text-slate-300'}`}>
                                             {n.body}
                                         </p>
                                     </div>

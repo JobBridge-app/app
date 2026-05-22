@@ -632,7 +632,7 @@ export function OnboardingWizard({
 
   if (!resumeChecked) {
     return (
-      <div className="dark onboarding-shell flex items-center justify-center overflow-hidden px-4 py-4 no-scrollbar md:py-8">
+      <div className="onboarding-shell flex items-center justify-center overflow-hidden px-4 py-4 no-scrollbar md:py-8">
         <div className={`${panelClass} w-full max-w-md`}>
           <div className={panelGlowClass} />
           <div className={panelTextureClass} />
@@ -645,7 +645,7 @@ export function OnboardingWizard({
   return (
     <div
       className={[
-        "dark onboarding-shell flex justify-center overflow-y-auto overflow-x-hidden px-4 no-scrollbar",
+        "onboarding-shell flex justify-center overflow-y-auto overflow-x-hidden px-4 no-scrollbar",
         reserveFooterSpace
           ? "py-4 pb-28 md:py-8 md:pb-24"
           : "py-4 md:py-8",

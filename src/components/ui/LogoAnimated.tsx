@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import clsx from "clsx";
-import { BRAND_NAME, LOGO_PATH } from "@/lib/constants";
+import { BRAND_NAME } from "@/lib/constants";
+import { ThemedLogoImage } from "@/components/ui/ThemedLogoImage";
 
 type LogoAnimatedProps = {
   size?: number;
@@ -65,8 +65,7 @@ export function LogoAnimated({
         
         {/* Logo image */}
         <div className="relative z-10">
-          <Image
-            src={LOGO_PATH}
+          <ThemedLogoImage
             alt={BRAND_NAME}
             width={logoSize}
             height={logoSize}

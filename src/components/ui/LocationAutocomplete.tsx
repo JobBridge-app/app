@@ -8,13 +8,31 @@ export type LocationDetails = {
   address_line1: string;
   city: string;
   postal_code: string;
-  postcode?: string; // Add alias for backwards compatibility
+  postcode?: string;
   lat: number;
   lng: number;
-  lon?: number; // Add alias for backwards compatibility
+  lon?: number;
   public_label: string;
   state?: string;
   house_number?: string;
+};
+
+type LocationSearchResult = {
+  lat: string;
+  lon: string;
+  display_name: string;
+  address?: {
+    road?: string;
+    pedestrian?: string;
+    footway?: string;
+    house_number?: string | number;
+    city?: string;
+    town?: string;
+    village?: string;
+    postcode?: string;
+    state?: string;
+    country?: string;
+  };
 };
 
 interface LocationAutocompleteProps {
@@ -28,7 +46,7 @@ interface LocationAutocompleteProps {
 
 export function LocationAutocomplete({ onSelect, defaultValue = "", className, placeholder, cityOnly = false, autoFocus = false }: LocationAutocompleteProps) {
   const [query, setQuery] = useState(defaultValue);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<LocationSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -46,7 +64,6 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
     return () => window.clearTimeout(timer);
   }, [autoFocus]);
 
-  // Close on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -57,7 +74,6 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced Search
   useEffect(() => {
     const normalizedQuery = query.trim();
 
@@ -81,12 +97,6 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        // Priority to Rheinbach/Meckenheim/Bonn (Radius/Viewbox)
-        // We use 'viewbox' to prioritize but not strictly restrict (unless bounded=1).
-        // User wants "Proposals in Rheinbach only if possible".
-        // viewbox: left,top,right,bottom -> roughly 6.8,50.8,7.2,50.5
-        // &dedupe=1 removes duplicates
-
         const url = new URL("/api/location/search", window.location.origin);
         url.searchParams.set("q", query);
         if (cityOnly) {
@@ -94,15 +104,20 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
         }
 
         const response = await fetch(url.toString(), { signal: controller.signal });
+        if (!response.ok) {
+          throw new Error("Location search failed");
+        }
         const data = await response.json();
+        const nextResults = Array.isArray(data) ? data : [];
 
         if (searchVersion !== searchVersionRef.current) return;
 
-        setResults(data);
-        setIsOpen(Array.isArray(data) && data.length > 0);
+        setResults(nextResults);
+        setIsOpen(nextResults.length > 0);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        console.error("Location search failed", error);
+        setResults([]);
+        setIsOpen(false);
       } finally {
         if (searchVersion === searchVersionRef.current) {
           setIsLoading(false);
@@ -116,15 +131,12 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
     };
   }, [query, cityOnly]);
 
-  const handleSelect = (item: any) => {
+  const handleSelect = (item: LocationSearchResult) => {
     const addr = item.address || {};
     let street = addr.road || addr.pedestrian || addr.footway || "";
-    let houseNumber = addr.house_number ? `${addr.house_number}` : "";
+    let houseNumber = addr.house_number ? String(addr.house_number) : "";
 
-    // Smart Extraction: If API didn't return a house number, check if user typed one in the query
     if (!houseNumber && query) {
-      // Regex to find trailing number (e.g. "Hauptstr 12", "Hauptstr. 12a")
-      // Matches: space + digits + optional letter at end of string
       const match = query.match(/\s(\d+[a-zA-Z]?)$/);
       if (match) {
         houseNumber = match[1];
@@ -135,12 +147,11 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
     const city = addr.city || addr.town || addr.village || "Rheinbach";
     const zip = addr.postcode || "";
 
-    // Construct a nice label
     const localityLabel = [zip, city].filter(Boolean).join(" ");
     const label = fullStreet ? `${fullStreet}, ${localityLabel}` : localityLabel;
 
     const details: LocationDetails = {
-      address_line1: street, // Just street name
+      address_line1: street,
       city: city,
       postal_code: zip,
       postcode: zip,
@@ -163,9 +174,9 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
   };
 
   return (
-    <div ref={wrapperRef} className={cn("relative", className)}>
+    <div ref={wrapperRef} className={cn("location-search-root relative", isOpen && "is-open", className)}>
       <div className="relative flex items-center">
-        <div className="absolute left-4 text-slate-400 pointer-events-none z-10">
+        <div className="location-search-icon absolute left-4 pointer-events-none z-10">
           {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
         </div>
         <input
@@ -187,7 +198,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
             }
           }}
           placeholder={placeholder || (cityOnly ? "Stadt eingeben (z.B. Bonn)..." : "Adresse suchen (z.B. Hauptstraße 12)...")}
-          className="w-full pl-12 pr-10 h-14 rounded-2xl bg-[#0F0F12] border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all text-base font-medium shadow-sm"
+          className="location-search-control w-full pl-12 pr-10 h-14 rounded-2xl border text-base font-medium shadow-sm transition-all focus:outline-none focus:ring-2"
         />
         {query && (
           <button
@@ -200,7 +211,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
               setIsOpen(false);
               setIsLoading(false);
             }}
-            className="absolute right-4 text-slate-500 hover:text-white transition-colors p-1"
+            className="location-search-clear absolute right-4 p-1 transition-colors"
           >
             <X size={16} />
           </button>
@@ -208,27 +219,27 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
       </div>
 
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#17171D] shadow-[0_24px_80px_rgba(0,0,0,0.55)] animate-in fade-in zoom-in-95 duration-200">
+        <div className="location-search-menu absolute mt-2 w-full overflow-hidden rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.55)] animate-in fade-in zoom-in-95 duration-200">
           <div className="max-h-[280px] overflow-y-auto p-2 space-y-1">
             {results.map((item, index) => (
               <button
-                key={index}
+                key={`${item.lat}-${item.lon}-${item.display_name}-${index}`}
                 type="button"
                 onClick={() => handleSelect(item)}
-                className="w-full text-left flex items-start justify-between gap-3 p-3 rounded-xl hover:bg-white/[0.06] focus:bg-white/[0.06] focus:outline-none transition-colors group"
+                className="location-search-result group flex w-full items-start justify-between gap-3 rounded-xl p-3 text-left transition-colors focus:outline-none"
               >
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="mt-1 p-2 rounded-full bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                  <div className="location-search-result-icon mt-1 rounded-full p-2 transition-all">
                     <MapPin size={16} />
                   </div>
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
+                    <div className="location-search-result-title truncate text-sm font-bold transition-colors">
                       {cityOnly
                         ? (item.address?.city || item.address?.town || item.address?.village || item.display_name.split(",")[0])
                         : (item.address?.road || item.display_name.split(",")[0])}
-                      {!cityOnly && item.address?.house_number && <span className="text-indigo-400"> {item.address.house_number}</span>}
+                      {!cityOnly && item.address?.house_number && <span className="location-search-result-accent"> {item.address.house_number}</span>}
                     </div>
-                    <div className="truncate text-xs text-slate-500 mt-1 font-medium group-hover:text-slate-400">
+                    <div className="location-search-result-subtitle mt-1 truncate text-xs font-medium">
                       {cityOnly
                         ? `${item.address?.postcode || ""} ${item.address?.state || ""}`.trim() || item.address?.country
                         : `${item.address?.postcode || ""} ${item.address?.city || item.address?.town || item.address?.village}, ${item.address?.country}`.trim()
@@ -236,14 +247,14 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 text-slate-600 opacity-0 transition-all group-hover:opacity-100 group-hover:text-indigo-200 group-focus:opacity-100">
+                <div className="location-search-result-check mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border opacity-0 transition-all group-hover:opacity-100 group-focus:opacity-100">
                   <Check size={14} />
                 </div>
               </button>
             ))}
           </div>
           {!cityOnly && (
-            <div className="px-4 py-2 bg-black/20 border-t border-white/5 text-[10px] uppercase tracking-wider text-slate-600 font-bold flex justify-between items-center">
+            <div className="location-search-menu-footer flex items-center justify-between border-t px-4 py-2 text-[10px] font-bold uppercase tracking-wider">
               Rheinbach & Umgebung
             </div>
           )}

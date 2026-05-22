@@ -26,7 +26,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
     const warmProfileLinks = useCallback((mode: "full" | "minimal" = "full") => {
         router.prefetch("/app-home/profile");
         if (mode === "full") {
-            router.prefetch("/legal/impressum");
+            router.prefetch("/legal");
             if (isStaff) {
                 router.prefetch("/admin");
                 router.prefetch("/admin/demo");
@@ -108,14 +108,13 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
                 className={cn(
-                    "group flex h-[52px] items-center gap-2 rounded-full border border-white/10 bg-slate-900/40 pl-[6px] pr-2 shadow-xl backdrop-blur-md transition-colors duration-200 md:pr-3",
-                    "hover:border-white/20 hover:bg-slate-900/50",
-                    isOpen && "border-white/25 bg-slate-900/55"
+                    "app-profile-chip group flex h-[52px] items-center gap-2 rounded-full border pl-[6px] pr-2 shadow-xl backdrop-blur-md transition-colors duration-200 md:pr-3",
+                    isOpen && "is-open"
                 )}
             >
                 <div className="relative h-10 w-10 shrink-0">
                     <div className="h-full w-full rounded-full border border-white/10 bg-white/5 p-[1px] overflow-hidden">
-                        <div className="flex h-full w-full items-center justify-center rounded-full bg-indigo-500/20 text-indigo-300 transition-all group-hover:bg-indigo-500/25">
+                        <div className="app-profile-avatar flex h-full w-full items-center justify-center rounded-full text-blue-700 transition-all">
                             {profile.avatar_url ? (
                                 <img src={profile.avatar_url} alt="" className="h-full w-full object-cover rounded-full" />
                             ) : (
@@ -128,11 +127,11 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                 </div>
 
                 <div className="hidden min-w-0 md:flex md:flex-col md:items-start md:text-left">
-                    <span className="max-w-[120px] truncate text-[15px] font-semibold leading-[1.05] tracking-[-0.025em] text-white">
+                    <span className="app-profile-chip-title -my-[3px] max-w-[120px] truncate py-[3px] text-[15px] font-semibold leading-[1.05] tracking-[-0.025em] text-white">
                         {profile.full_name}
                     </span>
                     <div className="mt-1 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium leading-none tracking-[-0.01em] text-sky-100/62">
+                        <span className="app-profile-chip-subtitle inline-flex items-center gap-1.5 text-xs font-medium leading-none tracking-[-0.01em] text-sky-100/62">
                             <RoleIcon size={12} strokeWidth={2.1} />
                             {label}
                         </span>
@@ -144,7 +143,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                     </div>
                 </div>
 
-                <ChevronDown size={14} className={cn("hidden text-slate-400 transition-transform duration-200 md:block", isOpen && "rotate-180")} />
+                <ChevronDown size={14} className={cn("app-profile-chip-chevron hidden text-slate-400 transition-transform duration-200 md:block", isOpen && "rotate-180")} />
             </button>
 
             <AnimatePresence>
@@ -159,12 +158,12 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 6 }}
                             transition={{ duration: 0.1, ease: "easeOut" }}
-                            className="absolute right-0 top-full z-50 mt-2 flex w-[18rem] flex-col gap-1 rounded-2xl border border-white/10 bg-slate-950/98 p-2 shadow-xl shadow-black/50 backdrop-blur-xl"
+                            className="app-profile-menu absolute right-0 top-full z-50 mt-2 flex w-[18rem] flex-col gap-1 rounded-2xl border border-white/10 bg-slate-950/98 p-2 shadow-xl shadow-black/50 backdrop-blur-xl"
                         >
 
-                            <div className="mb-1 border-b border-white/10 px-3 py-2">
+                            <div className="app-profile-menu-account mb-1 border-b border-white/10 px-3 py-2">
                                 <div className="mb-1 flex items-center justify-between">
-                                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Account</p>
+                                    <p className="app-profile-menu-label text-xs font-semibold uppercase tracking-widest text-slate-500">Account</p>
                                 </div>
                                 <div className="text-left mt-2">
                                     <div className="flex items-center gap-2">
@@ -181,7 +180,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                                 href="/app-home/profile"
                                 prefetch
                                 onClick={() => setIsOpen(false)}
-                                className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
+                                className="app-profile-menu-item group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
                             >
                                 <User size={16} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
                                 <span>Profil bearbeiten</span>
@@ -192,35 +191,35 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
 
                             {isStaff && (
                                 <>
-                                    <div className="my-1 h-px bg-white/5" />
-                                    <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Team Console</p>
-                                    <Link href="/admin" prefetch onClick={() => setIsOpen(false)} className="rounded-lg px-3 py-2 text-left text-sm font-medium text-indigo-400 transition-colors hover:bg-indigo-500/10 hover:text-indigo-300">
+                                    <div className="app-profile-menu-divider my-1 h-px bg-white/5" />
+                                    <p className="app-profile-menu-label px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Team Console</p>
+                                    <Link href="/admin" prefetch onClick={() => setIsOpen(false)} className="app-profile-menu-item app-profile-menu-item-accent rounded-lg px-3 py-2 text-left text-sm font-medium text-indigo-400 transition-colors hover:bg-indigo-500/10 hover:text-indigo-300">
                                         Team Console
                                     </Link>
-                                    <Link href="/admin/demo" prefetch onClick={() => setIsOpen(false)} className="w-full rounded-lg px-3 py-2 text-left text-sm text-amber-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400">
+                                    <Link href="/admin/demo" prefetch onClick={() => setIsOpen(false)} className="app-profile-menu-item app-profile-menu-item-warn w-full rounded-lg px-3 py-2 text-left text-sm text-amber-500 transition-colors hover:bg-amber-500/10 hover:text-amber-400">
                                         Demo Mode
                                     </Link>
                                 </>
                             )}
 
-                            <div className="my-1 h-px bg-white/5" />
-                            <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Rechtliches</p>
+                            <div className="app-profile-menu-divider my-1 h-px bg-white/5" />
+                            <p className="app-profile-menu-label px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Rechtliches</p>
                             <Link
-                                href="/legal/impressum"
+                                href="/legal"
                                 prefetch
                                 onClick={() => setIsOpen(false)}
-                                className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
+                                className="app-profile-menu-item group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
                             >
                                 <Shield size={16} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
                                 <span>Trust Center</span>
                             </Link>
 
-                            <div className="my-1 h-px bg-white/5" />
+                            <div className="app-profile-menu-divider my-1 h-px bg-white/5" />
 
                             <button
                                 type="button"
                                 onClick={handleLogout}
-                                className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                                className="app-profile-menu-item app-profile-menu-item-danger w-full rounded-lg px-3 py-2 text-left text-sm text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
                             >
                                 Abmelden
                             </button>

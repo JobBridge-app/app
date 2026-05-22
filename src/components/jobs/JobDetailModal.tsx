@@ -22,7 +22,7 @@ import { endPerfMark, startPerfMark } from "@/lib/perf";
 const LeafletMap = dynamic(() => import("@/components/ui/LeafletMap"), {
     ssr: false,
     loading: () => (
-        <div className="w-full h-full bg-[#121217] animate-pulse flex items-center justify-center text-slate-700">
+        <div className="jobbridge-map-loading flex h-full w-full animate-pulse items-center justify-center">
             <MapPin size={24} />
         </div>
     ),
@@ -134,7 +134,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                         leaveFrom="opacity-100"
                         leaveTo="opacity-0"
                     >
-                        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" />
+                        <div className="job-detail-backdrop fixed inset-0 bg-black/90 backdrop-blur-sm" />
                     </Transition.Child>
 
                     <div className="fixed inset-0 overflow-y-auto">
@@ -148,13 +148,13 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                 leaveFrom="opacity-100 scale-100 translate-y-0"
                                 leaveTo="opacity-0 scale-95 translate-y-4"
                             >
-                                <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-3xl bg-[#09090b] border border-white/10 text-left align-middle shadow-2xl transition-all">
+                                <Dialog.Panel className="job-detail-modal w-full max-w-3xl transform overflow-hidden rounded-3xl border text-left align-middle shadow-2xl transition-all">
                                     {/* Detailed Header with Background Pattern */}
-                                    <div className="relative overflow-hidden bg-[#111116] px-8 py-10 border-b border-white/5">
+                                    <div className="job-detail-hero relative overflow-hidden border-b px-8 py-10">
                                         <div className="absolute top-0 right-0 p-6 z-20">
                                             <button
                                                 type="button"
-                                                className="rounded-full bg-white/5 p-2 text-slate-400 hover:text-white hover:bg-white/10 transition-colors backdrop-blur-md"
+                                                className="job-detail-close rounded-full p-2 transition-colors backdrop-blur-md"
                                                 onClick={onClose}
                                             >
                                                 <X className="h-6 w-6" />
@@ -162,8 +162,8 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                         </div>
 
                                         {/* Background Decoration */}
-                                        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
-                                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
+                                        <div className="job-detail-grid absolute inset-0 bg-[url('/grid.svg')]" />
+                                        <div className="job-detail-glow absolute top-0 right-0 w-64 h-64 blur-[100px] rounded-full pointer-events-none" />
 
                                         <div className="relative z-10 flex flex-col gap-6">
                                             <div className="flex gap-3">
@@ -268,7 +268,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                     </div>
 
                                     {/* Main Content Area */}
-                                    <div className="px-8 py-10 space-y-10 bg-[#09090b]">
+                                    <div className="job-detail-content px-8 py-10 space-y-10">
 
                                         {/* Description */}
                                         <section>
@@ -290,7 +290,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                 <h4 className="text-sm font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
                                                     <ShieldCheck size={16} /> Sicherheit
                                                 </h4>
-                                                <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 flex-1 flex flex-col justify-center">
+                                                <div className="job-detail-info-card rounded-2xl border p-6 flex-1 flex flex-col justify-center">
                                                     {isSelectedProfileStaff ? (
                                                         <div className="flex flex-col items-start gap-4">
                                                             <div>
@@ -324,7 +324,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                 <h4 className="text-sm font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
                                                     <MapPin size={16} /> Standort
                                                 </h4>
-                                                <div className="rounded-2xl border border-white/5 bg-[#121217] p-1 flex-1 min-h-[160px] relative flex items-center justify-center overflow-hidden group">
+                                                <div className="job-detail-map-frame rounded-2xl border p-1 flex-1 min-h-[180px] relative flex items-center justify-center overflow-hidden group">
                                                     {shouldRenderMap && (
                                                         <LeafletMap
                                                             center={[job?.public_lat ?? 50.6256, job?.public_lng ?? 6.9493]}
@@ -334,8 +334,8 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                     )}
 
                                                     {/* Overlay for "Approximate Location" text style if desired, or relying on map visual */}
-                                                    <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-[400]">
-                                                        <span className="text-[10px] text-slate-300 uppercase tracking-widest font-medium">Ungefähre Lage</span>
+                                                    <div className="job-detail-map-note absolute left-2 top-2 z-[400] rounded-full border px-2.5 py-1 backdrop-blur-md">
+                                                        <span className="text-[10px] uppercase tracking-widest font-semibold">Ungefähre Lage</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -343,7 +343,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                     </div>
 
                                     {/* Action Footer */}
-                                    <div className="bg-[#111116] px-8 py-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+                                    <div className="job-detail-footer px-8 py-6 border-t flex flex-col md:flex-row items-center justify-between gap-6">
                                         {job.is_applied ? (
                                             ['submitted', 'waitlisted', 'negotiating', 'accepted'].includes(job.application_status || '') ? (
                                                 <div className="w-full flex flex-col items-end gap-2">

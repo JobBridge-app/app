@@ -83,7 +83,7 @@ export function MobileNavPreferenceControl({ initialPreference }: MobileNavPrefe
     };
 
     return (
-        <div className="space-y-2">
+        <div className="mobile-nav-control space-y-2">
             {options.map((option) => {
                 const active = preference === option.value;
                 const saving = pendingPreference === option.value || (isPending && active);
@@ -95,26 +95,22 @@ export function MobileNavPreferenceControl({ initialPreference }: MobileNavPrefe
                         onClick={() => syncPreference(option.value)}
                         disabled={Boolean(pendingPreference)}
                         aria-pressed={active}
+                        data-active={active}
                         className={cn(
-                            "group grid w-full grid-cols-[4.6rem_minmax(0,1fr)_1.7rem] items-center gap-3 rounded-[1.05rem] border p-2.5 text-left outline-none transition-[border-color,background-color,box-shadow]",
-                            "focus-visible:ring-2 focus-visible:ring-indigo-200/35 disabled:cursor-not-allowed disabled:opacity-70",
-                            active
-                                ? "border-indigo-200/28 bg-indigo-400/[0.075] shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]"
-                                : "border-white/[0.075] bg-white/[0.022] hover:border-white/[0.13] hover:bg-white/[0.04]"
+                            "mobile-nav-option group grid w-full grid-cols-[4.6rem_minmax(0,1fr)_1.7rem] items-center gap-3 text-left outline-none",
+                            "disabled:cursor-not-allowed disabled:opacity-70"
                         )}
                     >
                         <NavigationPreview preference={option.value} active={active} />
 
-                        <span className="min-w-0">
-                            <span className="block truncate text-sm font-semibold text-white">{option.title}</span>
-                            <span className="mt-0.5 block truncate text-xs font-medium text-slate-500">{option.status}</span>
+                        <span className="mobile-nav-option-copy min-w-0">
+                            <span className="block truncate text-sm font-semibold">{option.title}</span>
+                            <span className="mt-0.5 block truncate text-xs font-medium">{option.status}</span>
                         </span>
 
                         <span className={cn(
-                            "flex h-6 w-6 items-center justify-center rounded-full border transition-colors",
-                            active
-                                ? "border-white bg-white text-slate-950"
-                                : "border-white/[0.08] bg-white/[0.025] text-transparent group-hover:text-slate-600"
+                            "mobile-nav-option-check flex h-6 w-6 items-center justify-center rounded-full border transition-colors",
+                            active ? "is-active" : "text-transparent"
                         )}>
                             {saving ? (
                                 <Loader2 size={13} className="animate-spin text-slate-950" />
@@ -127,7 +123,7 @@ export function MobileNavPreferenceControl({ initialPreference }: MobileNavPrefe
             })}
 
             {error && (
-                <p className="rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-xs font-medium text-rose-200">
+                <p className="mobile-nav-error rounded-xl border px-3 py-2 text-xs font-medium">
                     {error}
                 </p>
             )}
@@ -140,27 +136,27 @@ function NavigationPreview({ preference, active }: { preference: MobileNavPrefer
         <span
             aria-hidden="true"
             className={cn(
-                "relative h-12 overflow-hidden rounded-xl border bg-[#060812]",
-                active ? "border-indigo-200/22" : "border-white/[0.07]"
+                "mobile-nav-preview relative h-12 overflow-hidden rounded-xl border",
+                active && "is-active"
             )}
         >
-            <span className="absolute left-2 right-2 top-2 h-1 rounded-full bg-white/[0.09]" />
-            <span className="absolute left-2 top-5 h-4 w-7 rounded-md border border-white/[0.06] bg-white/[0.035]" />
-            <span className="absolute right-2 top-5 h-4 w-7 rounded-md border border-white/[0.06] bg-white/[0.035]" />
+            <span className="mobile-nav-preview-line absolute left-2 right-2 top-2 h-1 rounded-full" />
+            <span className="mobile-nav-preview-tile absolute left-2 top-5 h-4 w-7 rounded-md border" />
+            <span className="mobile-nav-preview-tile absolute right-2 top-5 h-4 w-7 rounded-md border" />
 
             {preference === "top" ? (
-                <span className="absolute left-1/2 top-1.5 flex h-4 w-11 -translate-x-1/2 items-center gap-0.5 rounded-full border border-white/[0.08] bg-slate-950/88 p-0.5">
-                    <span className="h-full flex-1 rounded-full bg-indigo-300/80" />
-                    <span className="h-full flex-1 rounded-full bg-white/[0.11]" />
-                    <span className="h-full flex-1 rounded-full bg-white/[0.11]" />
+                <span className="mobile-nav-preview-pill absolute left-1/2 top-1.5 flex h-4 w-11 -translate-x-1/2 items-center gap-0.5 rounded-full border p-0.5">
+                    <span className="mobile-nav-preview-segment-active h-full flex-1 rounded-full" />
+                    <span className="mobile-nav-preview-segment-idle h-full flex-1 rounded-full" />
+                    <span className="mobile-nav-preview-segment-idle h-full flex-1 rounded-full" />
                 </span>
             ) : (
                 <>
-                    <span className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-slate-950 to-transparent" />
-                    <span className="absolute bottom-1.5 left-1/2 flex h-4 w-12 -translate-x-1/2 items-center gap-0.5 rounded-full border border-white/[0.08] bg-slate-950/92 p-0.5">
-                        <span className="h-full flex-1 rounded-full bg-indigo-300/80" />
-                        <span className="h-full flex-1 rounded-full bg-white/[0.11]" />
-                        <span className="h-full flex-1 rounded-full bg-white/[0.11]" />
+                    <span className="mobile-nav-preview-bottom-fade absolute inset-x-0 bottom-0 h-5" />
+                    <span className="mobile-nav-preview-pill absolute bottom-1.5 left-1/2 flex h-4 w-12 -translate-x-1/2 items-center gap-0.5 rounded-full border p-0.5">
+                        <span className="mobile-nav-preview-segment-active h-full flex-1 rounded-full" />
+                        <span className="mobile-nav-preview-segment-idle h-full flex-1 rounded-full" />
+                        <span className="mobile-nav-preview-segment-idle h-full flex-1 rounded-full" />
                     </span>
                 </>
             )}

@@ -194,8 +194,8 @@ export function JobsList({
     return (
         <>
             {/* ── Mobile Tab Bar ───────────────────────────────────────── */}
-            <div className="flex justify-center mb-6 md:hidden w-full">
-                <div className="flex items-center justify-between w-full bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border border-white/[0.08] rounded-2xl p-1 shadow-sm">
+            <div className="mb-6 flex w-full justify-center md:hidden">
+                <div className="jobs-mobile-tabs flex w-full items-center justify-between rounded-2xl border border-white/[0.08] bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 p-1 shadow-sm">
                     <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar flex-1 min-w-0">
                         <MobileTab
                             active={activeTab === "active"}
@@ -238,7 +238,7 @@ export function JobsList({
                         </MobileTab>
                     </div>
 
-                    <div className="w-px h-7 bg-white/10 mx-1 shrink-0" />
+                    <div className="jobs-mobile-tabs-divider mx-1 h-7 w-px shrink-0 bg-white/10" />
 
                     <FilterButton
                         onClick={() => setShowFilterPanel(true)}
@@ -250,7 +250,7 @@ export function JobsList({
             </div>
 
             {/* ── Desktop Tab Bar ──────────────────────────────────────── */}
-            <div className="hidden md:flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+            <div className="jobs-desktop-tabs hidden items-center justify-between border-b border-white/10 pb-4 md:mb-8 md:flex">
                 <div className="flex items-center gap-1">
                     <DesktopTab active={activeTab === "active"} onClick={() => handleTabChange("active")}>
                         <Briefcase size={15} className={cn(activeTab === "active" ? "text-indigo-400" : "text-slate-500")} />
@@ -272,7 +272,7 @@ export function JobsList({
                 <button
                     onClick={() => setShowFilterPanel(true)}
                     className={cn(
-                        "relative ml-4 py-2 px-3 sm:px-4 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2 whitespace-nowrap border border-transparent hover:border-white/10",
+                        "jobs-filter-trigger relative ml-4 flex items-center gap-2 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-slate-400 transition-all hover:border-white/10 hover:bg-white/5 hover:text-white sm:px-4",
                         showFilterPanel && "bg-white/10 text-indigo-400 border-indigo-500/20",
                         hasChanges && !showFilterPanel && "text-indigo-400 border-indigo-500/20 bg-indigo-500/10"
                     )}
@@ -408,8 +408,9 @@ function MobileTab({
     return (
         <button
             onClick={onClick}
+            data-active={active}
             className={cn(
-                "relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap border",
+                "jobs-mobile-tab relative flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-all",
                 active ? activeClass : "text-slate-400 hover:text-slate-200 hover:bg-white/5 border-transparent"
             )}
         >
@@ -430,8 +431,9 @@ function DesktopTab({
     return (
         <button
             onClick={onClick}
+            data-active={active}
             className={cn(
-                "py-2 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center gap-2 whitespace-nowrap",
+                "jobs-desktop-tab flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:text-sm",
                 active
                     ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
                     : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -444,7 +446,7 @@ function DesktopTab({
 
 function TabBadge({ children }: { children: React.ReactNode }) {
     return (
-        <span className="bg-white/10 text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full ml-0.5">
+        <span className="jobs-tab-badge ml-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">
             {children}
         </span>
     );
@@ -466,7 +468,7 @@ function FilterButton({
             onClick={onClick}
             aria-label="Filter & Sortierung"
             className={cn(
-                "relative flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all shrink-0",
+                "jobs-filter-icon-button relative flex shrink-0 items-center justify-center text-slate-400 transition-all hover:bg-white/5 hover:text-white",
                 isActive && "text-indigo-400 bg-white/5",
                 className
             )}
@@ -491,16 +493,16 @@ function EmptyState({
     message: string;
 }) {
     return (
-        <div className="flex flex-col items-center justify-center space-y-4 py-8 px-4">
+        <div className="jobs-empty-copy flex flex-col items-center justify-center space-y-4 px-4 py-8">
             <div className="relative">
                 <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full scale-110 pointer-events-none" />
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900 border border-white/[0.05] flex items-center justify-center shadow-xl relative z-10 text-indigo-400/80">
+                <div className="jobs-empty-icon relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-white/[0.05] bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900 text-indigo-400/80 shadow-xl">
                     <Icon size={32} className="opacity-80" />
                 </div>
             </div>
             <div className="text-center space-y-1.5">
-                <h3 className="text-xl font-bold text-white tracking-tight">{title}</h3>
-                <p className="text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">{message}</p>
+                <h3 className="jobs-empty-title text-xl font-bold tracking-tight text-white">{title}</h3>
+                <p className="jobs-empty-message mx-auto max-w-sm text-sm leading-relaxed text-slate-400">{message}</p>
             </div>
         </div>
     );

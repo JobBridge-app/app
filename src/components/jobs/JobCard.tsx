@@ -113,7 +113,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
             onMouseEnter={() => void warmJobsUI()}
             onFocus={() => void warmJobsUI()}
             onPointerDown={() => void warmJobsUI()}
-            className={`group relative flex h-full transform-gpu cursor-pointer flex-col overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-[border-color,box-shadow,background-color,filter] duration-300
+            className={`job-card group relative flex h-full transform-gpu cursor-pointer flex-col overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-[border-color,box-shadow,background-color,filter] duration-300
                 ${isApplied && !isUserWaitlisted
                     ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
                     : isLocked
@@ -179,7 +179,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                     {/* Main Header Row: Title & Right-Aligned Badges */}
                     <div className="flex items-start justify-between gap-3">
                         {/* Title Row */}
-                        <h3 className="text-xl font-bold text-white leading-tight group-hover:text-indigo-100 transition-colors">
+                        <h3 className="job-card-title text-xl font-bold leading-tight text-white transition-colors group-hover:text-indigo-100">
                             {job.title}
                         </h3>
 
@@ -200,13 +200,13 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="flex items-center flex-wrap gap-2 text-sm text-slate-400 font-medium">
+                    <div className="job-card-meta-row flex flex-wrap items-center gap-2 text-sm font-medium text-slate-400">
                         {(() => {
                             const CategoryIcon = JOB_CATEGORIES.find(c => c.id === job.category)?.icon;
                             const categoryLabel = JOB_CATEGORIES.find(c => c.id === job.category)?.label || "Sonstiges";
                             return (
                                 <span className={cn(
-                                    "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide transition-all duration-300",
+                                    "job-card-category flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wide transition-all duration-300",
                                     isWaitlistMode
                                         ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_10px_-2px_rgba(245,158,11,0.15)]"
                                         : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_10px_-2px_rgba(99,102,241,0.15)] group-hover:bg-indigo-500/20 group-hover:border-indigo-500/30 group-hover:shadow-[0_0_15px_-2px_rgba(99,102,241,0.25)]"
@@ -216,8 +216,8 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                                 </span>
                             );
                         })()}
-                        <span className="text-slate-600">•</span>
-                        <span className="text-slate-400 text-sm font-medium">{job.creator?.company_name || "Privater Auftraggeber"}</span>
+                        <span className="job-card-separator text-slate-600">•</span>
+                        <span className="job-card-provider text-sm font-medium text-slate-400">{job.creator?.company_name || "Privater Auftraggeber"}</span>
                         {isDemo && (
                             <span className="text-[10px] uppercase tracking-wider font-bold text-cyan-400 border border-cyan-400/30 px-1.5 py-0.5 rounded bg-cyan-400/10 ml-1">
                                 Demo
@@ -226,13 +226,13 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                     </div>
                 </div>
 
-                <p className="text-slate-300 text-base line-clamp-2 mb-6 leading-relaxed flex-grow font-light">
+                <p className="job-card-description mb-6 line-clamp-2 flex-grow text-base font-light leading-relaxed text-slate-300">
                     {job.description}
                 </p>
 
-                <div className="flex flex-wrap gap-4 text-sm text-slate-400 mt-auto pt-4 border-t border-white/[0.06]">
-                    <div className="flex items-center gap-2">
-                        <Euro size={16} className="text-emerald-400" />
+                <div className="job-card-footer mt-auto flex flex-wrap gap-4 border-t border-white/[0.06] pt-4 text-sm text-slate-400">
+                    <div className="job-card-metric flex items-center gap-2">
+                        <Euro size={16} className="job-card-icon text-emerald-400" />
                         <span className="font-semibold text-white">
                             {job.payment_type === 'fixed'
                                 ? `${job.wage_hourly} € pauschal`
@@ -240,15 +240,15 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                         </span>
                     </div>
                     {providerStatus ? (
-                        <div className="flex items-center gap-2">
-                            <MapPin size={16} className="text-indigo-400" />
+                        <div className="job-card-metric flex items-center gap-2">
+                            <MapPin size={16} className="job-card-icon text-indigo-400" />
                             <span className="truncate max-w-[150px]">
                                 {job.public_location_label || job.market_name || "Privatadresse"}
                             </span>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2">
-                            <MapPin size={16} className={job.distance_km != null ? "text-indigo-400" : "text-slate-500"} />
+                        <div className="job-card-metric flex items-center gap-2">
+                            <MapPin size={16} className={cn("job-card-icon", job.distance_km != null ? "text-indigo-400" : "text-slate-500")} />
                             {job.distance_km != null ? (
                                 <span className="truncate max-w-[150px] text-white font-medium">
                                     {`${(Math.round(job.distance_km * 10) / 10).toFixed(1).replace('.', ',')} km entfernt`}
@@ -271,14 +271,14 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                             )}
                         </div>
                     )}
-                    <div className="flex items-center gap-2 ml-auto text-xs text-slate-500 font-medium">
-                        <Clock size={14} className="text-slate-600" />
+                    <div className="job-card-trailing-meta ml-auto flex items-center gap-2 text-xs font-medium text-slate-500">
+                        <Clock size={14} className="job-card-muted-icon text-slate-600" />
                         <span>{timeAgo(job.created_at)}</span>
                         {job.creator && (
                             <>
-                                <span className="text-slate-700">•</span>
+                                <span className="job-card-separator text-slate-700">•</span>
                                 <div className="flex items-center gap-1.5 text-slate-400">
-                                    <div className="w-4 h-4 rounded-full bg-indigo-500/20 flex items-center justify-center text-[9px] font-bold text-indigo-400 overflow-hidden">
+                                    <div className="job-card-avatar flex h-4 w-4 items-center justify-center overflow-hidden rounded-full bg-indigo-500/20 text-[9px] font-bold text-indigo-400">
                                         {job.creator.avatar_url ? (
                                             <img src={job.creator.avatar_url} alt="" className="w-full h-full object-cover" />
                                         ) : (

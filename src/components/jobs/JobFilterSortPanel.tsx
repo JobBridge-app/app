@@ -157,7 +157,7 @@ export function JobFilterSortPanel({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.18 }}
-                        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                        className="job-filter-backdrop absolute inset-0 bg-black/70 backdrop-blur-md"
                         onClick={onClose}
                         aria-hidden="true"
                     />
@@ -166,10 +166,10 @@ export function JobFilterSortPanel({
                     <motion.div
                         ref={panelRef}
                         {...panelMotion}
-                        className="relative w-full max-w-sm flex flex-col max-h-[90vh] overflow-hidden rounded-t-3xl sm:rounded-3xl shadow-[0_24px_64px_-8px_rgba(0,0,0,0.6)] border-t sm:border border-white/[0.08] bg-[#1a1a20]"
+                        className="job-filter-panel relative flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-t-3xl border-t border-white/[0.08] bg-[#1a1a20] shadow-[0_24px_64px_-8px_rgba(0,0,0,0.6)] sm:rounded-3xl sm:border"
                     >
                         {/* Hairline top accent */}
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+                        <div className="job-filter-accent-line absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
                         {/* Drag handle (mobile only) */}
                         <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/15 rounded-full sm:hidden" aria-hidden="true" />
@@ -177,12 +177,12 @@ export function JobFilterSortPanel({
                         {/* Header */}
                         <div className="flex items-center justify-between px-6 pt-7 pb-4 shrink-0">
                             <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-slate-300" aria-hidden="true">
+                                <div className="job-filter-title-icon flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.06] text-slate-300" aria-hidden="true">
                                     <SlidersHorizontal size={15} />
                                 </div>
                                 <span
                                     id="filter-panel-title"
-                                    className="text-white font-semibold text-[15px] tracking-tight"
+                                    className="job-filter-title text-[15px] font-semibold tracking-tight text-white"
                                 >
                                     Filter &amp; Sortierung
                                 </span>
@@ -216,7 +216,7 @@ export function JobFilterSortPanel({
                         </div>
 
                         {/* Divider */}
-                        <div className="h-px bg-white/[0.05] mx-6" />
+                        <div className="job-filter-divider mx-6 h-px bg-white/[0.05]" />
 
                         {/* Scrollable body */}
                         <motion.div
@@ -356,7 +356,7 @@ export function JobFilterSortPanel({
                             className="px-6 pt-4 shrink-0"
                             style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom))" }}
                         >
-                            <div className="h-px bg-white/[0.05] mb-4" />
+                            <div className="job-filter-divider mb-4 h-px bg-white/[0.05]" />
                             <motion.button
                                 onClick={isZeroResults ? undefined : onClose}
                                 disabled={isZeroResults}
@@ -403,5 +403,4 @@ function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: s
         </h4>
     );
 }
-
 

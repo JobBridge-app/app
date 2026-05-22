@@ -212,7 +212,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
     }
 
     return (
-        <div className={cn("flex flex-col md:flex-row h-full overflow-hidden bg-[#09090b]", embedded ? "" : "rounded-3xl border border-white/10 shadow-2xl")}>
+        <div className={cn("application-chat flex flex-col md:flex-row h-full overflow-hidden bg-[#09090b]", embedded ? "" : "rounded-3xl border border-white/10 shadow-2xl")}>
             <UserProfileModal
                 isOpen={isProfileModalOpen}
                 onClose={() => setIsProfileModalOpen(false)}
@@ -231,7 +231,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                 <>
 
                     {/* Left Side: Job Summary & Actions */}
-                    <div className="hidden md:flex w-1/3 min-w-[320px] bg-[#111116] border-r border-white/5 flex-col">
+                    <div className="application-chat-sidebar hidden md:flex w-1/3 min-w-[320px] bg-[#111116] border-r border-white/5 flex-col">
                         {/* Premium Header */}
                         <div className="p-6 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
@@ -376,7 +376,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                     </div>
 
                     {/* Right Side: Chat & Content */}
-                    <div className="flex-1 flex flex-col bg-[#09090b] relative h-[85vh] md:h-full">
+                    <div className="application-chat-main flex-1 flex flex-col bg-[#09090b] relative h-[85vh] md:h-full">
                         {/* Mobile Header */}
                         <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#111116]">
                             <div className="flex items-center gap-3 overflow-hidden flex-1 mr-2">
@@ -422,7 +422,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                         )}
 
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-gradient-to-b from-[#09090b] to-[#0c0c10]">
+                        <div className="application-chat-messages flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-gradient-to-b from-[#09090b] to-[#0c0c10]">
 
                             {status === 'waitlisted' && (
                                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex gap-3 items-start my-4">
@@ -494,7 +494,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-4 md:p-6 bg-[#111116] border-t border-white/5">
+                        <div className="application-chat-inputbar p-4 md:p-6 bg-[#111116] border-t border-white/5">
                             <div className="flex gap-3">
                                 <input
                                     type="text"
@@ -503,7 +503,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                                     onKeyDown={e => e.key === 'Enter' && handleSend()}
                                     placeholder="Nachricht schreiben..."
                                     disabled={sending || !isActive}
-                                    className="flex-1 bg-[#1c1c21] border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="application-chat-input flex-1 bg-[#1c1c21] border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                                 <ButtonPrimary
                                     onClick={handleSend}

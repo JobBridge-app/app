@@ -27,9 +27,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  colorScheme: "dark",
+  colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#020617" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f8fc" },
     { media: "(prefers-color-scheme: dark)", color: "#020617" },
   ],
 };
@@ -40,9 +40,18 @@ import { TestModeBanner } from "@/components/admin/TestModeBanner";
 const themeBootstrapScript = `
 (() => {
   try {
+    const storageKey = "jobbridge-theme";
+    const storedTheme = localStorage.getItem(storageKey);
+    const theme = storedTheme === "light" || storedTheme === "dark" || storedTheme === "system" ? storedTheme : "system";
+    const resolvedTheme = theme === "system"
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : theme;
     const root = document.documentElement;
     root.classList.remove("light", "dark");
-    root.classList.add(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    root.classList.add(resolvedTheme);
+    root.dataset.themePreference = theme;
+    root.dataset.themeResolved = resolvedTheme;
+    root.style.colorScheme = resolvedTheme;
   } catch {}
 })();
 `;
@@ -53,9 +62,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de" className="bg-slate-950" suppressHydrationWarning>
-      <body className={`${fontSans.variable} min-h-screen bg-slate-950 text-slate-50 antialiased selection:bg-blue-500/30`}>
+    <html lang="de" className="bg-background" suppressHydrationWarning>
+      <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+      </head>
+      <body className={`${fontSans.variable} min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/30`}>
         <ThemeProvider defaultTheme="system" enableSystem={true} storageKey="jobbridge-theme">
           <TestModeBanner />
           {children}

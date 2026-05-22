@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Circle, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Circle, CircleMarker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin } from "lucide-react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
-// Fix for default marker icon in Leaflet with Next.js
-import L from "leaflet";
-
-// Dark Matter tiles from CartoDB
-const DARK_TILES_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-const DARK_TILES_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const MAP_TILES = {
+    light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+} as const;
 
 interface LeafletMapProps {
     center: [number, number];
@@ -18,7 +18,6 @@ interface LeafletMapProps {
     className?: string;
 }
 
-// Component to handle map resizing and updates
 function MapUpdater({ center }: { center: [number, number] }) {
     const map = useMap();
     useEffect(() => {
@@ -30,6 +29,9 @@ function MapUpdater({ center }: { center: [number, number] }) {
 
 export default function LeafletMap({ center, zoom = 13, className }: LeafletMapProps) {
     const [isMounted, setIsMounted] = useState(false);
+    const { resolvedTheme } = useTheme();
+    const isLight = resolvedTheme === "light";
+    const mapThemeClass = isLight ? "is-light" : "is-dark";
 
     useEffect(() => {
         setIsMounted(true);
@@ -37,8 +39,8 @@ export default function LeafletMap({ center, zoom = 13, className }: LeafletMapP
 
     if (!isMounted) {
         return (
-            <div className={`bg-[#121217] flex items-center justify-center ${className}`}>
-                <div className="flex flex-col items-center text-slate-500 animate-pulse">
+            <div className={`jobbridge-map-loading flex items-center justify-center ${className ?? ""}`}>
+                <div className="flex flex-col items-center animate-pulse">
                     <MapPin size={24} className="mb-2 opacity-50" />
                     <span className="text-xs uppercase tracking-widest">Karte wird geladen...</span>
                 </div>
@@ -50,56 +52,41 @@ export default function LeafletMap({ center, zoom = 13, className }: LeafletMapP
         <MapContainer
             center={center}
             zoom={zoom}
-            minZoom={zoom - 3} // Restrict how far they can zoom out (keep it regional)
-            maxZoom={18} // Restrict max zoom in
+            minZoom={zoom - 3}
+            maxZoom={18}
             scrollWheelZoom={true}
-            className={`z-0 ${className}`}
-            style={{ height: "100%", width: "100%", background: "#121217" }}
-            dragging={true} // Enable panning around
-            zoomControl={false} // Keep UI clean
+            className={`jobbridge-leaflet-map ${mapThemeClass} z-0 ${className ?? ""}`}
+            style={{ height: "100%", width: "100%" }}
+            dragging={true}
+            zoomControl={false}
             doubleClickZoom={true}
             preferCanvas={true}
         >
-            <style jsx global>{`
-                .leaflet-control-attribution {
-                    background: rgba(0, 0, 0, 0.4) !important;
-                    color: #52525b !important; /* zinc-600 */
-                    font-size: 10px;
-                    border-radius: 4px;
-                    padding: 0 4px;
-                }
-                .leaflet-control-attribution a {
-                    color: #71717a !important; /* zinc-500 */
-                    text-decoration: none;
-                }
-            `}</style>
             <TileLayer
-                attribution={DARK_TILES_ATTRIBUTION}
-                url={DARK_TILES_URL}
+                attribution={TILE_ATTRIBUTION}
+                url={isLight ? MAP_TILES.light : MAP_TILES.dark}
             />
-            {/* Using a Circle to indicate approximate location comfortably */}
             <Circle
                 center={center}
                 pathOptions={{
-                    fillColor: '#6366f1', // Indigo-500
-                    fillOpacity: 0.2,
-                    color: '#6366f1',
-                    weight: 1,
-                    opacity: 0.5
+                    fillColor: isLight ? "#2457d6" : "#6366f1",
+                    fillOpacity: isLight ? 0.13 : 0.2,
+                    color: isLight ? "#2457d6" : "#818cf8",
+                    weight: isLight ? 1.5 : 1,
+                    opacity: isLight ? 0.42 : 0.5,
                 }}
-                radius={800} // 800 meters radius for "approximate" location
+                radius={800}
             />
-            {/* Center visual dot */}
-            <Circle
+            <CircleMarker
                 center={center}
                 pathOptions={{
-                    fillColor: '#818cf8', // Indigo-400
+                    fillColor: isLight ? "#2457d6" : "#818cf8",
                     fillOpacity: 1,
-                    color: '#fff',
-                    weight: 2,
-                    opacity: 0.8
+                    color: isLight ? "#ffffff" : "#f8fafc",
+                    weight: 3,
+                    opacity: 1,
                 }}
-                radius={50}
+                radius={8}
             />
             <MapUpdater center={center} />
         </MapContainer>

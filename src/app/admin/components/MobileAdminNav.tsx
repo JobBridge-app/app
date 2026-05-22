@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ArrowLeft, LayoutDashboard, Users, Briefcase, FileText, Flag, Settings, Gift, Clock, MessageSquare, Shield, BarChart3, Lock } from "lucide-react";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { StaffBadge } from "@/components/ui/StaffBadge";
+import { ThemedLogoImage } from "@/components/ui/ThemedLogoImage";
 import {
     getAdminNavGroupsWithAccess,
     formatStaffRole,
@@ -44,8 +44,7 @@ export function MobileAdminNav({ highestRole }: { highestRole: StaffRole }) {
             <header className="md:hidden flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-white/5 z-30 relative">
                 <div className="flex items-center gap-2.5">
                     <div className="relative w-6 h-6 shrink-0">
-                        <Image
-                            src="/logo2-jobbridge.png"
+                        <ThemedLogoImage
                             alt="JobBridge"
                             fill
                             className="object-contain scale-150"
@@ -89,8 +88,7 @@ export function MobileAdminNav({ highestRole }: { highestRole: StaffRole }) {
                             <div className="px-4 py-4 border-b border-white/5 flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
                                     <div className="relative w-6 h-6 shrink-0">
-                                        <Image
-                                            src="/logo2-jobbridge.png"
+                                        <ThemedLogoImage
                                             alt="JobBridge"
                                             fill
                                             className="object-contain scale-150"

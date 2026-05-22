@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { MobileNavPreferenceControl } from "@/components/settings/MobileNavPreferenceControl";
+import { ThemeModeToggle } from "@/components/settings/ThemeModeToggle";
 import type { MobileNavPreference } from "@/lib/mobile-nav-preference";
 
 type SettingsSurfaceProps = {
@@ -11,26 +12,22 @@ type SettingsSurfaceProps = {
 
 export function SettingsSurface({ mobileNavPreference, themePreference = "system" }: SettingsSurfaceProps) {
     const navigationStatus = mobileNavPreference === "bottom" ? "Dock unten" : "Tabs oben";
-    const themeStatus = {
-        dark: "Dunkel",
-        light: "Hell",
-        system: "System",
-    }[themePreference];
+    const themeStatus = "Hell, Dunkel oder System";
 
     return (
-        <div className="mx-auto w-full max-w-5xl px-4 pb-14 pt-8 md:px-6">
-            <header className="border-b border-white/[0.06] pb-6">
+        <div className="settings-page mx-auto w-full max-w-5xl px-4 pb-14 pt-8 md:px-6">
+            <header className="settings-header border-b pb-6">
                 <div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
+                    <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
                         Einstellungen
                     </h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
+                    <p className="mt-3 max-w-2xl text-sm leading-6 md:text-base">
                         Lege fest, wie JobBridge auf deinen Geräten aussieht und navigiert.
                     </p>
                 </div>
             </header>
 
-            <div className="mt-7 space-y-4 md:space-y-0 md:overflow-hidden md:rounded-[1.65rem] md:border md:border-white/[0.07] md:bg-[#090A0F]/86 md:shadow-[0_24px_80px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.035)]">
+            <div className="settings-panel mt-7 space-y-4 md:space-y-0 md:overflow-hidden">
                 <SettingsGroup
                     id="darstellung"
                     title="Darstellung"
@@ -40,7 +37,7 @@ export function SettingsSurface({ mobileNavPreference, themePreference = "system
                         title="Design-Modus"
                         description={themeStatus}
                     >
-                        <UnavailableSettingNotice />
+                        <ThemeModeToggle />
                     </SettingsRow>
                 </SettingsGroup>
 
@@ -83,17 +80,6 @@ export function SettingsSurface({ mobileNavPreference, themePreference = "system
     );
 }
 
-function UnavailableSettingNotice() {
-    return (
-        <div
-            aria-disabled="true"
-            className="rounded-[1.05rem] border border-white/[0.065] bg-white/[0.018] px-4 py-3 text-sm font-medium text-slate-500"
-        >
-            Momentan nicht verfügbar.
-        </div>
-    );
-}
-
 function SettingsGroup({
     id,
     title,
@@ -108,14 +94,14 @@ function SettingsGroup({
     return (
         <section
             id={id}
-            className="scroll-mt-28 overflow-hidden rounded-[1.35rem] border border-white/[0.07] bg-[#090A0F]/86 shadow-[0_18px_60px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.035)] md:rounded-none md:border-0 md:border-b md:border-white/[0.055] md:bg-transparent md:shadow-none md:last:border-b-0"
+            className="settings-section scroll-mt-28 overflow-hidden"
         >
-            <div className="grid md:grid-cols-[14rem_minmax(0,1fr)]">
-                <div className="border-b border-white/[0.055] bg-white/[0.012] px-5 py-5 md:border-b-0 md:border-r md:bg-transparent md:px-6 md:py-6">
-                    <h2 className="text-sm font-semibold text-white">{title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
+            <div className="settings-section-grid grid md:grid-cols-[14rem_minmax(0,1fr)]">
+                <div className="settings-section-label border-b px-5 py-5 md:border-b-0 md:border-r md:px-6 md:py-6">
+                    <h2 className="text-sm font-semibold">{title}</h2>
+                    <p className="mt-2 text-sm leading-6">{description}</p>
                 </div>
-                <div className="divide-y divide-white/[0.055]">
+                <div className="settings-section-content divide-y">
                     {children}
                 </div>
             </div>
@@ -133,12 +119,12 @@ function SettingsRow({
     children: ReactNode;
 }) {
     return (
-        <div className="grid gap-4 px-5 py-5 md:grid-cols-[minmax(0,1fr)_minmax(17rem,0.95fr)] md:items-center md:px-6">
-            <div>
-                <h3 className="text-[15px] font-semibold text-slate-100">{title}</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+        <div className="settings-row grid gap-4 px-5 py-5 md:grid-cols-[minmax(0,1fr)_minmax(17rem,0.95fr)] md:items-center md:px-6">
+            <div className="max-w-xl">
+                <h3 className="text-[15px] font-semibold">{title}</h3>
+                <p className="mt-1 text-sm leading-6">{description}</p>
             </div>
-            <div className="min-w-0">{children}</div>
+            <div className="settings-control-slot min-w-0">{children}</div>
         </div>
     );
 }
@@ -155,15 +141,15 @@ function SettingsLinkRow({
     return (
         <Link
             href={href}
-            className="group grid gap-4 px-5 py-5 transition-colors hover:bg-white/[0.025] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:px-6"
+            className="settings-link-row group grid gap-4 px-5 py-5 transition-colors md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:px-6"
         >
             <div>
-                <h3 className="text-[15px] font-semibold text-slate-100 transition-colors group-hover:text-white">
+                <h3 className="text-[15px] font-semibold transition-colors">
                     {title}
                 </h3>
-                <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+                <p className="mt-1 text-sm leading-6">{description}</p>
             </div>
-            <span className="inline-flex h-9 w-fit items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.025] px-3 text-sm font-semibold text-slate-400 transition-colors group-hover:border-white/14 group-hover:bg-white/[0.05] group-hover:text-white">
+            <span className="settings-link-action inline-flex h-9 w-fit items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-colors">
                 Öffnen
                 <ChevronRight size={15} />
             </span>

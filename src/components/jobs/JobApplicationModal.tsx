@@ -80,7 +80,7 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                         leaveFrom="opacity-100"
                         leaveTo="opacity-0"
                     >
-                        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
+                        <div className="job-application-backdrop fixed inset-0 bg-black/70 backdrop-blur-sm" />
                     </Transition.Child>
 
                     <div className="fixed inset-0 overflow-y-auto">
@@ -94,11 +94,11 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-[#121217] border border-white/10 p-6 text-left align-middle shadow-xl transition-all">
+                                <Dialog.Panel className="job-application-modal w-full max-w-md transform overflow-hidden rounded-3xl border p-6 text-left align-middle shadow-xl transition-all">
                                     <div className="absolute top-4 right-4">
                                         <button
                                             onClick={onClose}
-                                            className="text-slate-400 hover:text-white transition-colors p-1"
+                                            className="job-application-close transition-colors p-1"
                                         >
                                             <X size={20} />
                                         </button>
@@ -163,7 +163,7 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                                                         <textarea
                                                             id="message"
                                                             rows={5}
-                                                            className="w-full rounded-xl bg-black/20 border border-white/10 p-3 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm resize-none"
+                                                            className="job-application-textarea w-full rounded-xl border p-3 placeholder-slate-500 focus:ring-1 transition-all text-sm resize-none"
                                                             placeholder="Hallo, ich habe Interesse an dem Job weil..."
                                                             value={message}
                                                             onChange={(e) => setMessage(e.target.value)}

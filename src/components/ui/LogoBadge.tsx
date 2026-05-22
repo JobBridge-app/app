@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { BRAND_NAME } from "@/lib/constants";
 import clsx from "clsx";
+import { ThemedLogoImage } from "@/components/ui/ThemedLogoImage";
 
 type LogoBadgeProps = {
   size?: "sm" | "md" | "lg";
@@ -35,8 +35,7 @@ export function LogoBadge({ size = "md", className }: LogoBadgeProps) {
     >
       {/* Highlight-Layer */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/25 to-transparent opacity-60 pointer-events-none mix-blend-screen" />
-      <Image
-        src="/logo2-jobbridge.png"
+      <ThemedLogoImage
         alt={BRAND_NAME}
         width={sizes.image}
         height={sizes.image}

@@ -28,7 +28,7 @@ export default async function AdminLayout({
     const highestRole = identity.highest_role as StaffRole;
 
     return (
-        <div className="min-h-screen bg-black flex flex-col md:flex-row font-sans text-slate-200">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row font-sans text-foreground">
             <AdminSidebar
                 userFullName={userFullName}
                 userInitials={userInitials}

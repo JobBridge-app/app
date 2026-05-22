@@ -59,10 +59,10 @@ export default async function JobsPage() {
     );
 
     return (
-        <div className="container mx-auto py-2 px-4 md:px-6">
+        <div className="jobs-home-surface container mx-auto py-2 px-4 md:px-6">
             <div className="mx-auto max-w-6xl space-y-8">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+                <div className="jobs-home-heading">
+                    <h1 className="mb-2 text-3xl font-bold tracking-tight text-white">
                         Finde deinen Job
                     </h1>
                     <p className="text-slate-400">Hier findest du aktuelle Taschengeldjobs in deiner Nähe.</p>

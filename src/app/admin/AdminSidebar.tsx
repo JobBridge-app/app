@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import {
     LayoutDashboard,
     Users,
@@ -20,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StaffBadge } from "@/components/ui/StaffBadge";
+import { ThemedLogoImage } from "@/components/ui/ThemedLogoImage";
 import {
     formatStaffRole,
     getAdminNavGroupsWithAccess,
@@ -57,8 +57,7 @@ export function AdminSidebar({ userFullName, userInitials, highestRole }: AdminS
             <div className="px-4 py-5 border-b border-white/5">
                 <Link href="/staff" className="flex items-center gap-2.5">
                     <div className="relative w-9 h-9 shrink-0">
-                        <Image
-                            src="/logo2-jobbridge.png"
+                        <ThemedLogoImage
                             alt="JobBridge"
                             fill
                             className="object-contain scale-150"

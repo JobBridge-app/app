@@ -25,7 +25,7 @@ export function AppHeader({ snapshot }: { snapshot: AppHomeSnapshot }) {
     const warmRoutes = [
         "/app-home/profile",
         "/notifications",
-        "/legal/impressum",
+        "/legal",
         ...siblingRoutes,
     ];
 

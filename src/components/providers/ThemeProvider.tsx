@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 
 type Theme = "dark" | "light" | "system";
+type ResolvedTheme = "dark" | "light";
 
 type ThemeProviderProps = {
     children: React.ReactNode;
@@ -14,11 +15,15 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
     theme: Theme;
+    resolvedTheme: ResolvedTheme;
+    isHydrated: boolean;
     setTheme: (theme: Theme) => void;
 };
 
 const initialState: ThemeProviderState = {
     theme: "system",
+    resolvedTheme: "dark",
+    isHydrated: false,
     setTheme: () => null,
 };
 
@@ -28,12 +33,29 @@ function isTheme(value: string | null | undefined): value is Theme {
     return value === "light" || value === "dark" || value === "system";
 }
 
+function readStoredTheme(storageKey: string): Theme | null {
+    try {
+        const storedTheme = localStorage.getItem(storageKey);
+        return isTheme(storedTheme) ? storedTheme : null;
+    } catch {
+        return null;
+    }
+}
+
 function persistTheme(storageKey: string, theme: Theme) {
     try {
         localStorage.setItem(storageKey, theme);
     } catch {
         // Storage can be unavailable in hardened browser contexts.
     }
+}
+
+function getResolvedTheme(theme: Theme, enableSystem: boolean): ResolvedTheme {
+    if (theme !== "system" || !enableSystem) {
+        return theme === "light" ? "light" : "dark";
+    }
+
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 export function ThemeProvider({
@@ -46,12 +68,17 @@ export function ThemeProvider({
     const [theme, setThemeState] = useState<Theme>(defaultTheme);
     const [isMounted, setIsMounted] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
+    const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
     const skipNextSyncRef = useRef(true);
 
     useEffect(() => {
         let cancelled = false;
 
         const hydrateTheme = async () => {
+            const storedTheme = readStoredTheme(storageKey);
+            const immediateTheme = storedTheme ?? defaultTheme;
+            setThemeState(immediateTheme);
+            setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
             setIsMounted(true);
 
             try {
@@ -60,8 +87,9 @@ export function ThemeProvider({
 
                 if (!user) {
                     if (!cancelled) {
-                        persistTheme(storageKey, defaultTheme);
-                        setThemeState(defaultTheme);
+                        persistTheme(storageKey, immediateTheme);
+                        setThemeState(immediateTheme);
+                        setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
                         setIsHydrated(true);
                     }
                     return;
@@ -76,13 +104,17 @@ export function ThemeProvider({
                 const dbTheme = profile?.theme_preference;
 
                 if (!cancelled) {
-                    setThemeState(isTheme(dbTheme) ? dbTheme : defaultTheme);
+                    const nextTheme = isTheme(dbTheme) ? dbTheme : immediateTheme;
+                    persistTheme(storageKey, nextTheme);
+                    setThemeState(nextTheme);
+                    setResolvedTheme(getResolvedTheme(nextTheme, enableSystem));
                     setIsHydrated(true);
                 }
             } catch {
                 if (!cancelled) {
-                    persistTheme(storageKey, defaultTheme);
-                    setThemeState(defaultTheme);
+                    persistTheme(storageKey, immediateTheme);
+                    setThemeState(immediateTheme);
+                    setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
                     setIsHydrated(true);
                 }
             }
@@ -93,7 +125,7 @@ export function ThemeProvider({
         return () => {
             cancelled = true;
         };
-    }, [defaultTheme, storageKey]);
+    }, [defaultTheme, enableSystem, storageKey]);
 
     useEffect(() => {
         if (!isMounted) return;
@@ -101,13 +133,15 @@ export function ThemeProvider({
         const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
         const applyTheme = () => {
             const root = window.document.documentElement;
-            root.classList.remove("light", "dark");
+            const nextResolvedTheme = getResolvedTheme(theme, enableSystem);
 
-            if (theme === "system" && enableSystem) {
-                root.classList.add(mediaQuery.matches ? "dark" : "light");
-            } else {
-                root.classList.add(theme);
-            }
+            root.classList.remove("light", "dark");
+            root.classList.add(nextResolvedTheme);
+            root.dataset.themePreference = theme;
+            root.dataset.themeResolved = nextResolvedTheme;
+            root.style.colorScheme = nextResolvedTheme;
+            setResolvedTheme(nextResolvedTheme);
+
         };
 
         applyTheme();
@@ -122,6 +156,7 @@ export function ThemeProvider({
         if (!isHydrated) return;
 
         persistTheme(storageKey, theme);
+        setResolvedTheme(getResolvedTheme(theme, enableSystem));
 
         if (skipNextSyncRef.current) {
             skipNextSyncRef.current = false;
@@ -141,14 +176,16 @@ export function ThemeProvider({
         }, 400);
 
         return () => clearTimeout(timeoutId);
-    }, [theme, isHydrated, storageKey]);
+    }, [theme, enableSystem, isHydrated, storageKey]);
 
-    const value = {
+    const value = useMemo<ThemeProviderState>(() => ({
         theme,
+        resolvedTheme,
+        isHydrated,
         setTheme: (theme: Theme) => {
             setThemeState(theme);
         },
-    };
+    }), [isHydrated, resolvedTheme, theme]);
 
     return (
         <ThemeProviderContext.Provider {...props} value={value}>

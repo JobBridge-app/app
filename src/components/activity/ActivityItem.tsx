@@ -61,7 +61,7 @@ export const ActivityItem = memo(function ActivityItem({ app, onSelect, isSelect
         <div
             onClick={() => onSelect(app)}
             className={cn(
-                "group relative overflow-hidden transition-all duration-200 cursor-pointer",
+                "activity-item group relative overflow-hidden transition-all duration-200 cursor-pointer",
                 compact ? "rounded-xl border hover:-translate-y-0.5" : "rounded-2xl border hover:shadow-xl hover:-translate-y-0.5",
                 isSelected
                     ? "bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_15px_-5px_rgba(99,102,241,0.2)]"

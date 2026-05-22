@@ -86,7 +86,7 @@ export default async function ActivityPage({
             : applications;
 
         return (
-            <div className="container mx-auto py-12 px-4 md:px-6">
+            <div className="activities-page container mx-auto py-12 px-4 md:px-6">
                 <div className="mx-auto max-w-6xl space-y-8">
                     <div className="flex items-center justify-between">
                         <div>
@@ -150,7 +150,7 @@ export default async function ActivityPage({
     const applications = (data ?? []) as unknown as AppWithFullJob[];
 
     return (
-        <div className="container mx-auto py-6 px-4 md:px-6 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+        <div className="activities-page container mx-auto py-6 px-4 md:px-6 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
             <div className="mb-6 shrink-0">
                 <h1 className="text-2xl font-bold tracking-tight text-white">Deine Aktivitäten</h1>
             </div>

@@ -26,10 +26,10 @@ export function ButtonPrimary({
       onClick={onClick}
       disabled={disabled || loading}
       className={clsx(
-        "bg-blue-500 text-white rounded-full px-8 py-3 shadow-lg shadow-black/30",
+        "bg-blue-600 text-white rounded-full px-8 py-3 shadow-lg shadow-black/30",
         "font-semibold transition-all duration-200",
         "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-transparent",
-        !disabled && !loading && "hover:bg-blue-600 hover:shadow-xl hover:shadow-black/30 hover:scale-[1.02] active:scale-[0.98]",
+        !disabled && !loading && "hover:bg-blue-700 hover:shadow-xl hover:shadow-black/30 hover:scale-[1.02] active:scale-[0.98]",
         (disabled || loading) && "opacity-50 cursor-not-allowed shadow-none",
         className
       )}

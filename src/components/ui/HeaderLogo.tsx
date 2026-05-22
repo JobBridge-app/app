@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
-import { BRAND_NAME, LOGO_PATH } from "@/lib/constants";
+import { BRAND_NAME } from "@/lib/constants";
+import { ThemedLogoImage } from "@/components/ui/ThemedLogoImage";
 
 export function HeaderLogo() {
   return (
@@ -41,8 +41,7 @@ export function HeaderLogo() {
             repeatDelay: 2,
           }}
         />
-        <Image
-          src={LOGO_PATH}
+        <ThemedLogoImage
           alt={BRAND_NAME}
           width={56}
           height={56}
@@ -53,4 +52,3 @@ export function HeaderLogo() {
     </div>
   );
 }
-

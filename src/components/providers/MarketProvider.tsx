@@ -25,10 +25,8 @@ export function MarketProvider({ children, defaultMarket }: MarketProviderProps)
 
     useEffect(() => {
         if (defaultMarket) {
-            console.log("MarketProvider: Using server-provided market:", defaultMarket);
             return;
         }
-        console.log("MarketProvider: No server market, starting client fetch...");
 
         const loadMarket = async () => {
             try {
@@ -38,7 +36,6 @@ export function MarketProvider({ children, defaultMarket }: MarketProviderProps)
                     return;
                 }
 
-                // Fetch profile's market_id
                 const { data: profile } = await supabaseBrowser
                     .from("profiles")
                     .select("market_id")
