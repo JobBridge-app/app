@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { JobsListSection } from "@/components/jobs/JobsListSection";
-import { Briefcase, CheckCircle2, Clock, ListFilter, MapPin } from "lucide-react";
+import { Briefcase, CheckCircle2, Clock, ListFilter } from "lucide-react";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 import { cn } from "@/lib/utils";
 import {
@@ -309,7 +309,6 @@ export function JobsList({
                         <div className="space-y-16">
                             <JobsListSection
                                 title="Lokale Angebote"
-                                icon={Briefcase}
                                 colorClass="text-indigo-400"
                                 jobs={filteredLocalJobs}
                                 emptyMsg={
@@ -335,7 +334,6 @@ export function JobsList({
                             {(filteredExtendedJobs.length > 0 || (hasChanges && extendedActiveJobs.length > 0)) && (
                                 <JobsListSection
                                     title="Überregionale Angebote"
-                                    icon={MapPin}
                                     colorClass="text-violet-400"
                                     jobs={filteredExtendedJobs}
                                     emptyMsg="Keine überregionalen Jobs für deine aktuellen Filter."
