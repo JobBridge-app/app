@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Send, MessageSquare, AlertCircle, Trash2, CheckCircle2, Clock, Building2, MapPin, Euro, ArrowLeft, XCircle, User, ShieldCheck } from "lucide-react";
+import { X, Send, MessageSquare, AlertCircle, Trash2, CheckCircle2, Clock, Building2, MapPin, Euro, ArrowLeft, XCircle, User, ShieldCheck, Sparkles } from "lucide-react";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/types/supabase";
@@ -19,9 +19,11 @@ interface ApplicationChatProps {
     onSendMessage: (applicationId: string, message: string) => Promise<any>;
     onClose?: () => void;
     embedded?: boolean;
+    contextPanel?: boolean;
+    premiumComposer?: boolean;
 }
 
-export function ApplicationChat({ application, currentUserRole = "seeker", onWithdraw, onReject, onSendMessage, onClose, embedded = false }: ApplicationChatProps) {
+export function ApplicationChat({ application, currentUserRole = "seeker", onWithdraw, onReject, onSendMessage, onClose, embedded = false, contextPanel = true, premiumComposer = false }: ApplicationChatProps) {
     const [message, setMessage] = useState("");
     const [isWithdrawing, setIsWithdrawing] = useState(false);
     const [withdrawReason, setWithdrawReason] = useState("");
@@ -202,6 +204,15 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
 
     const status = application.status;
     const isActive = ['submitted', 'negotiating', 'accepted'].includes(status);
+    const statusLabels: Record<string, string> = {
+        submitted: "Gesendet",
+        negotiating: "In Kontakt",
+        accepted: "Angenommen",
+        rejected: "Abgelehnt",
+        withdrawn: "Zurückgezogen",
+        cancelled: "Beendet",
+        waitlisted: "Warteliste",
+    };
 
     // Prepare Header Data for Display
     let headerSubtitle = "";
@@ -231,6 +242,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                 <>
 
                     {/* Left Side: Job Summary & Actions */}
+                    {contextPanel && (
                     <div className="application-chat-sidebar hidden md:flex w-1/3 min-w-[320px] bg-[#111116] border-r border-white/5 flex-col">
                         {/* Premium Header */}
                         <div className="p-6 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden">
@@ -331,7 +343,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                                     {status === 'waitlisted' && <Clock size={16} />}
                                     {status === 'negotiating' && <MessageSquare size={16} />}
                                     {status === 'rejected' && <XCircle size={16} />}
-                                    <span className="capitalize">{status}</span>
+                                    <span>{statusLabels[status] || "Offen"}</span>
                                 </div>
                             </div>
 
@@ -374,6 +386,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                             )}
                         </div>
                     </div>
+                    )}
 
                     {/* Right Side: Chat & Content */}
                     <div className="application-chat-main flex-1 flex flex-col bg-[#09090b] relative h-[85vh] md:h-full">
@@ -496,22 +509,35 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                         {/* Input Area */}
                         <div className="application-chat-inputbar p-4 md:p-6 bg-[#111116] border-t border-white/5">
                             <div className="flex gap-3">
-                                <input
-                                    type="text"
-                                    value={message}
-                                    onChange={e => setMessage(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && handleSend()}
-                                    placeholder="Nachricht schreiben..."
-                                    disabled={sending || !isActive}
-                                    className="application-chat-input flex-1 bg-[#1c1c21] border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                                <ButtonPrimary
-                                    onClick={handleSend}
-                                    disabled={sending || !message.trim() || !isActive}
-                                    className="px-5 rounded-xl aspect-square flex items-center justify-center p-0"
-                                >
-                                    {sending ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Send size={20} />}
-                                </ButtonPrimary>
+                                {premiumComposer ? (
+                                    <PremiumComposer
+                                        message={message}
+                                        setMessage={setMessage}
+                                        onSend={handleSend}
+                                        sending={sending}
+                                        isActive={isActive}
+                                        currentUserRole={currentUserRole}
+                                    />
+                                ) : (
+                                    <>
+                                        <input
+                                            type="text"
+                                            value={message}
+                                            onChange={e => setMessage(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && handleSend()}
+                                            placeholder="Nachricht schreiben..."
+                                            disabled={sending || !isActive}
+                                            className="application-chat-input flex-1 bg-[#1c1c21] border border-white/10 rounded-xl px-5 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        />
+                                        <ButtonPrimary
+                                            onClick={handleSend}
+                                            disabled={sending || !message.trim() || !isActive}
+                                            className="px-5 rounded-xl aspect-square flex items-center justify-center p-0"
+                                        >
+                                            {sending ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <Send size={20} />}
+                                        </ButtonPrimary>
+                                    </>
+                                )}
                             </div>
                             {!isActive && (
                                 <p className="text-center text-xs text-slate-500 mt-3">
@@ -534,6 +560,78 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                     </div>
                 </>
             )}
+        </div>
+    );
+}
+
+function PremiumComposer({
+    message,
+    setMessage,
+    onSend,
+    sending,
+    isActive,
+    currentUserRole,
+}: {
+    message: string;
+    setMessage: (value: string) => void;
+    onSend: () => void;
+    sending: boolean;
+    isActive: boolean;
+    currentUserRole: "seeker" | "provider";
+}) {
+    const quickReplies = currentUserRole === "provider"
+        ? ["Danke, ich prüfe das.", "Wann kannst du starten?", "Lass uns kurz abstimmen."]
+        : ["Danke für die Rückmeldung.", "Ich bin verfügbar.", "Können wir Details klären?"];
+    const remaining = 800 - message.length;
+
+    return (
+        <div className="activity-premium-composer">
+            <div className="activity-composer-toolbar">
+                <div className="activity-quick-replies">
+                    {quickReplies.map((reply) => (
+                        <button
+                            key={reply}
+                            type="button"
+                            onClick={() => setMessage(message ? `${message} ${reply}` : reply)}
+                            disabled={!isActive || sending}
+                        >
+                            <Sparkles size={13} />
+                            {reply}
+                        </button>
+                    ))}
+                </div>
+                <span className={remaining < 80 ? "is-low" : ""}>{Math.max(remaining, 0)}</span>
+            </div>
+
+            <div className="activity-composer-box">
+                <textarea
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value.slice(0, 800))}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.shiftKey) {
+                            event.preventDefault();
+                            onSend();
+                        }
+                    }}
+                    placeholder={isActive ? "Schreibe klar, freundlich und konkret..." : "Dieser Chat ist aktuell pausiert."}
+                    disabled={sending || !isActive}
+                />
+                <div className="activity-composer-actions">
+                    <button
+                        type="button"
+                        onClick={onSend}
+                        disabled={sending || !message.trim() || !isActive}
+                        className="activity-send-button"
+                        aria-label="Nachricht senden"
+                    >
+                        {sending ? (
+                            <span className="activity-send-spinner" />
+                        ) : (
+                            <Send size={19} />
+                        )}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

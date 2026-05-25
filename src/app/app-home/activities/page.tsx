@@ -86,14 +86,8 @@ export default async function ActivityPage({
             : applications;
 
         return (
-            <div className="activities-page container mx-auto py-12 px-4 md:px-6">
-                <div className="mx-auto max-w-6xl space-y-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Eingehende Bewerbungen</h1>
-                            <p className="text-slate-400">Verwalte Bewerbungen und kommuniziere direkt mit Talenten.</p>
-                        </div>
-                    </div>
+            <div className="activities-page jobs-home-surface container mx-auto py-2 px-4 md:px-6">
+                <div className="mx-auto max-w-6xl">
                     {/* @ts-ignore - Supabase types are tricky with joins, verified manually */}
                     <ProviderActivityList
                         applications={visibleApplications}
@@ -150,12 +144,10 @@ export default async function ActivityPage({
     const applications = (data ?? []) as unknown as AppWithFullJob[];
 
     return (
-        <div className="activities-page container mx-auto py-6 px-4 md:px-6 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
-            <div className="mb-6 shrink-0">
-                <h1 className="text-2xl font-bold tracking-tight text-white">Deine Aktivitäten</h1>
+        <div className="activities-page jobs-home-surface container mx-auto py-2 px-4 md:px-6">
+            <div className="mx-auto max-w-6xl">
+                <ActivitiesPageClient applications={applications} userId={profile.id} />
             </div>
-
-            <ActivitiesPageClient applications={applications} userId={profile.id} />
         </div>
     );
 }
