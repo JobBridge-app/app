@@ -1047,8 +1047,27 @@ button,
   color: var(--text-default);
 }
 
+.app-shell-main:has(.activities-page) {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  padding-bottom: 0 !important;
+}
+
+html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) {
+  padding-bottom: 0 !important;
+}
+
 .activities-page {
   color: var(--text-default);
+  height: calc(100dvh - 6rem);
+  max-height: calc(100dvh - 6rem);
+  overflow: hidden;
+}
+
+.activities-page > .mx-auto {
+  height: 100%;
+  min-height: 0;
 }
 
 .activities-page h1,
@@ -1165,7 +1184,9 @@ button,
   --activity-shadow: 0 30px 90px rgba(0, 8, 18, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.045);
   color: var(--activity-text);
   display: flex;
-  min-height: calc(100dvh - 8.5rem);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   flex-direction: column;
   gap: 1rem;
 }
@@ -1494,6 +1515,7 @@ button,
   flex-direction: column;
   gap: 0.55rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0.7rem;
 }
 
@@ -1503,6 +1525,7 @@ button,
   grid-template-columns: 2.65rem minmax(0, 1fr);
   gap: 0.78rem;
   width: 100%;
+  flex: 0 0 auto;
   overflow: hidden;
   border: 1px solid var(--activity-border);
   border-radius: 1rem;
@@ -2184,18 +2207,21 @@ button,
 
 @media (max-width: 1023px) {
   .activities-command-center {
-    min-height: auto;
+    min-height: 0;
   }
 
   .activity-workspace {
     display: block;
+    flex: 1 1 auto;
     height: auto;
-    min-height: 35rem;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .activity-inbox-panel,
   .activity-chat-stage {
-    min-height: calc(100dvh - 15rem);
+    height: 100%;
+    min-height: 0;
   }
 }
 
@@ -2384,8 +2410,10 @@ button,
 
 .activity-workspace {
   grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr);
-  min-height: 32rem;
-  height: clamp(32rem, calc(100dvh - 17.75rem), 47rem);
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  overflow: hidden;
 }
 
 .activity-inbox-panel,
@@ -2432,6 +2460,7 @@ button,
 
 .activity-inbox-list {
   gap: 0.62rem;
+  min-height: 0;
   padding: 0.78rem;
 }
 
@@ -2739,11 +2768,44 @@ button,
   }
 
   .activity-workspace {
+    flex: 1 1 auto;
+    min-height: 0;
     height: auto;
+    overflow: hidden;
   }
 }
 
 @media (max-width: 760px) {
+  .activities-command-center :where(input, textarea, select) {
+    font-size: 16px !important;
+  }
+
+  .activities-page {
+    height: calc(100dvh - 6rem);
+    max-height: calc(100dvh - 6rem);
+    overflow: hidden;
+    padding-bottom: 0 !important;
+  }
+
+  html[data-mobile-nav-preference="bottom"] .activities-page {
+    height: calc(
+      100dvh -
+      6rem -
+      var(--app-mobile-dock-panel-height) -
+      var(--app-mobile-dock-edge-gap) -
+      var(--app-mobile-dock-content-clearance) -
+      env(safe-area-inset-bottom, 0px)
+    );
+    max-height: calc(
+      100dvh -
+      6rem -
+      var(--app-mobile-dock-panel-height) -
+      var(--app-mobile-dock-edge-gap) -
+      var(--app-mobile-dock-content-clearance) -
+      env(safe-area-inset-bottom, 0px)
+    );
+  }
+
   .activities-command-center {
     gap: 0.9rem;
   }
@@ -2843,16 +2905,20 @@ button,
   }
 
   .activity-home-controls .activity-search input {
-    font-size: 0.86rem;
+    font-size: 16px;
   }
 
   .activity-workspace {
+    flex: 1 1 auto;
     min-height: 0;
+    height: auto;
+    overflow: hidden;
   }
 
   .activity-inbox-panel {
+    height: 100%;
     min-height: 0;
-    overflow: visible;
+    overflow: hidden;
     border: 0;
     background: transparent !important;
     box-shadow: none;
@@ -2865,6 +2931,8 @@ button,
 
   .activity-inbox-list {
     gap: 0.66rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 0.05rem 0 0;
   }
 
@@ -2899,7 +2967,9 @@ button,
   }
 
   .activity-chat-stage {
-    min-height: calc(100dvh - 7rem);
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
     border-radius: 1rem;
   }
 
@@ -2926,18 +2996,18 @@ button,
   }
 
   .activities-command-center[data-chat-open="true"] {
-    min-height: calc(100dvh - 1rem);
+    min-height: 0;
   }
 
   .activities-command-center[data-chat-open="true"] .activity-workspace {
     min-height: 0;
-    height: auto;
+    height: 100%;
   }
 
   .activities-command-center[data-chat-open="true"] .activity-chat-stage {
-    min-height: calc(100dvh - 7rem);
-    height: calc(100dvh - 7rem);
-    max-height: calc(100dvh - 7rem);
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
     overflow: hidden;
   }
 
@@ -3060,7 +3130,7 @@ button,
     max-height: 7.1rem;
     resize: none;
     padding: 0;
-    font-size: 0.9rem;
+    font-size: 16px;
     font-weight: 650;
     line-height: 1.38;
   }
