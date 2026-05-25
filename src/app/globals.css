@@ -2409,8 +2409,8 @@ button,
 }
 
 .activity-panel-heading {
-  min-height: 3.55rem;
-  padding: 0.9rem 1.15rem;
+  min-height: 2.85rem;
+  padding: 0.68rem 1rem;
 }
 
 .activity-panel-heading div {
@@ -2427,7 +2427,7 @@ button,
 
 .activity-panel-heading strong {
   color: var(--activity-text);
-  font-size: 1.05rem;
+  font-size: 0.92rem;
 }
 
 .activity-inbox-list {
@@ -2608,6 +2608,54 @@ button,
   background: rgba(255, 255, 255, 0.72) !important;
 }
 
+.activities-command-center .application-chat-mobile-header {
+  flex: 0 0 auto;
+  min-height: 3.45rem;
+  border-color: var(--activity-border) !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.58)) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(145%);
+}
+
+.light .activities-command-center .application-chat-mobile-header {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 251, 255, 0.86)) !important;
+}
+
+.activities-command-center .application-chat-mobile-header h3 {
+  color: var(--activity-text) !important;
+  font-size: 0.9rem;
+  font-weight: 780;
+  line-height: 1.14;
+  letter-spacing: 0;
+}
+
+.activities-command-center .application-chat-mobile-header p {
+  color: var(--activity-faint) !important;
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.16;
+}
+
+.activities-command-center .application-chat-mobile-header button {
+  display: inline-grid;
+  width: 2.18rem;
+  height: 2.18rem;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--activity-border);
+  border-radius: 0.78rem;
+  background: rgba(255, 255, 255, 0.045);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.activities-command-center .application-chat-mobile-header button:hover {
+  transform: translateY(-1px);
+  border-color: var(--activity-border-strong);
+  background: rgba(255, 255, 255, 0.075);
+}
+
 .light .activities-command-center .application-chat :where([class*="bg-indigo-600"]) {
   background: var(--brand) !important;
   color: #ffffff !important;
@@ -2642,14 +2690,14 @@ button,
 
   .activity-home-controls {
     position: sticky;
-    top: 0.75rem;
+    top: 0.55rem;
     z-index: 5;
-    gap: 0.7rem;
+    gap: 0.52rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1.1rem;
     background:
       linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.72));
-    padding: 0.62rem;
+    padding: 0.5rem;
     box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
     backdrop-filter: blur(18px) saturate(150%);
@@ -2670,11 +2718,24 @@ button,
     order: 2;
   }
 
+  .activity-inbox-panel .activity-panel-heading {
+    display: none;
+  }
+
   .activity-home-controls .activity-filter-strip,
   .activity-home-controls .activity-search {
     flex: none;
     width: 100%;
     max-width: none;
+  }
+
+  .activities-command-center[data-chat-open="true"] {
+    gap: 0;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-home-heading,
+  .activities-command-center[data-chat-open="true"] .activity-home-controls {
+    display: none;
   }
 
   .activity-workspace {
@@ -2705,14 +2766,22 @@ button,
 
   .activity-home-controls .activity-filter-strip {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.42rem;
-    overflow: visible;
+    flex-wrap: nowrap;
+    gap: 0.36rem;
+    overflow-x: auto;
+    overflow-y: hidden;
     border: 0;
     border-radius: 0;
     background: transparent;
     padding: 0;
     box-shadow: none;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 1.2rem), transparent);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 1.2rem), transparent);
+  }
+
+  .activity-home-controls .activity-filter-strip::-webkit-scrollbar {
+    display: none;
   }
 
   .light .activity-home-controls .activity-filter-strip {
@@ -2723,13 +2792,13 @@ button,
 
   .activity-home-controls .activity-filter-strip button {
     min-width: 0;
-    min-height: 2.35rem;
-    flex: 1 1 calc(33.333% - 0.42rem);
+    min-height: 2.18rem;
+    flex: 0 0 auto;
     border: 1px solid rgba(255, 255, 255, 0.085);
     border-radius: 0.78rem;
     background: rgba(255, 255, 255, 0.045);
-    padding: 0 0.62rem;
-    font-size: 0.78rem;
+    padding: 0 0.66rem;
+    font-size: 0.76rem;
   }
 
   .light .activity-home-controls .activity-filter-strip button {
@@ -2751,8 +2820,8 @@ button,
 
   .activity-home-controls .activity-filter-strip button span {
     display: inline-grid;
-    min-width: 1.15rem;
-    height: 1.15rem;
+    min-width: 1.08rem;
+    height: 1.08rem;
     place-items: center;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.11);
@@ -2762,7 +2831,7 @@ button,
   }
 
   .activity-home-controls .activity-search {
-    height: 2.75rem;
+    height: 2.42rem;
     border-radius: 0.86rem;
     background: rgba(2, 6, 23, 0.32);
     box-shadow: none;
@@ -2792,10 +2861,6 @@ button,
   .light .activity-inbox-panel {
     background: transparent !important;
     box-shadow: none;
-  }
-
-  .activity-inbox-panel .activity-panel-heading {
-    display: none;
   }
 
   .activity-inbox-list {
@@ -2853,6 +2918,172 @@ button,
 
   .light .activity-mobile-back {
     background: rgba(255, 255, 255, 0.86);
+  }
+
+  .activities-page:has(.activities-command-center[data-chat-open="true"]) {
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
+  .activities-command-center[data-chat-open="true"] {
+    min-height: calc(100dvh - 1rem);
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-workspace {
+    min-height: 0;
+    height: auto;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-chat-stage {
+    min-height: calc(100dvh - 7rem);
+    height: calc(100dvh - 7rem);
+    max-height: calc(100dvh - 7rem);
+    overflow: hidden;
+  }
+
+  .activities-command-center[data-chat-open="true"] .application-chat,
+  .activities-command-center[data-chat-open="true"] .application-chat-main {
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .activities-command-center[data-chat-open="true"] .application-chat-main {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .activities-command-center[data-chat-open="true"] .application-chat-mobile-header {
+    min-height: 3.32rem;
+    padding: 0.62rem 0.72rem;
+  }
+
+  .activities-command-center[data-chat-open="true"] .application-chat-messages {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.92rem 0.82rem !important;
+    overscroll-behavior: contain;
+    overflow-anchor: none;
+  }
+
+  .activities-command-center[data-chat-open="true"] .application-chat-messages > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse))) !important;
+    margin-bottom: calc(1rem * var(--tw-space-y-reverse)) !important;
+  }
+
+  .activities-command-center[data-chat-open="true"] .application-chat-inputbar {
+    flex: 0 0 auto;
+    padding: 0.52rem 0.64rem 0.62rem !important;
+    border-top: 1px solid var(--activity-border) !important;
+    background: rgba(2, 6, 23, 0.74) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
+    backdrop-filter: blur(18px) saturate(145%);
+  }
+
+  .light .activities-command-center[data-chat-open="true"] .application-chat-inputbar {
+    background: rgba(255, 255, 255, 0.88) !important;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-premium-composer {
+    gap: 0.48rem;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-composer-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.45rem;
+    align-items: center;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-quick-replies {
+    min-width: 0;
+    gap: 0.36rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 1.4rem), transparent);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 1.4rem), transparent);
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-quick-replies button {
+    max-width: 13.8rem;
+    min-height: 2rem;
+    padding: 0 0.62rem;
+    font-size: 0.72rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-quick-replies button svg {
+    width: 0.82rem;
+    height: 0.82rem;
+    flex: 0 0 auto;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-composer-toolbar > span {
+    display: inline-grid;
+    min-width: 2.32rem;
+    height: 2rem;
+    place-items: center;
+    border: 1px solid var(--activity-border);
+    border-radius: 0.72rem;
+    background: rgba(255, 255, 255, 0.045);
+    color: var(--activity-muted);
+    font-size: 0.72rem;
+    font-weight: 790;
+    line-height: 1;
+  }
+
+  .light .activities-command-center[data-chat-open="true"] .activity-composer-toolbar > span {
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-composer-box {
+    position: relative;
+    display: block;
+    min-height: 6.45rem;
+    border-radius: 1rem;
+    padding: 0.72rem 3.18rem 0.68rem 0.82rem;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
+      rgba(2, 6, 23, 0.42);
+  }
+
+  .light .activities-command-center[data-chat-open="true"] .activity-composer-box {
+    background: #ffffff;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-composer-box textarea {
+    display: block;
+    min-height: 5rem;
+    max-height: 7.1rem;
+    resize: none;
+    padding: 0;
+    font-size: 0.9rem;
+    font-weight: 650;
+    line-height: 1.38;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-composer-actions {
+    position: absolute;
+    right: 0.55rem;
+    bottom: 0.55rem;
+    display: block;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-composer-actions .activity-send-button {
+    width: 2.52rem;
+    height: 2.52rem;
+    border-radius: 0.88rem;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--activity-brand) 88%, #ffffff), var(--activity-brand-strong));
+    color: #ffffff;
+  }
+
+  .activities-command-center[data-chat-open="true"] .activity-composer-actions .activity-send-button:disabled {
+    opacity: 0.68;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--activity-brand) 56%, #ffffff), color-mix(in srgb, var(--activity-brand) 70%, #1e293b));
+    color: rgba(255, 255, 255, 0.92);
   }
 }
 

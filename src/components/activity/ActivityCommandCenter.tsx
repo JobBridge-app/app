@@ -197,6 +197,7 @@ export function ActivityCommandCenter({
             transition={{ duration: 0.34, ease: "easeOut" }}
             className="activities-command-center jobs-home-surface"
             data-role={role}
+            data-chat-open={selectedApp ? "true" : "false"}
         >
             <div className="jobs-home-heading activity-home-heading">
                 <div>

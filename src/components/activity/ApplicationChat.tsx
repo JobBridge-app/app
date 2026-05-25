@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Send, MessageSquare, AlertCircle, Trash2, CheckCircle2, Clock, Building2, MapPin, Euro, ArrowLeft, XCircle, User, ShieldCheck, Sparkles } from "lucide-react";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { cn } from "@/lib/utils";
@@ -30,9 +30,20 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
     const [sending, setSending] = useState(false);
     const [messages, setMessages] = useState<any[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const previousMessageCountRef = useRef(0);
+    const suppressNextMessageScrollRef = useRef(false);
     const supabase = supabaseBrowser;
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [isReady] = useState(true);
+    const scrollMessagesToEnd = useCallback((behavior: ScrollBehavior = "smooth") => {
+        const messagesContainer = messagesEndRef.current?.parentElement;
+        if (!messagesContainer) return;
+
+        messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior,
+        });
+    }, []);
 
     // Profile Modal State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -65,6 +76,9 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
     // Fetch initial messages and subscribe
     useEffect(() => {
         if (application && isReady) {
+            previousMessageCountRef.current = 0;
+            setMessages([]);
+
             const fetchMessages = async () => {
                 const { data } = await supabase
                     .from("messages")
@@ -72,7 +86,8 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                     .eq("application_id", application.id)
                     .order("created_at", { ascending: true });
 
-                if (data) setMessages(data);
+                suppressNextMessageScrollRef.current = true;
+                setMessages(data ?? []);
             };
             fetchMessages();
 
@@ -119,12 +134,22 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
         }
     }, [application, supabase, isReady]);
 
-    // Scroll to bottom
+    // Keep opening a chat stable; only follow newly added messages after the initial load.
     useEffect(() => {
-        if (isReady && messages.length > 0) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (!isReady) return;
+
+        if (suppressNextMessageScrollRef.current) {
+            suppressNextMessageScrollRef.current = false;
+            previousMessageCountRef.current = messages.length;
+            return;
         }
-    }, [messages, isReady]);
+
+        if (messages.length > previousMessageCountRef.current) {
+            scrollMessagesToEnd("smooth");
+        }
+
+        previousMessageCountRef.current = messages.length;
+    }, [messages, isReady, scrollMessagesToEnd]);
 
 
     const handleSend = async () => {
@@ -147,7 +172,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
 
         // Scroll immediately
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            scrollMessagesToEnd("smooth");
         }, 10);
 
         setSending(true);
@@ -391,7 +416,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                     {/* Right Side: Chat & Content */}
                     <div className="application-chat-main flex-1 flex flex-col bg-[#09090b] relative h-[85vh] md:h-full">
                         {/* Mobile Header */}
-                        <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#111116]">
+                        <div className="application-chat-mobile-header md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#111116]">
                             <div className="flex items-center gap-3 overflow-hidden flex-1 mr-2">
                                 {onClose && (
                                     <button onClick={onClose} className="text-slate-400 hover:text-white">
