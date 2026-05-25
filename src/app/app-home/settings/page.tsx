@@ -9,7 +9,7 @@ export default async function SettingsPage() {
     return (
         <SettingsSurface
             mobileNavPreference={mobileNavPreference}
-            themePreference={profile.theme_preference || "system"}
+            themePreference={profile.theme_preference || "dark"}
         />
     );
 }

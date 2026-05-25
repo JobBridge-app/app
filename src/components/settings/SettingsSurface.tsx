@@ -10,7 +10,7 @@ type SettingsSurfaceProps = {
     themePreference?: "light" | "dark" | "system";
 };
 
-export function SettingsSurface({ mobileNavPreference, themePreference = "system" }: SettingsSurfaceProps) {
+export function SettingsSurface({ mobileNavPreference, themePreference = "dark" }: SettingsSurfaceProps) {
     const navigationStatus = mobileNavPreference === "bottom" ? "Dock unten" : "Tabs oben";
     const themeStatus = "Hell, Dunkel oder System";
 

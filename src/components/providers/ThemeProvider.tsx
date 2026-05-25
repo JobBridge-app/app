@@ -21,13 +21,14 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-    theme: "system",
+    theme: "dark",
     resolvedTheme: "dark",
     isHydrated: false,
     setTheme: () => null,
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
+const explicitThemeMarker = (storageKey: string) => `${storageKey}:explicit`;
 
 function isTheme(value: string | null | undefined): value is Theme {
     return value === "light" || value === "dark" || value === "system";
@@ -36,6 +37,9 @@ function isTheme(value: string | null | undefined): value is Theme {
 function readStoredTheme(storageKey: string): Theme | null {
     try {
         const storedTheme = localStorage.getItem(storageKey);
+        const isExplicitTheme = localStorage.getItem(explicitThemeMarker(storageKey)) === "true";
+        if (storedTheme === "system" && !isExplicitTheme) return null;
+
         return isTheme(storedTheme) ? storedTheme : null;
     } catch {
         return null;
@@ -45,6 +49,14 @@ function readStoredTheme(storageKey: string): Theme | null {
 function persistTheme(storageKey: string, theme: Theme) {
     try {
         localStorage.setItem(storageKey, theme);
+    } catch {
+        // Storage can be unavailable in hardened browser contexts.
+    }
+}
+
+function markThemeExplicit(storageKey: string) {
+    try {
+        localStorage.setItem(explicitThemeMarker(storageKey), "true");
     } catch {
         // Storage can be unavailable in hardened browser contexts.
     }
@@ -77,7 +89,7 @@ function scheduleIdle(task: () => void, timeout = 2600) {
 
 export function ThemeProvider({
     children,
-    defaultTheme = "system",
+    defaultTheme = "dark",
     enableSystem = true,
     storageKey = "vite-ui-theme",
     ...props
@@ -191,9 +203,11 @@ export function ThemeProvider({
         resolvedTheme,
         isHydrated,
         setTheme: (theme: Theme) => {
+            markThemeExplicit(storageKey);
+            persistTheme(storageKey, theme);
             setThemeState(theme);
         },
-    }), [isHydrated, resolvedTheme, theme]);
+    }), [isHydrated, resolvedTheme, storageKey, theme]);
 
     return (
         <ThemeProviderContext.Provider {...props} value={value}>

@@ -28,11 +28,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  colorScheme: "light dark",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f8fc" },
-    { media: "(prefers-color-scheme: dark)", color: "#020617" },
-  ],
+  colorScheme: "dark light",
+  themeColor: "#020617",
 };
 
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -43,7 +40,9 @@ const themeBootstrapScript = `
   try {
     const storageKey = "jobbridge-theme";
     const storedTheme = localStorage.getItem(storageKey);
-    const theme = storedTheme === "light" || storedTheme === "dark" || storedTheme === "system" ? storedTheme : "system";
+    const isExplicitTheme = localStorage.getItem(storageKey + ":explicit") === "true";
+    const normalizedStoredTheme = storedTheme === "system" && !isExplicitTheme ? null : storedTheme;
+    const theme = normalizedStoredTheme === "light" || normalizedStoredTheme === "dark" || normalizedStoredTheme === "system" ? normalizedStoredTheme : "dark";
     const resolvedTheme = theme === "system"
       ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
       : theme;
@@ -63,12 +62,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de" className="bg-background" suppressHydrationWarning>
+    <html lang="de" className="dark bg-background" suppressHydrationWarning>
       <head>
         <Script id="theme-bootstrap" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
       <body className={`${fontSans.variable} min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/30`}>
-        <ThemeProvider defaultTheme="system" enableSystem={true} storageKey="jobbridge-theme">
+        <ThemeProvider defaultTheme="dark" enableSystem={true} storageKey="jobbridge-theme">
           <TestModeBanner />
           {children}
         </ThemeProvider>
