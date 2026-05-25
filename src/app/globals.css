@@ -2409,7 +2409,14 @@ button,
 }
 
 .activity-panel-heading {
-  padding: 1.05rem 1.15rem;
+  min-height: 3.55rem;
+  padding: 0.9rem 1.15rem;
+}
+
+.activity-panel-heading div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
 }
 
 .activity-panel-heading span {
@@ -2633,6 +2640,36 @@ button,
     flex-direction: column;
   }
 
+  .activity-home-controls {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 5;
+    gap: 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.1rem;
+    background:
+      linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.72));
+    padding: 0.62rem;
+    box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+  }
+
+  .light .activity-home-controls {
+    border-color: var(--job-border);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 251, 255, 0.88));
+    box-shadow: 0 16px 34px rgba(31, 45, 74, 0.12);
+  }
+
+  .activity-home-controls .activity-search {
+    order: 1;
+  }
+
+  .activity-home-controls .activity-filter-strip {
+    order: 2;
+  }
+
   .activity-home-controls .activity-filter-strip,
   .activity-home-controls .activity-search {
     flex: none;
@@ -2646,16 +2683,176 @@ button,
 }
 
 @media (max-width: 760px) {
+  .activities-command-center {
+    gap: 0.9rem;
+  }
+
+  .activity-home-heading {
+    gap: 0.35rem;
+  }
+
+  .activity-home-heading h1 {
+    margin-bottom: 0.35rem !important;
+    font-size: 2rem !important;
+    line-height: 1.05;
+  }
+
+  .activity-home-heading p {
+    max-width: 19rem;
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+
   .activity-home-controls .activity-filter-strip {
-    border-radius: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.42rem;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .light .activity-home-controls .activity-filter-strip {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .activity-home-controls .activity-filter-strip button {
-    min-width: max-content;
+    min-width: 0;
+    min-height: 2.35rem;
+    flex: 1 1 calc(33.333% - 0.42rem);
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    border-radius: 0.78rem;
+    background: rgba(255, 255, 255, 0.045);
+    padding: 0 0.62rem;
+    font-size: 0.78rem;
+  }
+
+  .light .activity-home-controls .activity-filter-strip button {
+    border-color: rgba(23, 45, 78, 0.08);
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  .activity-home-controls .activity-filter-strip button.is-active {
+    background: linear-gradient(180deg, #ffffff, rgba(255, 255, 255, 0.86));
+    color: #020617;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.16);
+  }
+
+  .light .activity-home-controls .activity-filter-strip button.is-active {
+    background: var(--job-accent);
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(33, 79, 208, 0.2);
+  }
+
+  .activity-home-controls .activity-filter-strip button span {
+    display: inline-grid;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.11);
+    margin-left: 0.08rem;
+    font-size: 0.66rem;
+    line-height: 1;
+  }
+
+  .activity-home-controls .activity-search {
+    height: 2.75rem;
+    border-radius: 0.86rem;
+    background: rgba(2, 6, 23, 0.32);
+    box-shadow: none;
+  }
+
+  .light .activity-home-controls .activity-search {
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: none;
+  }
+
+  .activity-home-controls .activity-search input {
+    font-size: 0.86rem;
+  }
+
+  .activity-workspace {
+    min-height: 0;
+  }
+
+  .activity-inbox-panel {
+    min-height: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent !important;
+    box-shadow: none;
+  }
+
+  .light .activity-inbox-panel {
+    background: transparent !important;
+    box-shadow: none;
+  }
+
+  .activity-inbox-panel .activity-panel-heading {
+    display: none;
+  }
+
+  .activity-inbox-list {
+    gap: 0.66rem;
+    padding: 0.05rem 0 0;
   }
 
   .activity-inbox-item {
     grid-template-columns: minmax(0, 1fr);
+    border-radius: 0.95rem;
+    padding: 0.86rem 0.92rem;
+  }
+
+  .activity-inbox-title-row {
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .activity-inbox-title-row strong {
+    display: -webkit-box;
+    font-size: 0.94rem;
+    line-height: 1.22;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .activity-inbox-title-row .activity-status-pill {
+    padding: 0.31rem 0.48rem;
+    font-size: 0.63rem;
+  }
+
+  .activity-inbox-meta {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  .activity-chat-stage {
+    min-height: calc(100dvh - 7rem);
+    border-radius: 1rem;
+  }
+
+  .activity-mobile-back {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    margin: 0.5rem 0.5rem 0;
+    border: 1px solid var(--activity-border);
+    border-radius: 0.82rem;
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--activity-text);
+    -webkit-backdrop-filter: blur(14px) saturate(145%);
+    backdrop-filter: blur(14px) saturate(145%);
+  }
+
+  .light .activity-mobile-back {
+    background: rgba(255, 255, 255, 0.86);
   }
 }
 

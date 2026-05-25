@@ -192,7 +192,7 @@ export function ActivityCommandCenter({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.34, ease: "easeOut" }}
             className="activities-command-center jobs-home-surface"
@@ -250,7 +250,6 @@ export function ActivityCommandCenter({
                     <div className="activity-panel-heading">
                         <div>
                             <span>Verlauf</span>
-                            <strong>{visibleItems.length} Vorgänge</strong>
                         </div>
                     </div>
 
