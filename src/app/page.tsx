@@ -1,4 +1,5 @@
 import { getAuthState } from "@/lib/auth";
+import { getDefaultAppHomePath } from "@/lib/app-shell";
 import { redirect } from "next/navigation";
 import AuthBridge from "@/components/AuthBridge";
 import { MiniFooter } from "@/components/layout/MiniFooter";
@@ -18,7 +19,8 @@ export default async function LandingPage({
 
   // Wenn ready → zu /app-home oder redirectTo
   if (authState.state === "ready") {
-    redirect(redirectTo || "/app-home");
+    const viewRole = authState.effectiveView?.viewRole ?? authState.profile?.account_type;
+    redirect(redirectTo || getDefaultAppHomePath(viewRole));
   }
 
   if (authState.state === "email-unconfirmed" || authState.state === "incomplete-profile") {

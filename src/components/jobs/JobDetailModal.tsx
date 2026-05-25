@@ -16,7 +16,7 @@ import { JobApplicationModal } from "@/components/jobs/JobApplicationModal";
 import { StaffBadge } from "@/components/ui/StaffBadge";
 import { cn } from "@/lib/utils";
 import { createSupabaseClient } from "@/lib/supabaseClient";
-import type { Profile } from "@/lib/types";
+import type { GuardianStatus, Profile } from "@/lib/types";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
 
 const LeafletMap = dynamic(() => import("@/components/ui/LeafletMap"), {
@@ -440,6 +440,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
             <VerificationRequiredModal
                 isOpen={isVerificationModalOpen}
                 onClose={() => setIsVerificationModalOpen(false)}
+                guardianStatus={guardianStatus as GuardianStatus}
             />
 
             <UserProfileModal

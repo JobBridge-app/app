@@ -1,13 +1,20 @@
-import { getAppHomeSnapshot } from "@/lib/app-shell";
+import { getAuthState } from "@/lib/auth";
+import { getDefaultAppHomePath } from "@/lib/app-shell";
 import { redirect } from "next/navigation";
 
 export default async function AppHomePage() {
-  const snapshot = await getAppHomeSnapshot();
-  const viewRole = snapshot.effectiveView.viewRole;
+  const authState = await getAuthState();
 
-  // Strict Redirect based on EFFECTIVE role (demo_view > override > base profile)
-  if (viewRole === "job_provider") redirect("/app-home/offers");
-  redirect("/app-home/jobs");
+  if (authState.state === "no-session" || authState.state === "email-unconfirmed") {
+    redirect("/");
+  }
+
+  if (authState.state === "incomplete-profile") {
+    redirect("/onboarding");
+  }
+
+  const viewRole = authState.effectiveView?.viewRole ?? authState.profile?.account_type;
+  redirect(getDefaultAppHomePath(viewRole));
 
   // Fallback (should not be reached if types are correct)
   return null;

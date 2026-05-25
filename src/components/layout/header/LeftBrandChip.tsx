@@ -9,6 +9,7 @@ export function LeftBrandChip({ market }: { market: Market | null }) {
     return (
         <Link
             href="/app-home"
+            prefetch={false}
             className="app-brand-chip group flex h-[52px] items-center gap-2 rounded-full border pl-[6px] pr-3 shadow-xl backdrop-blur-md transition-all duration-200 md:pr-4"
         >
             <div className="app-brand-logo-ring relative h-10 w-10 shrink-0 rounded-full border p-[1px]">

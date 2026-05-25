@@ -6,30 +6,46 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 type GuardianInvitationResult = {
     token?: string;
     expires_at?: string;
+    reused?: boolean;
     error?: string;
 };
 
 export async function createGuardianInvitation() {
-    const supabase = await supabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = await supabaseServer();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!user) {
-        return { error: "Nicht authentifiziert" };
-    }
+        if (authError) {
+            console.error("Guardian Invite Auth Error:", authError);
+            return { error: "Sitzung konnte nicht geprüft werden. Bitte lade die Seite neu." };
+        }
 
-    const { data, error } = await (supabase as any).rpc("create_guardian_invitation", {});
+        if (!user) {
+            return { error: "Nicht authentifiziert" };
+        }
 
-    if (error) {
-        console.error("Guardian Invite Error:", error);
+        const { data, error } = await (supabase as any).rpc("create_guardian_invitation", {});
+
+        if (error) {
+            console.error("Guardian Invite RPC Error:", error);
+            return { error: "Einladungslink konnte nicht erstellt werden." };
+        }
+
+        const result = data as GuardianInvitationResult | null;
+        if (result?.error || !result?.token || !result?.expires_at) {
+            return { error: result?.error || "Einladungslink konnte nicht erstellt werden." };
+        }
+
+        if (Number.isNaN(Date.parse(result.expires_at))) {
+            console.error("Guardian Invite Invalid Expiry:", result.expires_at);
+            return { error: "Einladungslink konnte nicht erstellt werden." };
+        }
+
+        return { success: true, token: result.token, expires_at: result.expires_at, reused: result.reused === true };
+    } catch (error) {
+        console.error("Guardian Invite Unexpected Error:", error);
         return { error: "Einladungslink konnte nicht erstellt werden." };
     }
-
-    const result = data as GuardianInvitationResult | null;
-    if (result?.error || !result?.token || !result?.expires_at) {
-        return { error: result?.error || "Einladungslink konnte nicht erstellt werden." };
-    }
-
-    return { success: true, token: result.token, expires_at: result.expires_at };
 }
 
 export async function getGuardians() {

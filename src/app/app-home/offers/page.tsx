@@ -90,16 +90,12 @@ export default async function OffersPage({
     let jobsError: { code?: string; message: string } | null = null;
     let applicationSummaries: Record<string, ProviderJobApplicationSummary> | null = {};
 
-    if (regionId) {
-        const supabase = await supabaseServer();
-        const { data } = await supabase.from("regions_live").select("city, display_name").eq("id", regionId).single();
-        if (data) regionName = data.display_name || data.city;
-    }
-
     const res = await fetchJobs({
         mode: "my_jobs",
         view: effectiveView,
         userId: profile.id,
+        userCoordinates: { lat: profile.lat ?? null, lng: profile.lng ?? null },
+        includeApplicationState: false,
         limit: 100,
         offset: 0,
     });

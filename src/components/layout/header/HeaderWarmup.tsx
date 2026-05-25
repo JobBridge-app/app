@@ -28,20 +28,17 @@ export function HeaderWarmup({ routes }: { routes: string[] }) {
     const uniqueRoutes = Array.from(new Set(routes));
     const isCoarsePointer =
       typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
-    const criticalRoutes = uniqueRoutes.slice(0, isCoarsePointer ? 1 : 3);
+    if (isCoarsePointer) return;
+
+    const criticalRoutes = uniqueRoutes.slice(0, 3);
     const earlyWarmTimeout = window.setTimeout(() => {
       criticalRoutes.forEach((route) => {
         router.prefetch(route);
-        if (!isCoarsePointer) {
-          void warmRouteAdjacentUI(route);
-        }
+        void warmRouteAdjacentUI(route);
       });
-    }, isCoarsePointer ? 320 : 80);
+    }, 80);
 
     const cancelIdle = scheduleIdle(() => {
-      if (isCoarsePointer) {
-        return;
-      }
       uniqueRoutes.forEach((route) => {
         router.prefetch(route);
         void warmRouteAdjacentUI(route);

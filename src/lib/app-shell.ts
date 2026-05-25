@@ -4,7 +4,11 @@ import { getAuthState } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabaseServer";
 import type { Market } from "@/lib/types";
 import type { AccountType, Profile } from "@/lib/types";
-import type { AppHeaderProfile, AppHomeSnapshot, EffectiveViewSnapshot, HeaderNotificationItem } from "@/lib/types/jobbridge";
+import type { AppHeaderProfile, AppHomeSnapshot, EffectiveViewSnapshot } from "@/lib/types/jobbridge";
+
+export function getDefaultAppHomePath(viewRole: AccountType | null | undefined) {
+  return viewRole === "job_provider" ? "/app-home/offers" : "/app-home/jobs";
+}
 
 function buildFallbackView(profile: Profile): EffectiveViewSnapshot {
   return {
@@ -33,31 +37,6 @@ export const getMarketSummary = cache(async (marketId: string | null | undefined
     display_name: data.display_name || data.city,
     brand_prefix: data.brand_prefix || "JobBridge",
     is_live: data.is_live,
-  };
-});
-
-const getNotificationSummary = cache(async (userId: string): Promise<{
-  unreadCount: number;
-  notificationsPreview: HeaderNotificationItem[];
-}> => {
-  const supabase = await supabaseServer();
-  const [countResult, rowsResult] = await Promise.all([
-    supabase
-      .from("notifications")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .is("read_at", null),
-    supabase
-      .from("notifications")
-      .select("id, type, title, body, created_at, read_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10),
-  ]);
-
-  return {
-    unreadCount: countResult.count || 0,
-    notificationsPreview: (rowsResult.data ?? []) as HeaderNotificationItem[],
   };
 });
 
@@ -124,7 +103,7 @@ export const getAppHomeSnapshot = cache(async (): Promise<AppHomeSnapshot> => {
   const profile = authState.profile!;
   const effectiveView = authState.effectiveView ?? buildFallbackView(profile);
 
-  const [market, verification, notifications] = await Promise.all([
+  const [market, verification] = await Promise.all([
     getMarketSummary(profile.market_id),
     getVerificationState(
       profile.id,
@@ -133,7 +112,6 @@ export const getAppHomeSnapshot = cache(async (): Promise<AppHomeSnapshot> => {
       profile.provider_verification_status,
       profile.provider_verified_at,
     ),
-    getNotificationSummary(profile.id),
   ]);
 
   const accountEmail = profile.email?.trim() || null;
@@ -157,7 +135,7 @@ export const getAppHomeSnapshot = cache(async (): Promise<AppHomeSnapshot> => {
     hasActiveGuardian: verification.hasActiveGuardian,
     isVerified: verification.isVerified,
     canApply: verification.canApply,
-    unreadCount: notifications.unreadCount,
-    notificationsPreview: notifications.notificationsPreview,
+    unreadCount: 0,
+    notificationsPreview: [],
   };
 });

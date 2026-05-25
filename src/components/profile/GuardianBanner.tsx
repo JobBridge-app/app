@@ -97,6 +97,7 @@ export function GuardianBanner({ guardianStatus }: GuardianBannerProps) {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 variant="initial"
+                guardianStatus={guardianStatus}
             />
         </>
     );

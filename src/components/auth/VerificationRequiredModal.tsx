@@ -1,11 +1,13 @@
 import { GuardianConsentModal } from "@/components/GuardianConsentModal";
+import type { GuardianStatus } from "@/lib/types";
 
 interface VerificationRequiredModalProps {
     isOpen: boolean;
     onClose: () => void;
+    guardianStatus?: GuardianStatus | null;
 }
 
-export function VerificationRequiredModal({ isOpen, onClose }: VerificationRequiredModalProps) {
+export function VerificationRequiredModal({ isOpen, onClose, guardianStatus = null }: VerificationRequiredModalProps) {
     if (!isOpen) return null;
 
     return (
@@ -13,8 +15,8 @@ export function VerificationRequiredModal({ isOpen, onClose }: VerificationRequi
             isOpen={isOpen}
             onClose={onClose}
             variant="initial"
+            guardianStatus={guardianStatus}
         />
     );
 }
-
 

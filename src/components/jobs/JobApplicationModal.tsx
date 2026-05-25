@@ -7,6 +7,7 @@ import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { applyToJob } from "@/app/app-home/jobs/actions";
 import { GuardianConsentModal } from "@/components/GuardianConsentModal";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
+import type { GuardianStatus } from "@/lib/types";
 
 interface JobApplicationModalProps {
     isOpen: boolean;
@@ -213,6 +214,7 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
             <GuardianConsentModal
                 isOpen={showGuardianModal}
                 onClose={() => setShowGuardianModal(false)}
+                guardianStatus={guardianStatus as GuardianStatus}
             />
         </>
     );

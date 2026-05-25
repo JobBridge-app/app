@@ -58,6 +58,23 @@ function getResolvedTheme(theme: Theme, enableSystem: boolean): ResolvedTheme {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function scheduleIdle(task: () => void, timeout = 2600) {
+    if (typeof window === "undefined") return () => undefined;
+
+    const idleWindow = window as typeof window & {
+        requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+        cancelIdleCallback?: (id: number) => void;
+    };
+
+    if (idleWindow.requestIdleCallback) {
+        const id = idleWindow.requestIdleCallback(task, { timeout });
+        return () => idleWindow.cancelIdleCallback?.(id);
+    }
+
+    const timeoutId = window.setTimeout(task, timeout);
+    return () => window.clearTimeout(timeoutId);
+}
+
 export function ThemeProvider({
     children,
     defaultTheme = "system",
@@ -74,56 +91,47 @@ export function ThemeProvider({
     useEffect(() => {
         let cancelled = false;
 
-        const hydrateTheme = async () => {
-            const storedTheme = readStoredTheme(storageKey);
-            const immediateTheme = storedTheme ?? defaultTheme;
-            setThemeState(immediateTheme);
-            setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
-            setIsMounted(true);
+        const storedTheme = readStoredTheme(storageKey);
+        const immediateTheme = storedTheme ?? defaultTheme;
+        setThemeState(immediateTheme);
+        setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
+        setIsMounted(true);
+        setIsHydrated(true);
 
-            try {
-                const supabase = supabaseBrowser;
-                const { data: { user } } = await supabase.auth.getUser();
+        const cancelIdle = scheduleIdle(() => {
+            if (cancelled || storedTheme) return;
 
-                if (!user) {
-                    if (!cancelled) {
-                        persistTheme(storageKey, immediateTheme);
-                        setThemeState(immediateTheme);
-                        setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
-                        setIsHydrated(true);
+            const hydrateFromProfile = async () => {
+                try {
+                    const supabase = supabaseBrowser;
+                    const { data: { user } } = await supabase.auth.getUser();
+
+                    if (!user) return;
+
+                    const { data: profile } = await supabase
+                        .from("profiles")
+                        .select("theme_preference")
+                        .eq("id", user.id)
+                        .maybeSingle();
+
+                    const dbTheme = profile?.theme_preference;
+
+                    if (!cancelled && isTheme(dbTheme)) {
+                        persistTheme(storageKey, dbTheme);
+                        setThemeState(dbTheme);
+                        setResolvedTheme(getResolvedTheme(dbTheme, enableSystem));
                     }
-                    return;
-                }
-
-                const { data: profile } = await supabase
-                    .from("profiles")
-                    .select("theme_preference")
-                    .eq("id", user.id)
-                    .maybeSingle();
-
-                const dbTheme = profile?.theme_preference;
-
-                if (!cancelled) {
-                    const nextTheme = isTheme(dbTheme) ? dbTheme : immediateTheme;
-                    persistTheme(storageKey, nextTheme);
-                    setThemeState(nextTheme);
-                    setResolvedTheme(getResolvedTheme(nextTheme, enableSystem));
-                    setIsHydrated(true);
-                }
-            } catch {
-                if (!cancelled) {
+                } catch {
                     persistTheme(storageKey, immediateTheme);
-                    setThemeState(immediateTheme);
-                    setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
-                    setIsHydrated(true);
                 }
-            }
-        };
+            };
 
-        hydrateTheme();
+            hydrateFromProfile();
+        });
 
         return () => {
             cancelled = true;
+            cancelIdle();
         };
     }, [defaultTheme, enableSystem, storageKey]);
 

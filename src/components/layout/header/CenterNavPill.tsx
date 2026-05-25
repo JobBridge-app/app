@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { warmRouteAdjacentUI } from "@/lib/ui-warmup";
@@ -49,7 +48,7 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                     <Link
                         key={item.href}
                         href={item.href}
-                        prefetch
+                        prefetch={false}
                         onClick={() => activateRoute(item.href)}
                         onMouseEnter={() => warmRoute(item.href)}
                         onFocus={() => warmRoute(item.href)}
@@ -68,17 +67,9 @@ export function CenterNavPill({ profile, instanceId = "default" }: { profile: Pr
                         aria-current={isActive ? "page" : undefined}
                     >
                         {isActive && (
-                            <motion.div
-                                layoutId={activePillId}
+                            <div
+                                id={activePillId}
                                 className="app-center-nav-active absolute inset-0 z-0 rounded-full"
-                                initial={false}
-                                style={{ willChange: "transform" }}
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 420,
-                                    damping: 28,
-                                    mass: 0.9,
-                                }}
                             />
                         )}
 

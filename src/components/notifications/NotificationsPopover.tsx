@@ -11,6 +11,23 @@ import { endPerfMark, startPerfMark } from "@/lib/perf";
 
 type NotificationItem = HeaderNotificationItem;
 
+function scheduleIdle(task: () => void, timeout = 2200) {
+    if (typeof window === "undefined") return () => undefined;
+
+    const idleWindow = window as typeof window & {
+        requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+        cancelIdleCallback?: (id: number) => void;
+    };
+
+    if (idleWindow.requestIdleCallback) {
+        const id = idleWindow.requestIdleCallback(task, { timeout });
+        return () => idleWindow.cancelIdleCallback?.(id);
+    }
+
+    const timeoutId = window.setTimeout(task, timeout);
+    return () => window.clearTimeout(timeoutId);
+}
+
 export function NotificationsPopover({
     initialUnreadCount = 0,
     initialNotifications = [],
@@ -30,11 +47,12 @@ export function NotificationsPopover({
 
     useEffect(() => {
         const isCoarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
-        const timeoutId = window.setTimeout(warmNotificationsRoute, isCoarsePointer ? 1200 : 450);
+        if (isCoarsePointer) return;
+        const timeoutId = window.setTimeout(warmNotificationsRoute, 450);
         return () => window.clearTimeout(timeoutId);
     }, [warmNotificationsRoute]);
 
-    const refreshNotifications = useCallback(async () => {
+    const fetchNotifications = useCallback(async () => {
         const supabase = supabaseBrowser;
         const [countResult, rowsResult] = await Promise.all([
             supabase
@@ -48,20 +66,54 @@ export function NotificationsPopover({
                 .limit(10),
         ]);
 
-        setUnreadCount(countResult.count || 0);
-        setNotifications((rowsResult.data ?? []) as NotificationItem[]);
+        return {
+            unreadCount: countResult.count || 0,
+            notifications: (rowsResult.data ?? []) as NotificationItem[],
+        };
     }, []);
 
     useEffect(() => {
-        if (!open || hasLoadedFresh) return;
+        if (hasLoadedFresh) return;
+        let cancelled = false;
 
-        const fetchNotifications = async () => {
-            await refreshNotifications();
-            setHasLoadedFresh(true);
+        const cancelIdle = scheduleIdle(() => {
+            fetchNotifications()
+                .then((next) => {
+                    if (cancelled) return;
+                    setUnreadCount(next.unreadCount);
+                    setNotifications(next.notifications);
+                    setHasLoadedFresh(true);
+                })
+                .catch(() => {
+                    if (!cancelled) setHasLoadedFresh(true);
+                });
+        });
+
+        return () => {
+            cancelled = true;
+            cancelIdle();
         };
+    }, [fetchNotifications, hasLoadedFresh]);
 
-        fetchNotifications();
-    }, [hasLoadedFresh, open, refreshNotifications]);
+    useEffect(() => {
+        if (!open || hasLoadedFresh) return;
+        let cancelled = false;
+
+        fetchNotifications()
+            .then((next) => {
+                if (cancelled) return;
+                setUnreadCount(next.unreadCount);
+                setNotifications(next.notifications);
+                setHasLoadedFresh(true);
+            })
+            .catch(() => {
+                if (!cancelled) setHasLoadedFresh(true);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [fetchNotifications, hasLoadedFresh, open]);
 
     useEffect(() => {
         if (!open) return;

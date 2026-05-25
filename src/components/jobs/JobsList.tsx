@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { JobsListSection } from "@/components/jobs/JobsListSection";
 import { Briefcase, CheckCircle2, Clock, ListFilter, MapPin } from "lucide-react";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 import { cn } from "@/lib/utils";
-import { JobDetailModal } from "@/components/jobs/JobDetailModal";
-import { JobFilterSortPanel } from "@/components/jobs/JobFilterSortPanel";
 import {
     deriveVisibleJobs,
     sortJobs,
@@ -20,7 +19,15 @@ import {
 import { warmJobsUI } from "@/lib/ui-warmup";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
 
+const JobDetailModal = dynamic(
+    () => import("@/components/jobs/JobDetailModal").then((mod) => mod.JobDetailModal),
+    { ssr: false }
+);
 
+const JobFilterSortPanel = dynamic(
+    () => import("@/components/jobs/JobFilterSortPanel").then((mod) => mod.JobFilterSortPanel),
+    { ssr: false }
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,6 +100,7 @@ export function JobsList({
         applied: false,
     });
     const [showFilterPanel, setShowFilterPanel] = useState(false);
+    const [hasOpenedFilterPanel, setHasOpenedFilterPanel] = useState(false);
 
     const [sortOption, setSortOption] = useState<SortOption>(DEFAULT_SORT_OPTION);
     const [filterState, setFilterState] = useState<FilterState>(DEFAULT_FILTER_STATE);
@@ -177,6 +185,10 @@ export function JobsList({
         });
         return () => cancelAnimationFrame(frameId);
     }, [activeTab]);
+
+    useEffect(() => {
+        if (showFilterPanel) setHasOpenedFilterPanel(true);
+    }, [showFilterPanel]);
 
     const getPanelClassName = (tab: Tab) => {
         const offset = TAB_ORDER.indexOf(tab) > TAB_ORDER.indexOf(activeTab) ? 20 : -20;
@@ -368,26 +380,30 @@ export function JobsList({
                 </div>
             </div>
 
-            <JobDetailModal
-                job={selectedJob}
-                isOpen={isDetailOpen}
-                onClose={() => setIsDetailOpen(false)}
-                onClosed={() => setSelectedJob(null)}
-                canApply={canApply}
-                guardianStatus={guardianStatus}
-            />
+            {selectedJob && (
+                <JobDetailModal
+                    job={selectedJob}
+                    isOpen={isDetailOpen}
+                    onClose={() => setIsDetailOpen(false)}
+                    onClosed={() => setSelectedJob(null)}
+                    canApply={canApply}
+                    guardianStatus={guardianStatus}
+                />
+            )}
 
-            <JobFilterSortPanel
-                isOpen={showFilterPanel}
-                sortOption={sortOption}
-                filterState={filterState}
-                onSortChange={setSortOption}
-                onFilterChange={setFilterState}
-                onClose={() => setShowFilterPanel(false)}
-                onReset={handleReset}
-                hasChanges={hasChanges}
-                resultCount={panelResultCount}
-            />
+            {hasOpenedFilterPanel && (
+                <JobFilterSortPanel
+                    isOpen={showFilterPanel}
+                    sortOption={sortOption}
+                    filterState={filterState}
+                    onSortChange={setSortOption}
+                    onFilterChange={setFilterState}
+                    onClose={() => setShowFilterPanel(false)}
+                    onReset={handleReset}
+                    hasChanges={hasChanges}
+                    resultCount={panelResultCount}
+                />
+            )}
         </>
     );
 }

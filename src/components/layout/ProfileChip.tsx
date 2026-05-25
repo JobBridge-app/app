@@ -1,9 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ChevronDown, User, Building2, CheckCircle2, AlertCircle, Shield } from "lucide-react";
+import { ChevronDown, User, Building2, Shield } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -36,10 +35,8 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
 
     useEffect(() => {
         const isCoarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
-        const timeoutId = window.setTimeout(
-            () => warmProfileLinks(isCoarsePointer ? "minimal" : "full"),
-            isCoarsePointer ? 1200 : 450
-        );
+        if (isCoarsePointer) return;
+        const timeoutId = window.setTimeout(() => warmProfileLinks("full"), 450);
         return () => window.clearTimeout(timeoutId);
     }, [warmProfileLinks]);
 
@@ -68,11 +65,6 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
     const isProvider = profile.account_type === "job_provider";
     const label = isProvider ? "Jobanbieter" : "Jobsuchend";
     const RoleIcon = isProvider ? Building2 : User;
-
-    const isVerified =
-        profile.account_type === "job_provider"
-            ? profile.provider_verification_status === "verified"
-            : (profile.guardian_status === "linked" && (profile as any).has_active_guardian !== false);
 
     const handleLogout = async () => {
         await supabaseBrowser.auth.signOut();
@@ -146,20 +138,13 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                 <ChevronDown size={14} className={cn("app-profile-chip-chevron hidden text-slate-400 transition-transform duration-200 md:block", isOpen && "rotate-180")} />
             </button>
 
-            <AnimatePresence>
-                {isOpen && (
-                    <>
-                        <div
-                            className="fixed inset-0 z-40"
-                            onClick={() => setIsOpen(false)}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 6 }}
-                            transition={{ duration: 0.1, ease: "easeOut" }}
-                            className="app-profile-menu absolute right-0 top-full z-50 mt-2 flex w-[18rem] flex-col gap-1 rounded-2xl border border-white/10 bg-slate-950/98 p-2 shadow-xl shadow-black/50 backdrop-blur-xl"
-                        >
+            {isOpen && (
+                <>
+                    <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsOpen(false)}
+                    />
+                    <div className="app-profile-menu absolute right-0 top-full z-50 mt-2 flex w-[18rem] flex-col gap-1 rounded-2xl border border-white/10 bg-slate-950/98 p-2 shadow-xl shadow-black/50 backdrop-blur-xl">
 
                             <div className="app-profile-menu-account mb-1 border-b border-white/10 px-3 py-2">
                                 <div className="mb-1 flex items-center justify-between">
@@ -223,10 +208,9 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             >
                                 Abmelden
                             </button>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

@@ -12,17 +12,20 @@ export default async function JobsPage() {
         redirect("/app-home/offers");
     }
 
+    const userCoordinates = { lat: profile.lat ?? null, lng: profile.lng ?? null };
     const [jobsRes, appsRes] = await Promise.all([
         fetchJobs({
             mode: "feed",
             view,
             userId: profile.id,
             marketId: profile.market_id,
+            userCoordinates,
+            includeApplicationState: false,
             status: ["open", "reserved"],
             limit: 50,
             offset: 0,
         }),
-        fetchCandidateApplications(profile.id)
+        fetchCandidateApplications(profile.id, { userCoordinates })
     ]);
 
     const rawActiveJobs: JobsListItem[] = jobsRes.ok ? jobsRes.data : [];

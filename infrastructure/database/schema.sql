@@ -470,16 +470,24 @@ WHERE u.id = p.id;
 CREATE TABLE IF NOT EXISTS public.guardian_invitations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  token_hash text NOT NULL UNIQUE,
+  token text NOT NULL UNIQUE,
   status text NOT NULL CHECK (status IN ('active', 'redeemed', 'expired', 'revoked')) DEFAULT 'active',
   expires_at timestamptz NOT NULL,
   redeemed_by uuid REFERENCES public.profiles(id),
   created_at timestamptz NOT NULL DEFAULT NOW(),
-  updated_at timestamptz NOT NULL DEFAULT NOW()
+  updated_at timestamptz NOT NULL DEFAULT NOW(),
+  used_at date,
+  purpose text NOT NULL CHECK (purpose IN ('guardian_account_link', 'basis_account_link')) DEFAULT 'guardian_account_link'
 );
 
 CREATE INDEX IF NOT EXISTS idx_guardian_invitations_child_id ON public.guardian_invitations(child_id);
 CREATE INDEX IF NOT EXISTS idx_guardian_invitations_status_expires ON public.guardian_invitations(status, expires_at);
+CREATE INDEX IF NOT EXISTS guardian_invitations_child_purpose_status_idx
+  ON public.guardian_invitations(child_id, purpose, status, expires_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS guardian_invitations_one_active_guardian_link_idx
+  ON public.guardian_invitations(child_id)
+  WHERE status = 'active'
+    AND purpose = 'guardian_account_link';
 
 ALTER TABLE public.guardian_invitations ENABLE ROW LEVEL SECURITY;
 
@@ -499,24 +507,55 @@ SET search_path = public
 AS $$
 DECLARE
   v_child_id uuid := auth.uid();
+  v_existing_invitation RECORD;
   v_token text;
-  v_token_hash text;
   v_expires_at timestamptz := NOW() + INTERVAL '7 days';
 BEGIN
   IF v_child_id IS NULL THEN
-    RAISE EXCEPTION 'Not authenticated';
+    RETURN jsonb_build_object('error', 'Nicht authentifiziert');
   END IF;
 
-  -- Best effort: revoke previous active links.
+  PERFORM pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('guardian_invitation:' || v_child_id::text, 0)
+  );
+
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_child_id) THEN
+    RETURN jsonb_build_object('error', 'Profil nicht gefunden. Bitte lade die Seite neu.');
+  END IF;
+
   UPDATE public.guardian_invitations
-  SET status = 'revoked', updated_at = NOW()
-  WHERE child_id = v_child_id AND status = 'active';
+  SET status = 'expired', updated_at = NOW()
+  WHERE child_id = v_child_id
+    AND status = 'active'
+    AND purpose = 'guardian_account_link'
+    AND expires_at <= NOW();
 
-  v_token := encode(gen_random_bytes(32), 'hex');
-  v_token_hash := encode(digest(v_token, 'sha256'), 'hex');
+  SELECT id, token, expires_at INTO v_existing_invitation
+  FROM public.guardian_invitations
+  WHERE child_id = v_child_id
+    AND status = 'active'
+    AND purpose = 'guardian_account_link'
+    AND expires_at > NOW()
+  ORDER BY expires_at DESC, created_at DESC, id DESC
+  LIMIT 1;
 
-  INSERT INTO public.guardian_invitations (child_id, token_hash, status, expires_at)
-  VALUES (v_child_id, v_token_hash, 'active', v_expires_at);
+  IF FOUND THEN
+    UPDATE public.profiles
+    SET guardian_status = 'pending', updated_at = NOW()
+    WHERE id = v_child_id AND guardian_status <> 'linked';
+
+    RETURN jsonb_build_object(
+      'token', v_existing_invitation.token,
+      'expires_at', v_existing_invitation.expires_at,
+      'purpose', 'guardian_account_link',
+      'reused', true
+    );
+  END IF;
+
+  v_token := encode(extensions.gen_random_bytes(32), 'hex');
+
+  INSERT INTO public.guardian_invitations (child_id, token, status, expires_at, purpose)
+  VALUES (v_child_id, v_token, 'active', v_expires_at, 'guardian_account_link');
 
   -- Mark profile as pending if not linked yet.
   UPDATE public.profiles
@@ -525,10 +564,37 @@ BEGIN
 
   RETURN jsonb_build_object(
     'token', v_token,
-    'expires_at', v_expires_at
+    'expires_at', v_expires_at,
+    'purpose', 'guardian_account_link',
+    'reused', false
   );
+EXCEPTION
+  WHEN unique_violation THEN
+    SELECT id, token, expires_at INTO v_existing_invitation
+    FROM public.guardian_invitations
+    WHERE child_id = v_child_id
+      AND status = 'active'
+      AND purpose = 'guardian_account_link'
+      AND expires_at > NOW()
+    ORDER BY expires_at DESC, created_at DESC, id DESC
+    LIMIT 1;
+
+    IF FOUND THEN
+      RETURN jsonb_build_object(
+        'token', v_existing_invitation.token,
+        'expires_at', v_existing_invitation.expires_at,
+        'purpose', 'guardian_account_link',
+        'reused', true
+      );
+    END IF;
+
+    RAISE;
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION public.create_guardian_invitation(text) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.create_guardian_invitation(text) FROM anon;
+GRANT EXECUTE ON FUNCTION public.create_guardian_invitation(text) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.redeem_guardian_invitation(token_input text)
 RETURNS jsonb
@@ -538,18 +604,15 @@ SET search_path = public
 AS $$
 DECLARE
   v_guardian_id uuid := auth.uid();
-  v_hash text;
   invitation_record RECORD;
 BEGIN
   IF v_guardian_id IS NULL THEN
     RETURN jsonb_build_object('success', false, 'error', 'Not authenticated');
   END IF;
 
-  v_hash := encode(digest(token_input, 'sha256'), 'hex');
-
   SELECT * INTO invitation_record
   FROM public.guardian_invitations
-  WHERE token_hash = v_hash
+  WHERE token = token_input
     AND status = 'active'
     AND expires_at > NOW()
   LIMIT 1;
@@ -559,7 +622,7 @@ BEGIN
   END IF;
 
   UPDATE public.guardian_invitations
-  SET status = 'redeemed', redeemed_by = v_guardian_id, updated_at = NOW()
+  SET status = 'redeemed', redeemed_by = v_guardian_id, used_at = CURRENT_DATE, updated_at = NOW()
   WHERE id = invitation_record.id;
 
   UPDATE public.profiles

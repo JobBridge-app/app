@@ -46,8 +46,8 @@ export function ApplyButton({ canApply, guardianStatus: initialStatus, jobId }: 
             <GuardianConsentModal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
+                guardianStatus={initialStatus}
             />
         </>
     );
 }
-

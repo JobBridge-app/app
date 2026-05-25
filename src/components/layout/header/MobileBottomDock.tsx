@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
@@ -15,7 +14,6 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
     const isPhoneDevice = usePhoneDevice();
     const pathname = usePathname();
     const router = useRouter();
-    const prefersReducedMotion = useReducedMotion() ?? false;
     const [pendingHref, setPendingHref] = useState<string | null>(null);
     const currentPath = pendingHref || pathname || "";
     const navItems = getAppNavItems(profile);
@@ -57,7 +55,7 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
                         <Link
                             key={item.href}
                             href={item.href}
-                            prefetch
+                            prefetch={false}
                             aria-label={item.label}
                             aria-current={isActive ? "page" : undefined}
                             onPointerDown={() => activateRoute(item.href)}
@@ -71,17 +69,7 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
                             )}
                         >
                             {isActive && (
-                                <motion.div
-                                    layoutId="mobile-dock-active"
-                                    className="app-mobile-dock-active absolute"
-                                    initial={false}
-                                    transition={prefersReducedMotion ? { duration: 0.12 } : {
-                                        type: "spring",
-                                        stiffness: 520,
-                                        damping: 36,
-                                        mass: 0.7,
-                                    }}
-                                />
+                                <div className="app-mobile-dock-active absolute" />
                             )}
                             <span className="app-mobile-dock-content relative z-10 flex min-w-0 flex-col items-center justify-center">
                                 <item.icon

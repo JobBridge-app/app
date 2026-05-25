@@ -135,10 +135,43 @@ export type FetchJobsParams = {
   view: EffectiveViewSnapshot;
   userId: string;
   marketId?: string | null;
+  userCoordinates?: UserCoordinates;
+  includeApplicationState?: boolean;
   status?: Database["public"]["Enums"]["job_status"] | Database["public"]["Enums"]["job_status"][];
   limit?: number;
   offset?: number;
 };
+
+type UserCoordinates = {
+  lat?: number | null;
+  lng?: number | null;
+};
+
+async function resolveUserCoordinates(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  providedCoordinates?: UserCoordinates,
+): Promise<UserCoordinates> {
+  if (providedCoordinates) {
+    return {
+      lat: providedCoordinates.lat ?? null,
+      lng: providedCoordinates.lng ?? null,
+    };
+  }
+
+  if (!userId) return { lat: null, lng: null };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("lat, lng")
+    .eq("id", userId)
+    .single();
+
+  return {
+    lat: profile?.lat ?? null,
+    lng: profile?.lng ?? null,
+  };
+}
 
 /** Fetch the map of job IDs -> Application Data the current user has applied to. */
 async function fetchAppliedJobIds(userId: string): Promise<Map<string, { id: string; status: ApplicationStatus }>> {
@@ -288,20 +321,11 @@ export async function fetchJobs(params: FetchJobsParams): Promise<Result<JobsLis
     return q.range(offset, offset + limit - 1);
   };
 
-  // Fetch user coordinates for distance calculation
-  let userLat: number | null = null;
-  let userLng: number | null = null;
-  if (params.userId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("lat, lng")
-      .eq("id", params.userId)
-      .single();
-    if (profile) {
-      userLat = profile.lat ?? null;
-      userLng = profile.lng ?? null;
-    }
-  }
+  const { lat: userLat, lng: userLng } = await resolveUserCoordinates(
+    supabase,
+    params.userId,
+    params.userCoordinates,
+  );
 
   // ── DEMO ──────────────────────────────────────────────────────────
   if (params.view.source === "demo") {
@@ -325,7 +349,9 @@ export async function fetchJobs(params: FetchJobsParams): Promise<Result<JobsLis
   }
 
   // ── LIVE ──────────────────────────────────────────────────────────
-  const appliedJobIds = await fetchAppliedJobIds(params.userId);
+  const appliedJobIds = params.includeApplicationState === false
+    ? new Map<string, { id: string; status: ApplicationStatus }>()
+    : await fetchAppliedJobIds(params.userId);
 
   let q = supabase.from("jobs").select("*");
   if (params.mode === "feed") {
@@ -584,23 +610,16 @@ export async function fetchJobApplications(jobId: string, _userId: string): Prom
   return { ok: true, data: items };
 }
 
-export async function fetchCandidateApplications(userId: string): Promise<Result<{ job: JobsListItem; status: Database["public"]["Enums"]["application_status"] }[]>> {
+export async function fetchCandidateApplications(
+  userId: string,
+  opts?: { userCoordinates?: UserCoordinates },
+): Promise<Result<{ job: JobsListItem; status: Database["public"]["Enums"]["application_status"] }[]>> {
   const supabase = await supabaseServer();
-
-  // Fetch user coordinates for distance calculation
-  let userLat: number | null = null;
-  let userLng: number | null = null;
-  if (userId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("lat, lng")
-      .eq("id", userId)
-      .single();
-    if (profile) {
-      userLat = profile.lat ?? null;
-      userLng = profile.lng ?? null;
-    }
-  }
+  const { lat: userLat, lng: userLng } = await resolveUserCoordinates(
+    supabase,
+    userId,
+    opts?.userCoordinates,
+  );
 
   const { data, error } = await supabase
     .from("applications")

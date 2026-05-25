@@ -1,19 +1,21 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, useCallback, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { createGuardianInvitation } from "@/app/actions/guardian";
-import { Copy, X, CheckCircle, ShieldCheck, UserPlus, Link as LinkIcon, Lock } from "lucide-react";
+import { X, ShieldCheck, UserPlus, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { GuardianStatus } from "@/lib/types";
 
 interface GuardianConsentModalProps {
     isOpen: boolean;
     onClose: () => void;
     variant?: "initial" | "add"; // "initial" = mandatory first consent, "add" = adding additional guardian
+    guardianStatus?: GuardianStatus | null;
 }
 
-export function GuardianConsentModal({ isOpen, onClose, variant = "initial" }: GuardianConsentModalProps) {
+export function GuardianConsentModal({ isOpen, onClose, variant = "initial", guardianStatus = null }: GuardianConsentModalProps) {
     const [step, setStep] = useState<"initial" | "generated">("initial");
     const [isLoading, setIsLoading] = useState(false);
     const [link, setLink] = useState("");
@@ -21,6 +23,9 @@ export function GuardianConsentModal({ isOpen, onClose, variant = "initial" }: G
     const [timeLeft, setTimeLeft] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const requestIdRef = useRef(0);
+    const mountedRef = useRef(false);
+    const shouldShowExistingLink = variant === "initial" && guardianStatus === "pending";
 
     // Countdown logic
     useEffect(() => {
@@ -33,6 +38,10 @@ export function GuardianConsentModal({ isOpen, onClose, variant = "initial" }: G
 
             if (diff <= 0) {
                 setTimeLeft("Abgelaufen");
+                setStep("initial");
+                setLink("");
+                setExpiresAt(null);
+                setError("Der bisherige Link ist abgelaufen. Erstelle einen neuen Link.");
             } else {
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -47,20 +56,20 @@ export function GuardianConsentModal({ isOpen, onClose, variant = "initial" }: G
     }, [expiresAt]); // Run when expiresAt changes
 
     useEffect(() => {
-        if (isOpen) {
-            setStep("initial");
-            setLink("");
-            setExpiresAt(null);
-            setError(null);
-            setCopied(false);
-        }
-    }, [isOpen]);
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
 
-    const fetchOrGenerateLink = async () => {
+    const fetchOrGenerateLink = useCallback(async () => {
+        const requestId = requestIdRef.current + 1;
+        requestIdRef.current = requestId;
         setIsLoading(true);
         setError(null);
         try {
             const res = await createGuardianInvitation();
+            if (!mountedRef.current || requestId !== requestIdRef.current) return;
             if (res.error) {
                 setError(res.error);
             } else if (res.token) {
@@ -68,18 +77,74 @@ export function GuardianConsentModal({ isOpen, onClose, variant = "initial" }: G
                 setLink(url);
                 setExpiresAt(res.expires_at || null);
                 setStep("generated");
+            } else {
+                setError("Einladungslink konnte nicht erstellt werden.");
             }
         } catch (e) {
+            if (!mountedRef.current || requestId !== requestIdRef.current) return;
             setError("Ein unerwarteter Fehler ist aufgetreten.");
         } finally {
+            if (mountedRef.current && requestId === requestIdRef.current) {
+                setIsLoading(false);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isOpen) {
+            requestIdRef.current += 1;
             setIsLoading(false);
+            return;
+        }
+
+        if (isOpen) {
+            setStep("initial");
+            setLink("");
+            setExpiresAt(null);
+            setTimeLeft("");
+            setError(null);
+            setCopied(false);
+            requestIdRef.current += 1;
+
+            if (shouldShowExistingLink) {
+                void fetchOrGenerateLink();
+            }
+        }
+    }, [fetchOrGenerateLink, isOpen, shouldShowExistingLink]);
+
+    const copyWithFallback = (text: string) => {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+            const didCopy = document.execCommand("copy");
+            if (!didCopy) throw new Error("Copy command failed");
+        } finally {
+            document.body.removeChild(textarea);
         }
     };
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(link);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const copyToClipboard = async () => {
+        if (!link) return;
+
+        setError(null);
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(link);
+            } else {
+                copyWithFallback(link);
+            }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            setCopied(false);
+            setError("Link konnte nicht kopiert werden.");
+        }
     };
 
     return (
@@ -172,22 +237,28 @@ export function GuardianConsentModal({ isOpen, onClose, variant = "initial" }: G
                                                 {isLoading ? (
                                                     <span className="flex items-center justify-center gap-2">
                                                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                        Einen Moment...
+                                                        {shouldShowExistingLink ? "Link wird geladen..." : "Einen Moment..."}
                                                     </span>
                                                 ) : (
                                                     <span className="flex items-center justify-center gap-2">
                                                         <LinkIcon size={20} />
-                                                        Link erstellen
+                                                        {shouldShowExistingLink ? "Link anzeigen" : "Link erstellen"}
                                                     </span>
                                                 )}
                                             </ButtonPrimary>
 
                                             <p className="guardian-consent-helper text-xs font-medium">
-                                                Dauert nur 30 Sekunden. Kein Papierkram.
+                                                {shouldShowExistingLink ? "Der vorhandene Link bleibt bis zum Ablauf gültig." : "Dauert nur 30 Sekunden. Kein Papierkram."}
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                            {error && (
+                                                <div className="guardian-consent-error w-full p-4 rounded-xl border text-xs font-semibold text-center">
+                                                    {error}
+                                                </div>
+                                            )}
+
                                             <div className="guardian-consent-link-card w-full rounded-2xl p-1 border relative overflow-hidden group">
                                                 <div className="guardian-consent-link-glow absolute inset-0 transition-colors" />
 
