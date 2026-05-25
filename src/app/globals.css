@@ -53,6 +53,10 @@
   --glass-border: rgba(15, 23, 42, 0.1);
   --glass-bg: rgba(255, 255, 255, 0.78);
 
+  --app-mobile-dock-edge-gap: 0.125rem;
+  --app-mobile-dock-panel-height: 3.76rem;
+  --app-mobile-dock-content-clearance: 1.125rem;
+
   --map-background: #eef4f8;
   --map-muted: #64748b;
   --map-border: rgba(31, 45, 74, 0.12);
@@ -2769,8 +2773,8 @@ textarea.profile-field-control {
 }
 
 .app-mobile-dock-shell {
-  bottom: max(0.5rem, calc(env(safe-area-inset-bottom) + 0.42rem));
-  padding-inline: max(0.8rem, env(safe-area-inset-left)) max(0.8rem, env(safe-area-inset-right));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--app-mobile-dock-edge-gap));
+  padding-inline: max(0.8rem, env(safe-area-inset-left, 0px)) max(0.8rem, env(safe-area-inset-right, 0px));
 }
 
 .app-mobile-dock-shell::before {
@@ -2779,7 +2783,12 @@ textarea.profile-field-control {
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(5.4rem + env(safe-area-inset-bottom));
+  height: calc(
+    var(--app-mobile-dock-panel-height) +
+    env(safe-area-inset-bottom, 0px) +
+    var(--app-mobile-dock-edge-gap) +
+    0.9rem
+  );
   background: linear-gradient(to top, rgba(2, 6, 23, 0.98) 0%, rgba(2, 6, 23, 0.84) 54%, rgba(2, 6, 23, 0));
   pointer-events: none;
   z-index: -1;
@@ -2882,7 +2891,12 @@ textarea.profile-field-control {
 }
 
 html[data-mobile-nav-preference="bottom"] .app-shell-main {
-  padding-bottom: calc(6.35rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(
+    var(--app-mobile-dock-panel-height) +
+    env(safe-area-inset-bottom, 0px) +
+    var(--app-mobile-dock-edge-gap) +
+    var(--app-mobile-dock-content-clearance)
+  );
 }
 
 @media (max-width: 767px) and (pointer: coarse) {
