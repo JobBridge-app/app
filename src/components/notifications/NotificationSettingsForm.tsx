@@ -36,7 +36,7 @@ export function NotificationSettingsForm({ initialPrefs, userId }: { initialPref
     };
 
     return (
-        <div className="space-y-8">
+        <div className="notification-settings-form space-y-8">
             {/* Global Email Toggle */}
             <div className="flex items-center justify-between pb-6 border-b border-white/5">
                 <div>
@@ -45,9 +45,9 @@ export function NotificationSettingsForm({ initialPrefs, userId }: { initialPref
                 </div>
                 <button
                     onClick={() => handleToggle('email_enabled')}
-                    className={`w-12 h-6 rounded-full transition-colors relative ${prefs.email_enabled ? 'bg-blue-500' : 'bg-white/10'}`}
+                    className={`notification-settings-switch w-12 h-6 rounded-full transition-colors relative ${prefs.email_enabled ? 'is-active bg-blue-500' : 'bg-white/10'}`}
                 >
-                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${prefs.email_enabled ? 'left-7' : 'left-1'}`} />
+                    <div className={`notification-settings-switch-knob absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${prefs.email_enabled ? 'left-7' : 'left-1'}`} />
                 </button>
             </div>
 
@@ -90,7 +90,7 @@ export function NotificationSettingsForm({ initialPrefs, userId }: { initialPref
                         <div
                             key={opt}
                             onClick={() => handleSelect('digest_frequency', opt)}
-                            className={`cursor-pointer text-center py-2 rounded-lg border text-sm capitalize ${prefs.digest_frequency === opt ? 'bg-blue-500/20 border-blue-500 text-blue-300' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}
+                            className={`notification-settings-frequency cursor-pointer text-center py-2 rounded-lg border text-sm capitalize ${prefs.digest_frequency === opt ? 'is-active bg-blue-500/20 border-blue-500 text-blue-300' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}
                         >
                             {opt === 'instant' ? 'Sofort' : opt === 'daily' ? 'Täglich' : 'Wöchentlich'}
                         </div>

@@ -115,7 +115,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="fixed inset-0 bg-[#000000]/80 backdrop-blur-md" />
+                    <div className="provider-verification-backdrop fixed inset-0 backdrop-blur-md" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 overflow-y-auto">
@@ -129,9 +129,9 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                             leaveFrom="opacity-100 scale-100 translate-y-0"
                             leaveTo="opacity-0 scale-95 translate-y-4"
                         >
-                            <Dialog.Panel className="relative w-full max-w-xl transform overflow-visible rounded-[2rem] border border-white/10 bg-[#090A0F] p-0 text-left align-middle shadow-[0_36px_110px_rgba(0,0,0,0.66)] transition-all">
+                            <Dialog.Panel className="provider-verification-modal relative w-full max-w-xl transform overflow-visible rounded-[2rem] border p-0 text-left align-middle transition-all">
                                 {isSuccess ? (
-                                    <div className="flex flex-col items-center justify-center py-16 px-6 space-y-8 relative z-10">
+                                    <div className="provider-verification-success flex flex-col items-center justify-center py-16 px-6 space-y-8 relative z-10">
                                         <div className="relative">
                                             <div className="absolute inset-0 bg-emerald-500 blur-3xl opacity-20 animate-pulse" />
                                             <div className="w-24 h-24 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center relative z-10">
@@ -145,7 +145,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="relative border-b border-white/[0.06] bg-white/[0.018] px-6 py-5">
+                                        <div className="provider-verification-header relative border-b px-6 py-5">
                                             <div className="flex items-center justify-between gap-4">
                                                 <div className="flex min-w-0 items-center gap-3">
                                                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-400/10 text-indigo-200">
@@ -157,7 +157,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                                 </div>
                                                 <button
                                                     onClick={onClose}
-                                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 transition-colors hover:bg-white/[0.08] hover:text-white"
+                                                    className="provider-verification-close flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors"
                                                 >
                                                     <X size={16} />
                                                 </button>
@@ -165,7 +165,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                         </div>
 
                                         <div className="relative z-10 space-y-5 p-6">
-                                            <div className="overflow-hidden rounded-2xl border border-amber-200/15 bg-[#12100B]">
+                                            <div className="provider-verification-notice overflow-hidden rounded-2xl border">
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsNoticeOpen((open) => !open)}
@@ -204,7 +204,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                                     Wohnadresse
                                                 </label>
                                                 {isAddressLocked ? (
-                                                    <div className="space-y-4 rounded-2xl border border-emerald-400/18 bg-emerald-400/[0.045] p-4">
+                                                    <div className="provider-verification-address-card space-y-4 rounded-2xl border p-4">
                                                         <div className="flex items-start gap-3">
                                                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300">
                                                                 <CheckCircle2 size={18} />
@@ -269,11 +269,11 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                             )}
                                         </div>
 
-                                        <div className="flex flex-col-reverse gap-3 border-t border-white/[0.06] bg-white/[0.018] px-6 py-5 sm:flex-row sm:justify-end">
+                                        <div className="provider-verification-footer flex flex-col-reverse gap-3 border-t px-6 py-5 sm:flex-row sm:justify-end">
                                             <button
                                                 type="button"
                                                 onClick={onClose}
-                                                className="h-11 rounded-xl px-5 text-sm font-bold text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+                                                className="provider-verification-cancel h-11 rounded-xl px-5 text-sm font-bold transition-colors"
                                             >
                                                 Abbrechen
                                             </button>

@@ -629,6 +629,79 @@ button,
     rgba(17, 24, 39, 0.82) !important;
 }
 
+.notification-settings-page {
+  color: var(--text-default);
+}
+
+.notification-settings-title,
+.notification-settings-form h3 {
+  color: var(--text-strong) !important;
+}
+
+.notification-settings-copy,
+.notification-settings-form p,
+.notification-settings-form label {
+  color: var(--text-muted) !important;
+}
+
+.notification-settings-panel,
+.notification-settings-note {
+  border-color: var(--border-subtle) !important;
+  background: var(--surface-raised) !important;
+  box-shadow: var(--shadow-surface);
+}
+
+.notification-settings-note {
+  border-color: var(--brand-border) !important;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--brand) 9%, transparent), transparent 14rem),
+    color-mix(in srgb, var(--brand-soft) 78%, var(--surface-solid) 22%) !important;
+}
+
+.notification-settings-note h3 {
+  color: var(--brand-strong);
+}
+
+.notification-settings-note p {
+  color: var(--text-default);
+}
+
+.notification-settings-form > div,
+.notification-settings-form .border-t {
+  border-color: var(--border-subtle) !important;
+}
+
+.notification-settings-switch {
+  background: color-mix(in srgb, var(--text-muted) 18%, transparent) !important;
+}
+
+.notification-settings-switch.is-active {
+  background: var(--brand) !important;
+}
+
+.notification-settings-switch-knob {
+  box-shadow: 0 4px 12px rgba(31, 45, 74, 0.18);
+}
+
+.notification-settings-frequency {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface-solid) 30%) !important;
+  color: var(--text-muted) !important;
+}
+
+.notification-settings-frequency:hover,
+.notification-settings-frequency.is-active {
+  border-color: var(--brand-border) !important;
+  background: var(--brand-soft) !important;
+  color: var(--brand-strong) !important;
+}
+
+.notification-settings-form input[type="checkbox"] {
+  border-color: var(--border-subtle) !important;
+  background-color: var(--surface-solid) !important;
+  color: var(--brand) !important;
+}
+
 .dark .app-center-nav-active {
   background: linear-gradient(180deg, rgba(96, 165, 250, 0.22), rgba(37, 99, 235, 0.92));
   box-shadow: 0 0 24px rgba(37, 99, 235, 0.34), inset 0 1px 0 rgba(191, 219, 254, 0.18);
@@ -1146,6 +1219,370 @@ button,
 .dark .profile-action-primary:hover {
   background: linear-gradient(180deg, #5b5ff0 0%, #4338ca 100%) !important;
   box-shadow: 0 20px 52px rgba(79, 70, 229, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.guardian-banner {
+  --guardian-rgb: 225 29 72;
+  --guardian-solid: #e11d48;
+  --guardian-strong: #be123c;
+  border-color: rgb(var(--guardian-rgb) / 0.2) !important;
+  background:
+    radial-gradient(circle at 92% 0%, rgb(var(--guardian-rgb) / 0.12), transparent 22rem),
+    linear-gradient(180deg, var(--surface-raised), var(--surface-solid)) !important;
+  color: var(--text-default);
+  box-shadow: var(--shadow-card);
+}
+
+.guardian-banner[data-status="pending"] {
+  --guardian-rgb: 217 119 6;
+  --guardian-solid: #d97706;
+  --guardian-strong: #92400e;
+}
+
+.guardian-banner[data-status="linked"] {
+  --guardian-rgb: 5 150 105;
+  --guardian-solid: #059669;
+  --guardian-strong: #047857;
+}
+
+.guardian-banner-tint,
+.guardian-banner-noise {
+  background: rgb(var(--guardian-rgb) / 0.045);
+}
+
+.guardian-banner-noise {
+  opacity: 0.9;
+  mix-blend-mode: normal;
+}
+
+.guardian-banner-glow {
+  background: rgb(var(--guardian-rgb) / 0.12);
+}
+
+.guardian-banner-icon {
+  border-color: rgb(var(--guardian-rgb) / 0.2) !important;
+  background: rgb(var(--guardian-rgb) / 0.09) !important;
+  color: var(--guardian-solid) !important;
+}
+
+.guardian-banner-title {
+  color: var(--text-strong) !important;
+}
+
+.guardian-banner-copy {
+  color: var(--text-muted) !important;
+}
+
+.guardian-banner-dismiss {
+  color: rgb(var(--guardian-rgb) / 0.68);
+}
+
+.guardian-banner-dismiss:hover {
+  background: rgb(var(--guardian-rgb) / 0.09);
+  color: var(--guardian-solid);
+}
+
+.guardian-banner-action {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--guardian-solid) 90%, #ffffff 10%), var(--guardian-solid)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 42px rgb(var(--guardian-rgb) / 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+}
+
+.guardian-banner-action:hover {
+  background: var(--guardian-strong) !important;
+  box-shadow: 0 22px 54px rgb(var(--guardian-rgb) / 0.28) !important;
+}
+
+.guardian-banner[data-status="pending"] .guardian-banner-action {
+  color: #251a05 !important;
+}
+
+.profile-verification-card {
+  border-color: var(--brand-border) !important;
+  background:
+    radial-gradient(circle at 94% 0%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 22rem),
+    linear-gradient(180deg, var(--surface-raised), var(--surface-solid)) !important;
+  color: var(--text-default);
+  box-shadow: var(--shadow-card) !important;
+}
+
+.profile-verification-glow {
+  background: linear-gradient(130deg, color-mix(in srgb, var(--brand) 12%, transparent), transparent 42%, color-mix(in srgb, #06b6d4 7%, transparent) 78%, transparent);
+}
+
+.profile-verification-hairline {
+  opacity: 0.5;
+}
+
+.profile-verification-icon-shell {
+  border-color: var(--brand-border) !important;
+  background: color-mix(in srgb, var(--brand-soft) 72%, var(--surface-solid) 28%) !important;
+}
+
+.profile-verification-card :where(.text-white, .text-slate-200, .text-slate-300) {
+  color: var(--text-strong) !important;
+}
+
+.profile-verification-card :where(.text-slate-400, .text-slate-500) {
+  color: var(--text-muted) !important;
+}
+
+.profile-verification-card :where(.text-indigo-100, .text-indigo-200, .text-indigo-400) {
+  color: var(--brand) !important;
+}
+
+.profile-verification-action {
+  background: linear-gradient(180deg, #2d63df, var(--brand)) !important;
+  box-shadow: 0 18px 42px rgba(33, 79, 208, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.26) !important;
+}
+
+.profile-verification-action:hover {
+  background: var(--brand-strong) !important;
+}
+
+.guardian-consent-backdrop,
+.provider-verification-backdrop,
+.guardian-manage-backdrop {
+  background: rgba(247, 249, 253, 0.84) !important;
+}
+
+.guardian-consent-panel,
+.provider-verification-modal,
+.guardian-manage-panel {
+  border-color: var(--border-subtle) !important;
+  background:
+    radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--brand) 8%, transparent), transparent 18rem),
+    linear-gradient(180deg, var(--surface-overlay), var(--surface-solid)) !important;
+  color: var(--text-default) !important;
+  box-shadow: var(--shadow-popover) !important;
+}
+
+.guardian-consent-title,
+.provider-verification-modal :where(h3, .text-white),
+.guardian-manage-panel :where(h1, h2, h3, .text-white) {
+  color: var(--text-strong) !important;
+}
+
+.guardian-consent-copy,
+.guardian-consent-helper,
+.guardian-consent-expiry,
+.provider-verification-modal :where(.text-slate-400, .text-slate-500, .text-slate-600),
+.guardian-manage-panel :where(.text-slate-400, .text-slate-500, .text-slate-600) {
+  color: var(--text-muted) !important;
+}
+
+.guardian-consent-close,
+.provider-verification-close {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-raised) 74%, transparent) !important;
+  color: var(--text-muted) !important;
+}
+
+.guardian-consent-close:hover,
+.provider-verification-close:hover,
+.provider-verification-cancel:hover {
+  background: var(--surface-solid) !important;
+  color: var(--text-strong) !important;
+}
+
+.guardian-consent-glow,
+.guardian-consent-icon-glow {
+  background: color-mix(in srgb, var(--brand) 15%, transparent) !important;
+}
+
+.guardian-consent-icon-shell,
+.guardian-consent-status-badge,
+.guardian-consent-link-card {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-muted) 68%, var(--surface-solid) 32%) !important;
+}
+
+.guardian-consent-status-badge {
+  color: var(--text-muted) !important;
+}
+
+.guardian-consent-panel :where(.text-indigo-300, .text-indigo-400),
+.provider-verification-modal :where(.text-indigo-200, .text-indigo-300, .text-indigo-400),
+.guardian-manage-panel :where(.text-indigo-400, .text-indigo-500) {
+  color: var(--brand) !important;
+}
+
+.guardian-consent-error {
+  border-color: rgba(225, 29, 72, 0.2) !important;
+  background: rgba(225, 29, 72, 0.08) !important;
+  color: #be123c !important;
+}
+
+.guardian-consent-primary {
+  background: linear-gradient(180deg, #2d63df, var(--brand)) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.guardian-consent-link-glow {
+  background: color-mix(in srgb, var(--brand) 5%, transparent);
+}
+
+.guardian-consent-link-card:hover .guardian-consent-link-glow {
+  background: color-mix(in srgb, var(--brand) 9%, transparent);
+}
+
+.guardian-consent-link-text {
+  color: var(--brand-strong) !important;
+}
+
+.guardian-consent-footer,
+.provider-verification-header,
+.provider-verification-footer {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-muted) 38%, transparent) !important;
+}
+
+.guardian-consent-secondary {
+  color: var(--text-muted) !important;
+}
+
+.guardian-consent-secondary:hover {
+  color: var(--text-strong) !important;
+}
+
+.provider-verification-notice {
+  border-color: rgba(217, 119, 6, 0.2) !important;
+  background: rgba(217, 119, 6, 0.07) !important;
+}
+
+.provider-verification-notice :where(.text-amber-100, .text-amber-200, .text-amber-300) {
+  color: #92400e !important;
+}
+
+.provider-verification-address-card {
+  border-color: rgba(5, 150, 105, 0.2) !important;
+  background: rgba(5, 150, 105, 0.07) !important;
+}
+
+.provider-verification-modal :where([class*="border-white/"]) {
+  border-color: var(--border-subtle) !important;
+}
+
+.provider-verification-modal :where([class*="bg-[#12100B]"], [class*="bg-[#111217]"], [class*="bg-white/[0.018]"]) {
+  background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface-solid) 28%) !important;
+}
+
+.provider-verification-cancel {
+  color: var(--text-muted) !important;
+}
+
+.guardian-manage-overlay {
+  background: color-mix(in srgb, var(--surface-overlay) 62%, transparent) !important;
+}
+
+.guardian-manage-alert-card {
+  border-color: var(--brand-border) !important;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--brand) 9%, transparent), transparent 16rem),
+    var(--surface-solid) !important;
+  color: var(--text-default) !important;
+}
+
+.light .guardian-manage-action {
+  background: linear-gradient(180deg, #2d63df, var(--brand)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 34px rgba(33, 79, 208, 0.22);
+}
+
+.light .guardian-manage-action:hover {
+  background: var(--brand-strong) !important;
+}
+
+.guardian-manage-panel :where([class*="border-white/"]) {
+  border-color: var(--border-subtle) !important;
+}
+
+.guardian-manage-panel :where([class*="bg-[#0A0A0C]"], [class*="bg-[#0F0F12]"], [class*="bg-[#15151A]"], [class*="bg-slate-900"], [class*="bg-slate-800"]) {
+  background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface-solid) 28%) !important;
+}
+
+.dark .guardian-banner {
+  background:
+    radial-gradient(circle at 92% 0%, rgb(var(--guardian-rgb) / 0.08), transparent 24rem),
+    linear-gradient(180deg, rgba(12, 13, 18, 0.98), rgba(8, 8, 12, 0.99)) !important;
+  box-shadow: 0 28px 82px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.dark .guardian-banner-title {
+  color: #ffffff !important;
+}
+
+.dark .guardian-banner-copy {
+  color: #94a3b8 !important;
+}
+
+.dark .guardian-banner-noise {
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+}
+
+.dark .profile-verification-card {
+  background:
+    linear-gradient(130deg, rgba(79, 70, 229, 0.16), transparent 42%, rgba(6, 182, 212, 0.08) 78%, transparent),
+    #0b0b10 !important;
+  box-shadow: 0 22px 72px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .profile-verification-card :where(.text-white) {
+  color: #ffffff !important;
+}
+
+.dark .profile-verification-card :where(.text-slate-400, .text-slate-500) {
+  color: #94a3b8 !important;
+}
+
+.dark .profile-verification-icon-shell {
+  background: rgba(21, 21, 26, 0.9) !important;
+}
+
+.dark .guardian-consent-backdrop,
+.dark .provider-verification-backdrop,
+.dark .guardian-manage-backdrop {
+  background: rgba(0, 0, 0, 0.82) !important;
+}
+
+.dark .guardian-consent-panel,
+.dark .provider-verification-modal,
+.dark .guardian-manage-panel {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: #09090b !important;
+  box-shadow: 0 36px 110px rgba(0, 0, 0, 0.66) !important;
+}
+
+.dark .guardian-consent-title,
+.dark .provider-verification-modal :where(h3, .text-white),
+.dark .guardian-manage-panel :where(h1, h2, h3, .text-white) {
+  color: #ffffff !important;
+}
+
+.dark .guardian-consent-copy,
+.dark .guardian-consent-helper,
+.dark .guardian-consent-expiry,
+.dark .provider-verification-modal :where(.text-slate-400, .text-slate-500, .text-slate-600),
+.dark .guardian-manage-panel :where(.text-slate-400, .text-slate-500, .text-slate-600) {
+  color: #94a3b8 !important;
+}
+
+.dark .guardian-consent-icon-shell,
+.dark .guardian-consent-status-badge,
+.dark .guardian-consent-link-card,
+.dark .guardian-manage-alert-card {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: #15151a !important;
+}
+
+.dark .guardian-consent-footer,
+.dark .provider-verification-header,
+.dark .provider-verification-footer {
+  background: rgba(255, 255, 255, 0.018) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 .profile-card {

@@ -267,14 +267,14 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                 id="provider-verification-section"
                                 tabIndex={-1}
                                 className={cn(
-                                    "relative isolate overflow-hidden rounded-[2rem] border bg-[#0B0B10] p-6 shadow-2xl outline-none transition-all duration-700 group md:p-8",
+                                    "profile-verification-card relative isolate overflow-hidden rounded-[2rem] border bg-[#0B0B10] p-6 shadow-2xl outline-none transition-all duration-700 group md:p-8",
                                     verificationFocusActive
                                         ? "border-indigo-300/55 shadow-[0_22px_72px_rgba(79,70,229,0.2),0_0_0_1px_rgba(129,140,248,0.2)]"
                                         : "border-indigo-500/30 shadow-black/30"
                                 )}
                             >
-                                <div className="absolute inset-0 bg-[linear-gradient(130deg,rgba(79,70,229,0.16),transparent_42%,rgba(6,182,212,0.08)_78%,transparent)] pointer-events-none" />
-                                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-40" />
+                                <div className="profile-verification-glow absolute inset-0 pointer-events-none" />
+                                <div className="profile-verification-hairline absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-40" />
 
                                 <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8">
                                     <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
@@ -290,7 +290,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                 verificationFocusActive && "border-indigo-100/25"
                                             )}
                                         />
-                                        <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-[#15151A]/90 shadow-2xl transition-transform duration-500 group-hover:scale-105">
+                                        <div className="profile-verification-icon-shell relative flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-[#15151A]/90 shadow-2xl transition-transform duration-500 group-hover:scale-105">
                                             <div className="absolute inset-0 rounded-full border border-indigo-300/10 opacity-70" />
                                             <ShieldCheck size={36} className={cn("relative z-10 transition-colors duration-500", verificationFocusActive ? "text-indigo-200" : "text-indigo-400")} />
                                         </div>
@@ -311,7 +311,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                         <button
                                             onClick={() => setShowVerificationModal(true)}
                                             className={cn(
-                                                "relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl px-8 py-4 text-sm font-bold tracking-wide text-white shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] md:w-auto group/btn",
+                                                "profile-verification-action relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl px-8 py-4 text-sm font-bold tracking-wide text-white shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] md:w-auto group/btn",
                                                 verificationFocusActive
                                                     ? "bg-[#5853F2] shadow-[0_16px_46px_rgba(79,70,229,0.32)]"
                                                     : "bg-[#4F46E5] hover:bg-[#4338CA] shadow-indigo-900/20 hover:shadow-indigo-900/30"

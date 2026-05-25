@@ -41,7 +41,7 @@ export function GuardianManageModal({ isOpen, onClose }: GuardianManageModalProp
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        className="guardian-manage-backdrop absolute inset-0 backdrop-blur-md"
                         onClick={onClose}
                     />
 
@@ -51,14 +51,14 @@ export function GuardianManageModal({ isOpen, onClose }: GuardianManageModalProp
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                        className="relative z-10 w-full max-w-4xl bg-[#0A0A0C] border border-white/10 text-slate-200 overflow-hidden sm:rounded-[2rem] shadow-2xl"
+                        className="guardian-manage-panel relative z-10 w-full max-w-4xl bg-[#0A0A0C] border border-white/10 text-slate-200 overflow-hidden sm:rounded-[2rem] shadow-2xl"
                     >
                         {/* 
                           Construction Overlay 
                           This sits on top of the "fake" UI to show it's work in progress.
                         */}
-                        <div className="absolute inset-0 z-50 backdrop-blur-sm bg-[#0A0A0C]/60 flex items-center justify-center p-6">
-                            <div className="max-w-md w-full bg-[#15151A] border border-indigo-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                        <div className="guardian-manage-overlay absolute inset-0 z-50 backdrop-blur-sm bg-[#0A0A0C]/60 flex items-center justify-center p-6">
+                            <div className="guardian-manage-alert-card max-w-md w-full bg-[#15151A] border border-indigo-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-purple-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
                                 <div className="relative z-10 flex flex-col items-center text-center">
                                     <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-6 shadow-inner ring-1 ring-white/5 mx-auto">
@@ -72,7 +72,7 @@ export function GuardianManageModal({ isOpen, onClose }: GuardianManageModalProp
                                     </p>
                                     <button
                                         onClick={onClose}
-                                        className="px-6 py-2.5 rounded-full bg-white text-black font-bold text-sm hover:bg-slate-200 transition-colors"
+                                        className="guardian-manage-action px-6 py-2.5 rounded-full bg-white text-black font-bold text-sm hover:bg-slate-200 transition-colors"
                                     >
                                         Verstanden
                                     </button>
@@ -84,7 +84,7 @@ export function GuardianManageModal({ isOpen, onClose }: GuardianManageModalProp
                            "Fake" Background UI 
                            This is the complex UI that the user "sees" behind the blur.
                         */}
-                        <div className="relative flex h-[600px] pointer-events-none select-none opacity-50 filter grayscale-[0.3]">
+                        <div className="guardian-manage-preview relative flex h-[600px] pointer-events-none select-none opacity-50 filter grayscale-[0.3]">
                             {/* Sidebar */}
                             <div className="w-64 border-r border-white/5 bg-[#0F0F12] p-6 flex flex-col gap-6">
                                 <div className="flex items-center gap-3 px-2">

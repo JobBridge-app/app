@@ -22,18 +22,18 @@ export default async function NotificationSettingsPage() {
     };
 
     return (
-        <div className="container mx-auto py-12 px-4 md:px-6">
+        <div className="notification-settings-page container mx-auto py-12 px-4 md:px-6">
             <div className="mx-auto max-w-2xl">
-                <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Benachrichtigungen</h1>
-                <p className="text-slate-400 mb-8">Steuere, wie und wann du informiert werden möchtest.</p>
+                <h1 className="notification-settings-title text-3xl font-bold tracking-tight text-white mb-2">Benachrichtigungen</h1>
+                <p className="notification-settings-copy text-slate-400 mb-8">Steuere, wie und wann du informiert werden möchtest.</p>
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-xl">
+                <div className="notification-settings-panel bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-xl">
                     <NotificationSettingsForm initialPrefs={prefs || defaultPrefs} userId={profile.id} />
                 </div>
 
-                <div className="mt-8 p-6 rounded-2xl bg-blue-500/10 border border-blue-500/20">
-                    <h3 className="text-lg font-semibold text-blue-200 mb-2">App Benachrichtigungen</h3>
-                    <p className="text-blue-200/70 text-sm">
+                <div className="notification-settings-note mt-8 p-6 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+                    <h3 className="text-lg font-semibold mb-2">App Benachrichtigungen</h3>
+                    <p className="text-sm">
                         Push-Benachrichtigungen für dein Smartphone kannst du direkt in der iOS/Android App oder in deinen Systemeinstellungen verwalten.
                     </p>
                 </div>
