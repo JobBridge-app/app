@@ -72,11 +72,12 @@ export default async function NewOfferPage() {
                 </p>
             </div>
 
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-slate-950/48 p-5 shadow-[0_28px_90px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl sm:p-7 md:p-8">
+            <div className="relative isolate overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#050817]/78 p-5 shadow-[0_32px_100px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.07)] backdrop-blur-xl sm:p-7 md:p-8">
                 <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-indigo-200/60 to-transparent" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(99,102,241,0.09),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.035),transparent_28%)]" />
+                <div className="pointer-events-none absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-sky-200/25 to-transparent" />
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.055),transparent_32%),linear-gradient(180deg,rgba(79,70,229,0.05),transparent_44%)]" />
                 <div className="relative">
-                <CreateJobForm defaultLocation={defaultLocation} marketName={marketName} />
+                    <CreateJobForm defaultLocation={defaultLocation} marketName={marketName} />
                 </div>
             </div>
         </div>

@@ -4592,6 +4592,153 @@ textarea.profile-field-control {
   --job-accent-strong: #c7d2fe;
   --job-accent-soft: rgba(99, 102, 241, 0.13);
   --job-accent-border: rgba(129, 140, 248, 0.26);
+  --job-border: rgba(148, 163, 184, 0.115);
+  --job-divider: rgba(148, 163, 184, 0.12);
+  --job-card-bg:
+    radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.16), transparent 17rem),
+    radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.08), transparent 19rem),
+    linear-gradient(145deg, rgba(21, 28, 49, 0.98), rgba(11, 16, 32, 0.98) 58%, rgba(17, 24, 39, 0.92));
+  --job-card-border: rgba(129, 140, 248, 0.18);
+  --job-card-border-hover: rgba(129, 140, 248, 0.42);
+  --job-shadow: 0 24px 70px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --job-shadow-hover: 0 34px 96px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(129, 140, 248, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.dark .jobs-desktop-tabs {
+  border-color: var(--job-divider);
+}
+
+.dark .jobs-mobile-tabs {
+  border-color: rgba(129, 140, 248, 0.15);
+  box-shadow: 0 20px 58px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.dark .jobs-mobile-tabs-divider {
+  background: var(--job-divider);
+}
+
+.dark .jobs-desktop-tab,
+.dark .jobs-mobile-tab,
+.dark .jobs-filter-trigger,
+.dark .jobs-filter-icon-button {
+  border: 1px solid transparent;
+  letter-spacing: -0.005em;
+}
+
+.dark .jobs-desktop-tab[data-active="true"],
+.dark .jobs-mobile-tab[data-active="true"],
+.dark .jobs-filter-trigger.bg-white\/10,
+.dark .jobs-filter-icon-button.bg-white\/5 {
+  border-color: rgba(129, 140, 248, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.052));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.dark .jobs-filter-trigger:hover,
+.dark .jobs-filter-icon-button:hover,
+.dark .jobs-desktop-tab:hover,
+.dark .jobs-mobile-tab:hover {
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+.dark .jobs-section-heading {
+  color: #f8fafc;
+}
+
+.dark .jobs-section-count {
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(148, 163, 184, 0.11);
+  color: #94a3b8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.dark .jobs-section-icon {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.dark .jobs-section-rule {
+  background: linear-gradient(90deg, rgba(129, 140, 248, 0.16), rgba(148, 163, 184, 0.06), transparent);
+}
+
+.job-card-shell {
+  isolation: isolate;
+  overflow: visible;
+}
+
+.job-card-shell:hover,
+.job-card-shell:focus-within {
+  z-index: 5;
+}
+
+.dark .job-card {
+  border-color: var(--job-card-border) !important;
+  background: var(--job-card-bg) !important;
+  box-shadow: var(--job-shadow);
+  transform: translateZ(0);
+  transition-property: border-color, box-shadow, background-color, filter, transform;
+}
+
+.dark .job-card:hover {
+  border-color: var(--job-card-border-hover) !important;
+  box-shadow: var(--job-shadow-hover);
+  filter: brightness(1.04) saturate(1.08);
+  transform: translateZ(0);
+}
+
+.dark .job-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 1.25rem auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(165, 180, 252, 0.48), transparent);
+  opacity: 0.48;
+  pointer-events: none;
+}
+
+.dark .job-card::after {
+  content: "";
+  position: absolute;
+  right: -24%;
+  bottom: -38%;
+  width: 58%;
+  height: 54%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.2), transparent 68%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.dark .job-card:hover::after {
+  opacity: 1;
+}
+
+.dark .job-card-title,
+.dark .job-card:hover .job-card-title {
+  color: #ffffff !important;
+  font-weight: 800;
+  text-shadow: 0 1px 18px rgba(199, 210, 254, 0.14);
+}
+
+.dark .job-card-description {
+  color: rgba(203, 213, 225, 0.84);
+}
+
+.dark .job-card-footer {
+  border-color: var(--job-divider);
+}
+
+.dark .job-card-category {
+  backdrop-filter: blur(10px);
+}
+
+.dark .job-card-metric span {
+  letter-spacing: -0.01em;
+}
+
+.dark .job-card-trailing-meta,
+.dark .job-card-provider {
+  color: rgba(148, 163, 184, 0.78);
 }
 
 .light .jobs-home-heading h1,
@@ -4679,7 +4826,8 @@ textarea.profile-field-control {
 .light .job-card:hover {
   border-color: rgba(33, 79, 208, 0.24) !important;
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-3px);
+  filter: brightness(1.01);
+  transform: translateZ(0);
 }
 
 .light .job-card::before {

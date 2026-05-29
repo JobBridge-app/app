@@ -206,8 +206,8 @@ export function JobsList({
     return (
         <>
             {/* ── Mobile Tab Bar ───────────────────────────────────────── */}
-            <div className="mb-6 flex w-full justify-center md:hidden">
-                <div className="jobs-mobile-tabs flex w-full items-center justify-between rounded-2xl border border-white/[0.08] bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 p-1 shadow-sm">
+            <div className="mb-7 flex w-full justify-center md:hidden">
+                <div className="jobs-mobile-tabs flex w-full items-center justify-between rounded-2xl border border-white/[0.08] bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-slate-950/95 p-1.5 shadow-[0_18px_50px_-26px_rgba(0,0,0,0.75)]">
                     <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar flex-1 min-w-0">
                         <MobileTab
                             active={activeTab === "active"}
@@ -262,19 +262,31 @@ export function JobsList({
             </div>
 
             {/* ── Desktop Tab Bar ──────────────────────────────────────── */}
-            <div className="jobs-desktop-tabs hidden items-center justify-between border-b border-white/10 pb-4 md:mb-8 md:flex">
-                <div className="flex items-center gap-1">
-                    <DesktopTab active={activeTab === "active"} onClick={() => handleTabChange("active")}>
+            <div className="jobs-desktop-tabs hidden items-center justify-between border-b border-white/[0.08] pb-5 md:mb-10 md:flex">
+                <div className="jobs-tab-group flex items-center gap-2">
+                    <DesktopTab
+                        active={activeTab === "active"}
+                        onClick={() => handleTabChange("active")}
+                        activeClass="bg-indigo-500/10 text-white ring-indigo-400/20 shadow-[0_14px_34px_-24px_rgba(99,102,241,0.75)]"
+                    >
                         <Briefcase size={15} className={cn(activeTab === "active" ? "text-indigo-400" : "text-slate-500")} />
                         Aktuell
                         {totalVisibleActiveJobs > 0 && <TabBadge>{totalVisibleActiveJobs}</TabBadge>}
                     </DesktopTab>
-                    <DesktopTab active={activeTab === "waitlist"} onClick={() => handleTabChange("waitlist")}>
+                    <DesktopTab
+                        active={activeTab === "waitlist"}
+                        onClick={() => handleTabChange("waitlist")}
+                        activeClass="bg-amber-500/10 text-white ring-amber-400/20 shadow-[0_14px_34px_-24px_rgba(245,158,11,0.65)]"
+                    >
                         <Clock size={15} className={cn(activeTab === "waitlist" ? "text-amber-400" : "text-slate-500")} />
                         Warteliste
                         {sortedWaitlistedJobs.length > 0 && <TabBadge>{sortedWaitlistedJobs.length}</TabBadge>}
                     </DesktopTab>
-                    <DesktopTab active={activeTab === "applied"} onClick={() => handleTabChange("applied")}>
+                    <DesktopTab
+                        active={activeTab === "applied"}
+                        onClick={() => handleTabChange("applied")}
+                        activeClass="bg-emerald-500/10 text-white ring-emerald-400/20 shadow-[0_14px_34px_-24px_rgba(16,185,129,0.65)]"
+                    >
                         <CheckCircle2 size={15} className={cn(activeTab === "applied" ? "text-emerald-400" : "text-slate-500")} />
                         Beworben
                         {sortedAppliedJobs.length > 0 && <TabBadge>{sortedAppliedJobs.length}</TabBadge>}
@@ -284,14 +296,14 @@ export function JobsList({
                 <button
                     onClick={() => setShowFilterPanel(true)}
                     className={cn(
-                        "jobs-filter-trigger relative ml-4 flex items-center gap-2 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-slate-400 transition-all hover:border-white/10 hover:bg-white/5 hover:text-white sm:px-4",
-                        showFilterPanel && "bg-white/10 text-indigo-400 border-indigo-500/20",
-                        hasChanges && !showFilterPanel && "text-indigo-400 border-indigo-500/20 bg-indigo-500/10"
+                        "jobs-filter-trigger relative ml-4 flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-transparent px-3.5 py-2.5 text-slate-400 transition-all duration-200 hover:border-white/10 hover:bg-white/5 hover:text-white sm:px-4",
+                        showFilterPanel && "bg-white/10 text-indigo-300 border-indigo-500/20",
+                        hasChanges && !showFilterPanel && "text-indigo-300 border-indigo-500/20 bg-indigo-500/10"
                     )}
                     title="Filter & Sortierung"
                 >
                     <ListFilter size={17} />
-                    <span className="hidden sm:inline text-xs font-semibold">
+                    <span className="hidden sm:inline text-sm font-semibold">
                         {isNonDefaultSort && !activeFilterCount ? currentSortLabel : "Filter"}
                     </span>
                     {totalBadgeCount > 0 && (
@@ -424,7 +436,7 @@ function MobileTab({
             onClick={onClick}
             data-active={active}
             className={cn(
-                "jobs-mobile-tab relative flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-semibold transition-all",
+                "jobs-mobile-tab relative flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-2 text-[11px] font-semibold transition-all sm:gap-1.5 sm:rounded-xl sm:px-3 sm:text-xs",
                 active ? activeClass : "text-slate-400 hover:text-slate-200 hover:bg-white/5 border-transparent"
             )}
         >
@@ -436,10 +448,12 @@ function MobileTab({
 function DesktopTab({
     active,
     onClick,
+    activeClass,
     children,
 }: {
     active: boolean;
     onClick: () => void;
+    activeClass: string;
     children: React.ReactNode;
 }) {
     return (
@@ -447,10 +461,10 @@ function DesktopTab({
             onClick={onClick}
             data-active={active}
             className={cn(
-                "jobs-desktop-tab flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:text-sm",
+                "jobs-desktop-tab relative flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 sm:px-4",
                 active
-                    ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    ? cn("ring-1", activeClass)
+                    : "text-slate-400 hover:bg-white/5 hover:text-white"
             )}
         >
             {children}
@@ -460,7 +474,7 @@ function DesktopTab({
 
 function TabBadge({ children }: { children: React.ReactNode }) {
     return (
-        <span className="jobs-tab-badge ml-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">
+        <span className="jobs-tab-badge ml-0.5 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-bold text-slate-300">
             {children}
         </span>
     );

@@ -33,20 +33,23 @@ export const JobsListSection = memo(function JobsListSection({
     onSelect
 }: SectionProps) {
     return (
-        <div className={cn("jobs-section space-y-6", hiddenOnMobile ? "hidden lg:block" : "")}>
-            <h2 className={cn("jobs-section-heading flex items-center gap-3 text-xl font-bold", isWhiteTitle ? "text-white" : colorClass)}>
-                {Icon && (
-                    <div className={cn("jobs-section-icon rounded-lg border p-2", isWhiteTitle ? "bg-white/10 border-white/10 text-indigo-400" : "bg-white/5 border-white/10")}>
-                        <Icon size={20} />
-                    </div>
-                )}
-                {title}
-                <span className="jobs-section-count ml-auto rounded-full bg-white/10 px-2.5 py-0.5 text-sm font-medium text-slate-400 lg:ml-2">
-                    {jobs.length}
-                </span>
-            </h2>
+        <div className={cn("jobs-section space-y-7", hiddenOnMobile ? "hidden lg:block" : "")}>
+            <div className="jobs-section-heading-row flex items-center gap-4">
+                <h2 className={cn("jobs-section-heading flex min-w-0 items-center gap-3 text-2xl font-bold tracking-[-0.01em]", isWhiteTitle ? "text-white" : colorClass)}>
+                    {Icon && (
+                        <div className={cn("jobs-section-icon rounded-xl border p-2.5", isWhiteTitle ? "border-white/10 bg-white/10 text-indigo-400" : "border-white/10 bg-white/5")}>
+                            <Icon size={20} />
+                        </div>
+                    )}
+                    <span className="truncate">{title}</span>
+                    <span className="jobs-section-count rounded-full bg-white/10 px-3 py-1 text-sm font-semibold tracking-normal text-slate-400">
+                        {jobs.length}
+                    </span>
+                </h2>
+                <div className="jobs-section-rule hidden h-px flex-1 bg-gradient-to-r from-white/10 via-white/[0.04] to-transparent md:block" />
+            </div>
 
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            <div className="jobs-card-grid grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {jobs.length === 0 ? (
                     <div className="jobs-empty-state col-span-full rounded-2xl border border-dashed border-white/10 bg-gradient-to-b from-white/[0.02] to-transparent py-12 text-center">
                         <div className="text-slate-400">{emptyMsg}</div>
@@ -55,10 +58,7 @@ export const JobsListSection = memo(function JobsListSection({
                     jobs.map(job => (
                         <div
                             key={job.id}
-                            style={{
-                                contentVisibility: "auto",
-                                containIntrinsicSize: "320px",
-                            }}
+                            className="job-card-shell relative min-w-0"
                         >
                             <JobCard
                                 job={job}

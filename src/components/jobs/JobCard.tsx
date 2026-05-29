@@ -113,7 +113,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
             onMouseEnter={() => void warmJobsUI()}
             onFocus={() => void warmJobsUI()}
             onPointerDown={() => void warmJobsUI()}
-            className={`job-card group relative flex h-full transform-gpu cursor-pointer flex-col overflow-hidden rounded-2xl border bg-slate-900/40 p-6 transition-[border-color,box-shadow,background-color,filter] duration-300
+            className={`job-card group relative flex h-full min-h-[236px] transform-gpu cursor-pointer flex-col overflow-hidden rounded-[1.35rem] border bg-slate-900/40 p-6 transition-[border-color,box-shadow,background-color,filter,transform] duration-300 md:p-7
                 ${isApplied && !isUserWaitlisted
                     ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
                     : isLocked
@@ -126,7 +126,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
         >
             {/* Locked Overlay */}
             {isLocked && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-slate-950/60 opacity-100 transition-opacity duration-300 pointer-events-none sm:opacity-0 sm:group-hover:opacity-100">
+                <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[1.35rem] bg-slate-950/60 opacity-100 transition-opacity duration-300 pointer-events-none sm:opacity-0 sm:group-hover:opacity-100">
                     <div className="flex flex-col items-center gap-2 transform sm:translate-y-4 sm:group-hover:translate-y-0 transition-transform duration-300">
                         <div className="w-12 h-12 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-slate-400 shadow-xl">
                             <Lock size={20} />
@@ -155,7 +155,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
             )}
 
             <div className={`relative z-10 flex flex-col h-full ${isLocked ? 'md:opacity-50 md:blur-[1px] md:group-hover:blur-sm transition-all duration-300' : ''}`}>
-                <div className="flex flex-col gap-2 mb-4">
+                <div className="mb-5 flex flex-col gap-2.5">
                     {/* Waitlist Badges - Keep in flow if they exist so title gets pushed down naturally */}
                     {(isWaitlistMode) && (
                         <div className="flex items-start mb-1">
@@ -179,7 +179,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                     {/* Main Header Row: Title & Right-Aligned Badges */}
                     <div className="flex items-start justify-between gap-3">
                         {/* Title Row */}
-                        <h3 className="job-card-title text-xl font-bold leading-tight text-white transition-colors group-hover:text-indigo-100">
+                        <h3 className="job-card-title line-clamp-2 text-[1.35rem] font-bold leading-[1.12] tracking-[-0.01em] text-white transition-colors group-hover:text-indigo-100 md:text-[1.45rem]">
                             {job.title}
                         </h3>
 
@@ -200,13 +200,13 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                     </div>
 
                     {/* Metadata Row */}
-                    <div className="job-card-meta-row flex flex-wrap items-center gap-2 text-sm font-medium text-slate-400">
+                    <div className="job-card-meta-row flex flex-wrap items-center gap-x-2.5 gap-y-2 text-sm font-medium text-slate-400">
                         {(() => {
                             const CategoryIcon = JOB_CATEGORIES.find(c => c.id === job.category)?.icon;
                             const categoryLabel = JOB_CATEGORIES.find(c => c.id === job.category)?.label || "Sonstiges";
                             return (
                                 <span className={cn(
-                                    "job-card-category flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wide transition-all duration-300",
+                                    "job-card-category flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold tracking-wide transition-all duration-300",
                                     isWaitlistMode
                                         ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_10px_-2px_rgba(245,158,11,0.15)]"
                                         : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_10px_-2px_rgba(99,102,241,0.15)] group-hover:bg-indigo-500/20 group-hover:border-indigo-500/30 group-hover:shadow-[0_0_15px_-2px_rgba(99,102,241,0.25)]"
@@ -226,12 +226,12 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                     </div>
                 </div>
 
-                <p className="job-card-description mb-6 line-clamp-2 flex-grow text-base font-light leading-relaxed text-slate-300">
+                <p className="job-card-description mb-7 line-clamp-2 flex-grow text-[0.98rem] font-normal leading-7 text-slate-300/90">
                     {job.description}
                 </p>
 
-                <div className="job-card-footer mt-auto flex flex-wrap gap-4 border-t border-white/[0.06] pt-4 text-sm text-slate-400">
-                    <div className="job-card-metric flex items-center gap-2">
+                <div className="job-card-footer mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-white/[0.07] pt-5 text-sm text-slate-400">
+                    <div className="job-card-metric flex min-w-0 items-center gap-2">
                         <Euro size={16} className="job-card-icon text-emerald-400" />
                         <span className="font-semibold text-white">
                             {job.payment_type === 'fixed'
@@ -240,14 +240,14 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                         </span>
                     </div>
                     {providerStatus ? (
-                        <div className="job-card-metric flex items-center gap-2">
+                        <div className="job-card-metric flex min-w-0 items-center gap-2">
                             <MapPin size={16} className="job-card-icon text-indigo-400" />
                             <span className="truncate max-w-[150px]">
                                 {job.public_location_label || job.market_name || "Privatadresse"}
                             </span>
                         </div>
                     ) : (
-                        <div className="job-card-metric flex items-center gap-2">
+                        <div className="job-card-metric flex min-w-0 items-center gap-2">
                             <MapPin size={16} className={cn("job-card-icon", job.distance_km != null ? "text-indigo-400" : "text-slate-500")} />
                             {job.distance_km != null ? (
                                 <span className="truncate max-w-[150px] text-white font-medium">
@@ -271,7 +271,7 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                             )}
                         </div>
                     )}
-                    <div className="job-card-trailing-meta ml-auto flex items-center gap-2 text-xs font-medium text-slate-500">
+                    <div className="job-card-trailing-meta ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 text-xs font-medium text-slate-500 max-sm:ml-0 max-sm:w-full max-sm:justify-start">
                         <Clock size={14} className="job-card-muted-icon text-slate-600" />
                         <span>{timeAgo(job.created_at)}</span>
                         {job.creator && (

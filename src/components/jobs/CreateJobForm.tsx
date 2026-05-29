@@ -63,9 +63,9 @@ type DefaultLocation = {
     postal_code: string | null;
 };
 
-const inputClass = "w-full rounded-xl border border-white/10 bg-slate-950/50 px-4 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] transition-[border-color,background-color,box-shadow] placeholder:text-slate-600 focus:border-indigo-300/45 focus:bg-slate-950/70 focus:outline-none focus:ring-2 focus:ring-indigo-400/15";
+const inputClass = "w-full rounded-xl border border-white/10 bg-[#050814]/70 px-4 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.045)] transition-[border-color,background-color,box-shadow] placeholder:text-slate-600 focus:border-sky-200/45 focus:bg-[#050814]/86 focus:outline-none focus:ring-2 focus:ring-sky-300/15";
 const fieldLabelClass = "block text-sm font-semibold text-slate-200 mb-2";
-const sectionClass = "border-t border-white/[0.07] pt-5";
+const sectionClass = "border-t border-white/[0.08] pt-6";
 
 export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation?: DefaultLocation | null, marketName: string }) {
     const [state, formAction] = useActionState<CreateJobFormState, FormData>(createJob, null);
@@ -139,7 +139,7 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
     }, [title, description, wage, categoryId, paymentType, location, useCustomLocation, isLoaded, saveDraft]);
 
     return (
-        <form action={formAction} className="space-y-6">
+        <form action={formAction} className="space-y-7">
             <input type="hidden" name="use_default_location" value={(!useCustomLocation && defaultLocation) ? "true" : "false"} />
             <input type="hidden" name="category" value={categoryId} />
             <input type="hidden" name="payment_type" value={paymentType} />
@@ -155,7 +155,7 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                 </>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-7">
                 {isLoaded && draft && (
                     <div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-300/15 bg-indigo-400/8 px-3 py-2 text-xs text-indigo-200">
                         <span className="flex items-center gap-2 font-semibold">
@@ -175,9 +175,7 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
 
                 {/* Category Selection */}
                 <div>
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                        <label className="text-sm font-semibold text-slate-200">Welche Art von Hilfe suchst du? *</label>
-                    </div>
+                    <label className="mb-3 block text-sm font-semibold text-slate-200">Welche Art von Hilfe suchst du? *</label>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                         {JOB_CATEGORIES.map((category) => {
                             const Icon = category.icon;
@@ -194,16 +192,20 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                                         }
                                     }}
                                     className={cn(
-                                        "group relative flex min-h-[104px] flex-col items-center justify-center overflow-hidden rounded-xl border p-4 transition-[background-color,border-color,box-shadow,transform] duration-300",
+                                        "group relative flex min-h-[104px] flex-col items-center justify-center overflow-hidden rounded-xl border p-4 transition-[background-color,border-color,box-shadow,transform] duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-200/20",
                                         isSelected
-                                            ? "border-indigo-300/55 bg-indigo-400/12 shadow-[0_18px_45px_rgba(79,70,229,0.15),inset_0_1px_0_rgba(255,255,255,0.09)] ring-1 ring-indigo-300/30"
-                                            : "border-white/[0.08] bg-white/[0.025] hover:-translate-y-0.5 hover:border-white/16 hover:bg-white/[0.055]"
+                                            ? "border-indigo-200/60 bg-[linear-gradient(145deg,rgba(99,102,241,0.18),rgba(14,165,233,0.055))] shadow-[0_18px_48px_rgba(79,70,229,0.18),inset_0_1px_0_rgba(255,255,255,0.1)] ring-1 ring-indigo-200/25"
+                                            : "border-white/[0.08] bg-white/[0.025] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] hover:-translate-y-0.5 hover:border-white/16 hover:bg-white/[0.055]"
                                     )}
                                 >
                                     {isSelected && (
                                         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-200/70 to-transparent" />
                                     )}
-                                    {isSelected && <CheckCircle2 size={15} className="absolute right-3 top-3 text-indigo-200" />}
+                                    {isSelected && (
+                                        <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border border-indigo-100/20 bg-indigo-200/12 text-indigo-100">
+                                            <CheckCircle2 size={13} />
+                                        </span>
+                                    )}
                                     <motion.div
                                         animate={{
                                             scale: isSelected ? 1.1 : 1,
@@ -216,13 +218,13 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                                             strokeWidth={1.5}
                                             className={cn(
                                                 "mb-3 transition-colors duration-300",
-                                                isSelected ? "text-indigo-200" : "text-slate-400 group-hover:text-slate-200"
+                                                isSelected ? "text-indigo-100" : "text-slate-400 group-hover:text-slate-200"
                                             )}
                                         />
                                     </motion.div>
                                     <span className={cn(
                                         "text-xs font-semibold text-center transition-colors duration-300",
-                                        isSelected ? "text-indigo-200" : "text-slate-300"
+                                        isSelected ? "text-indigo-50" : "text-slate-300"
                                     )}>
                                         {category.label}
                                     </span>
@@ -268,7 +270,7 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                             className={cn(
                                 "group relative flex cursor-pointer items-start gap-3 overflow-hidden rounded-xl border p-4 transition-[background-color,border-color,box-shadow,transform]",
                                 !useCustomLocation
-                                    ? "border-indigo-300/50 bg-indigo-400/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-indigo-300/20"
+                                    ? "border-indigo-200/55 bg-[linear-gradient(145deg,rgba(99,102,241,0.15),rgba(14,165,233,0.045))] shadow-[0_16px_44px_rgba(79,70,229,0.12),inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-indigo-200/20"
                                     : "border-white/[0.08] bg-white/[0.025] hover:-translate-y-0.5 hover:border-white/16 hover:bg-white/[0.055]"
                             )}
                         >
@@ -297,7 +299,7 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
                         className={cn(
                             "cursor-pointer space-y-3 rounded-xl border p-4 transition-[background-color,border-color,box-shadow,transform]",
                             useCustomLocation
-                                ? "border-indigo-300/35 bg-[#0F1014] shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]"
+                                ? "border-indigo-200/45 bg-[#0F1014] shadow-[0_16px_44px_rgba(79,70,229,0.1),inset_0_1px_0_rgba(255,255,255,0.07)]"
                                 : "border-white/[0.08] bg-white/[0.025] hover:-translate-y-0.5 hover:border-white/16 hover:bg-white/[0.055]"
                         )}
                     >
@@ -340,99 +342,99 @@ export function CreateJobForm({ defaultLocation, marketName }: { defaultLocation
 
                 <div className={cn(sectionClass, "space-y-4")}>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <label className={fieldLabelClass}>Bezahlung</label>
-                        <div className="flex rounded-xl border border-white/10 bg-slate-950/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-                            <button
-                                type="button"
-                                onClick={() => setPaymentType("hourly")}
-                                className={cn(
-                                    "flex-1 rounded-lg py-2 text-sm font-semibold transition-all duration-200",
-                                    paymentType === "hourly" ? "bg-indigo-400/18 text-indigo-100 shadow-sm" : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
-                                )}
-                            >
-                                Stundenlohn
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setPaymentType("fixed")}
-                                className={cn(
-                                    "flex-1 rounded-lg py-2 text-sm font-semibold transition-all duration-200",
-                                    paymentType === "fixed" ? "bg-indigo-400/18 text-indigo-100 shadow-sm" : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
-                                )}
-                            >
-                                Pauschale
-                            </button>
+                        <div>
+                            <label className={fieldLabelClass}>Bezahlung</label>
+                            <div className="flex rounded-xl border border-white/10 bg-[#050814]/70 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentType("hourly")}
+                                    className={cn(
+                                        "flex-1 rounded-lg py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200/18",
+                                        paymentType === "hourly" ? "bg-indigo-300/18 text-indigo-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]" : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
+                                    )}
+                                >
+                                    Stundenlohn
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentType("fixed")}
+                                    className={cn(
+                                        "flex-1 rounded-lg py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200/18",
+                                        paymentType === "fixed" ? "bg-indigo-300/18 text-indigo-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]" : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
+                                    )}
+                                >
+                                    Pauschale
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <label htmlFor="wage" className={fieldLabelClass}>
-                            {paymentType === "hourly" ? "Stundenlohn (€)" : "Pauschale (€)"} *
-                        </label>
-                        <div className="relative">
-                            <input
-                                type="number"
-                                name="wage"
-                                required
-                                min="0"
-                                step="0.50"
-                                value={wage}
-                                onChange={(e) => setWage(e.target.value)}
-                                placeholder={paymentType === "hourly" ? "15.00" : "50.00"}
-                                className={cn(inputClass, "h-[46px] pr-12")}
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm pointer-events-none">
-                                € {paymentType === "hourly" && <span className="text-xs">/h</span>}
+                        <div>
+                            <label htmlFor="wage" className={fieldLabelClass}>
+                                {paymentType === "hourly" ? "Stundenlohn (€)" : "Pauschale (€)"} *
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    name="wage"
+                                    required
+                                    min="0"
+                                    step="0.50"
+                                    value={wage}
+                                    onChange={(e) => setWage(e.target.value)}
+                                    placeholder={paymentType === "hourly" ? "15.00" : "50.00"}
+                                    className={cn(inputClass, "h-[46px] pr-12")}
+                                />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm pointer-events-none">
+                                    € {paymentType === "hourly" && <span className="text-xs">/h</span>}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Compensation Suggestion (Animated) moved below inputs */}
-                <AnimatePresence>
-                    {categoryId && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                            animate={{ opacity: 1, height: "auto", marginTop: 16 }}
-                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className="overflow-hidden"
-                        >
-                            <div className="relative rounded-xl border border-indigo-300/20 bg-[linear-gradient(135deg,rgba(99,102,241,0.14),rgba(14,165,233,0.06))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                                {(() => {
-                                    const selectedCat = JOB_CATEGORIES.find(c => c.id === categoryId);
-                                    if (!selectedCat) return null;
+                    {/* Compensation Suggestion (Animated) moved below inputs */}
+                    <AnimatePresence>
+                        {categoryId && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                            >
+                                <div className="relative rounded-xl border border-indigo-300/20 bg-[linear-gradient(135deg,rgba(99,102,241,0.14),rgba(14,165,233,0.06))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                                    {(() => {
+                                        const selectedCat = JOB_CATEGORIES.find(c => c.id === categoryId);
+                                        if (!selectedCat) return null;
 
-                                    const avg = ((selectedCat.recommendedWage.min + selectedCat.recommendedWage.max) / 2).toFixed(2);
+                                        const avg = ((selectedCat.recommendedWage.min + selectedCat.recommendedWage.max) / 2).toFixed(2);
 
-                                    return (
-                                        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                            <div>
-                                                <h4 className="text-sm font-bold text-indigo-100 mb-0.5">
-                                                    Unsere Empfehlung für eine faire Vergütung
-                                                </h4>
-                                                <p className="text-xs text-indigo-100/78 leading-relaxed m-0">
-                                                    {selectedCat.hint} Empfehlung: <strong className="rounded bg-indigo-300/15 px-1 py-0.5 text-white">{selectedCat.recommendedWage.min} - {selectedCat.recommendedWage.max} €</strong>.
-                                                </p>
+                                        return (
+                                            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-indigo-100 mb-0.5">
+                                                        Unsere Empfehlung für eine faire Vergütung
+                                                    </h4>
+                                                    <p className="text-xs text-indigo-100/78 leading-relaxed m-0">
+                                                        {selectedCat.hint} Empfehlung: <strong className="rounded bg-indigo-300/15 px-1 py-0.5 text-white">{selectedCat.recommendedWage.min} - {selectedCat.recommendedWage.max} €</strong>.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setWage(avg);
+                                                        setPaymentType(selectedCat.defaultPaymentType);
+                                                    }}
+                                                    className="shrink-0 rounded-lg border border-indigo-200/25 bg-indigo-300/15 px-4 py-2 text-center text-xs font-bold text-indigo-100 shadow-sm transition-all hover:bg-indigo-300/24 hover:text-white"
+                                                >
+                                                    {avg} € {selectedCat.defaultPaymentType === 'hourly' ? '/ Std' : 'pau.'} übernehmen
+                                                </button>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setWage(avg);
-                                                    setPaymentType(selectedCat.defaultPaymentType);
-                                                }}
-                                                className="shrink-0 rounded-lg border border-indigo-200/25 bg-indigo-300/15 px-4 py-2 text-center text-xs font-bold text-indigo-100 shadow-sm transition-all hover:bg-indigo-300/24 hover:text-white"
-                                            >
-                                                {avg} € {selectedCat.defaultPaymentType === 'hourly' ? '/ Std' : 'pau.'} übernehmen
-                                            </button>
-                                        </div>
-                                    );
-                                })()}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                        );
+                                    })()}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
