@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const STORAGE_KEY = "jobbridge_create_job_draft";
 
@@ -41,26 +41,27 @@ export function useJobFormPersistence() {
     }, []);
 
     // Save to storage
-    const saveDraft = (data: Partial<JobDraftData>) => {
+    const saveDraft = useCallback((data: Partial<JobDraftData>) => {
         try {
-            const current = draft || {};
-            const updated = { ...current, ...data };
-            setDraft(updated as JobDraftData);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            setDraft((current) => {
+                const updated = { ...(current || {}), ...data } as JobDraftData;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+                return updated;
+            });
         } catch (e) {
             console.error("Failed to save job draft", e);
         }
-    };
+    }, []);
 
     // Clear storage
-    const clearDraft = () => {
+    const clearDraft = useCallback(() => {
         try {
             localStorage.removeItem(STORAGE_KEY);
             setDraft(null);
         } catch (e) {
             console.error("Failed to clear job draft", e);
         }
-    };
+    }, []);
 
     return { draft, isLoaded, saveDraft, clearDraft };
 }

@@ -64,14 +64,20 @@ export default async function NewOfferPage() {
     const marketName = region?.display_name || "deiner Stadt";
 
     return (
-        <div className="container mx-auto py-8 px-4 md:px-6 max-w-2xl">
+        <div className="container mx-auto max-w-3xl px-4 py-8 md:px-6">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Neuen Job erstellen</h1>
-                <p className="text-slate-400">Suche nach Unterstützung in {marketName}.</p>
+                <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">Neuen Job erstellen</h1>
+                <p className="mt-3 max-w-2xl text-base leading-7 text-slate-400">
+                    Suche nach Unterstützung in {marketName}.
+                </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm">
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-slate-950/48 p-5 shadow-[0_28px_90px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl sm:p-7 md:p-8">
+                <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-indigo-200/60 to-transparent" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(99,102,241,0.09),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.035),transparent_28%)]" />
+                <div className="relative">
                 <CreateJobForm defaultLocation={defaultLocation} marketName={marketName} />
+                </div>
             </div>
         </div>
     );
