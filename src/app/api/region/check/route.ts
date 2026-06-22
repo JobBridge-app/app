@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { Database } from "@/lib/types";
+import { getRegionAvailabilityStatus } from "@/lib/regionCheck";
 
 export async function POST(req: NextRequest) {
     try {
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
         const { data, error } = await supabase
             .from("regions_live")
-            .select("*")
+            .select("id, city, postal_code, federal_state, country, openplz_municipality_key, is_live, display_name, brand_prefix")
             .ilike("city", city)
             .ilike("federal_state", federal_state)
             .eq("country", country || "DE")
@@ -34,9 +34,13 @@ export async function POST(req: NextRequest) {
         }
 
         const region = data[0];
+        const status = getRegionAvailabilityStatus(region);
 
-        // Since we are querying 'regions_live', existence implies it is live.
-        return NextResponse.json({ status: "live", region });
+        if (status !== "live") {
+            return NextResponse.json({ status });
+        }
+
+        return NextResponse.json({ status, region });
     } catch (err) {
         console.error("API error:", err);
         return NextResponse.json(
