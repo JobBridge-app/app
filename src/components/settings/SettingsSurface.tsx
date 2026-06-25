@@ -2,14 +2,24 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { MobileNavPreferenceControl } from "@/components/settings/MobileNavPreferenceControl";
+import { ThemePreferenceControl } from "@/components/settings/ThemePreferenceControl";
 import type { MobileNavPreference } from "@/lib/mobile-nav-preference";
+import type { ThemePreference } from "@/lib/theme-preference";
 
 type SettingsSurfaceProps = {
     mobileNavPreference: MobileNavPreference;
+    themePreference: ThemePreference;
 };
 
-export function SettingsSurface({ mobileNavPreference }: SettingsSurfaceProps) {
+const themePreferenceLabels: Record<ThemePreference, string> = {
+    system: "Systemeinstellung",
+    light: "Hellmodus",
+    dark: "Dunkelmodus",
+};
+
+export function SettingsSurface({ mobileNavPreference, themePreference }: SettingsSurfaceProps) {
     const navigationStatus = mobileNavPreference === "bottom" ? "Dock unten" : "Tabs oben";
+    const themeStatus = themePreferenceLabels[themePreference];
 
     return (
         <div className="settings-page mx-auto w-full max-w-5xl px-4 pb-14 pt-8 md:px-6">
@@ -25,6 +35,19 @@ export function SettingsSurface({ mobileNavPreference }: SettingsSurfaceProps) {
             </header>
 
             <div className="settings-panel mt-7 space-y-4 md:space-y-0 md:overflow-hidden">
+                <SettingsGroup
+                    id="appearance"
+                    title="Darstellung"
+                    description="Standardmäßig folgt JobBridge deinem Gerät."
+                >
+                    <SettingsRow
+                        title="Farbmodus"
+                        description={themeStatus}
+                    >
+                        <ThemePreferenceControl initialPreference={themePreference} />
+                    </SettingsRow>
+                </SettingsGroup>
+
                 <SettingsGroup
                     id="navigation"
                     title="Navigation"

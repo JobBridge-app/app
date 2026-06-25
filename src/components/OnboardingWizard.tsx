@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CardHeader } from "./ui/CardHeader";
 import { ChoiceTile } from "./ui/ChoiceTile";
@@ -110,6 +110,65 @@ function writeOnboardingDraft(draft: Omit<OnboardingDraft, "version" | "updatedA
 function clearOnboardingDraft() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+}
+
+type FeedbackTone = "danger" | "warning" | "success";
+
+function OnboardingFeedbackCard({
+  tone,
+  icon,
+  title,
+  children,
+  actions,
+}: {
+  tone: FeedbackTone;
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="onboarding-feedback-card" data-tone={tone}>
+      <div className="onboarding-feedback-sheen" aria-hidden="true" />
+      <div className="relative z-10 flex flex-col gap-5">
+        <div className="flex items-start gap-4">
+          <div className="onboarding-feedback-icon">
+            {icon}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h4 className="onboarding-feedback-title">{title}</h4>
+            <div className="onboarding-feedback-copy">
+              {children}
+            </div>
+          </div>
+        </div>
+        {actions && (
+          <div className="onboarding-feedback-actions">
+            {actions}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OnboardingInlineFeedback({
+  tone = "danger",
+  children,
+  action,
+  className,
+}: {
+  tone?: FeedbackTone;
+  children: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`onboarding-inline-feedback${className ? ` ${className}` : ""}`} data-tone={tone}>
+      <div>{children}</div>
+      {action}
+    </div>
+  );
 }
 
 export function OnboardingWizard({
@@ -382,7 +441,7 @@ export function OnboardingWizard({
     setResetSuccess(false);
 
     try {
-      const { error } = await signInWithEmail(email, password);
+      const { error } = await signInWithEmail(email.trim(), password);
 
       if (error) {
         const message = error.message.toLowerCase();
@@ -391,9 +450,23 @@ export function OnboardingWizard({
           return;
         }
 
+        const { getSignInEmailStatus } = await import("@/app/onboarding/actions");
+        const emailStatus = await getSignInEmailStatus(email);
+
+        if (emailStatus === "not_found") {
+          setErrorType("account_not_found");
+          setErrorMsg("Für diese E-Mail-Adresse gibt es noch keinen JobBridge-Account. Prüfe die Schreibweise oder registriere dich neu.");
+          return;
+        }
+
+        if (emailStatus === "unknown") {
+          setErrorType("general");
+          setErrorMsg("Wir konnten diese E-Mail gerade nicht eindeutig prüfen. Bitte versuche es noch einmal oder kontaktiere den Support.");
+          return;
+        }
+
         setErrorType("wrong_password");
-        setErrorMsg("E-Mail oder Passwort stimmen nicht.");
-        setLoading(false);
+        setErrorMsg("Das Passwort zu dieser E-Mail-Adresse stimmt nicht.");
         return;
       }
 
@@ -403,7 +476,7 @@ export function OnboardingWizard({
       setErrorType("general");
       setErrorMsg(getErrorMessage(err, "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es noch einmal."));
     } finally {
-      if (!errorType) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -624,11 +697,7 @@ export function OnboardingWizard({
   const panelGlowClass = "onboarding-panel-glow pointer-events-none absolute -top-16 -left-16 w-56 h-56";
   const panelTextureClass = "onboarding-panel-texture pointer-events-none absolute inset-0";
   const emailConfirmStatus = codeMessage || resendError || resendMessage;
-  const emailConfirmStatusClass = codeMessage
-    ? "rounded-2xl border border-green-500/20 bg-green-900/20 px-4 py-3 text-green-200"
-    : resendError
-      ? "text-red-300"
-      : "text-cyan-200/90";
+  const emailConfirmStatusTone: FeedbackTone = resendError ? "danger" : "success";
 
   if (!resumeChecked) {
     return (
@@ -853,20 +922,16 @@ export function OnboardingWizard({
                         initial={{ opacity: 0, height: 0, scale: 0.95 }}
                         animate={{ opacity: 1, height: "auto", scale: 1 }}
                         exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                        className="rounded-3xl border border-emerald-400/50 bg-emerald-500/10 p-6 overflow-hidden relative group"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="flex flex-col items-center text-center gap-3 relative z-10">
-                          <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                            <Mail className="w-6 h-6 text-emerald-300" />
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-semibold text-emerald-100 mb-1">E-Mail gesendet!</h4>
-                            <p className="text-sm text-emerald-200/80">
-                              Wir haben einen Link zum Zurücksetzen deines Passworts an <strong className="text-emerald-100">{email}</strong> geschickt.
-                            </p>
-                          </div>
-                        </div>
+                        <OnboardingFeedbackCard
+                          tone="success"
+                          icon={<Mail className="h-6 w-6" />}
+                          title="E-Mail gesendet"
+                        >
+                          <p>
+                            Wir haben einen Link zum Zurücksetzen deines Passworts an <strong>{email}</strong> geschickt.
+                          </p>
+                        </OnboardingFeedbackCard>
                       </motion.div>
                     ) : errorType === "wrong_password" && mode === "signin" ? (
                       <motion.div
@@ -874,38 +939,32 @@ export function OnboardingWizard({
                         initial={{ opacity: 0, height: 0, scale: 0.95 }}
                         animate={{ opacity: 1, height: "auto", scale: 1 }}
                         exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                        className="rounded-3xl border border-rose-500/30 bg-[#120808]/80 backdrop-blur-md p-6 overflow-hidden shadow-[0_8px_32px_rgba(225,29,72,0.15)] relative group"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="flex flex-col gap-4 relative z-10">
-                          <div className="flex items-start gap-4">
-                            <div className="mt-1 w-12 h-12 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30 flex-shrink-0 shadow-[0_0_15px_rgba(225,29,72,0.2)]">
-                              <KeyRound className="w-6 h-6 text-rose-400" />
-                            </div>
-                            <div>
-                              <h4 className="text-base font-semibold text-rose-100 mb-1">Passwort falsch</h4>
-                              <p className="text-sm text-rose-200/80 leading-relaxed">
-                                {errorMsg}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-2 mt-3">
+                        <OnboardingFeedbackCard
+                          tone="danger"
+                          icon={<KeyRound className="h-6 w-6" />}
+                          title="Passwort falsch"
+                          actions={
+                            <>
                             <ButtonPrimary
                               type="button"
                               onClick={handleResetPassword}
                               loading={resettingPassword}
-                              className="h-12 w-full border-rose-500/50 bg-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.3)] transition-[background-color,box-shadow,scale] duration-200 ease-out hover:bg-rose-500 hover:shadow-[0_0_30px_rgba(225,29,72,0.5)]"
+                              className="onboarding-feedback-action onboarding-feedback-action-primary h-12 w-full"
                             >
-                              Passwort Link anfordern
+                              Passwort-Link anfordern
                             </ButtonPrimary>
                             <a
                               href={`mailto:support@jobbridge.app?subject=Hilfe bei Passwort (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Amein Passwort für ${email} wird nicht akzeptiert.%0D%0A%0D%0ABitte helft mir weiter.`}
-                              className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-medium text-white/80 transition-[background-color,color,scale,border-color] duration-200 ease-out hover:bg-white/10 hover:text-white active:scale-[0.96]"
+                              className="onboarding-feedback-action onboarding-feedback-action-secondary flex h-12 w-full items-center justify-center text-sm font-semibold transition-[background-color,color,scale,border-color,box-shadow] duration-200 ease-out active:scale-[0.98]"
                             >
                               Support kontaktieren
                             </a>
-                          </div>
-                        </div>
+                            </>
+                          }
+                        >
+                          <p>{errorMsg}</p>
+                        </OnboardingFeedbackCard>
                       </motion.div>
                     ) : errorType === "account_not_found" && mode === "signin" ? (
                       <motion.div
@@ -913,22 +972,13 @@ export function OnboardingWizard({
                         initial={{ opacity: 0, height: 0, scale: 0.95 }}
                         animate={{ opacity: 1, height: "auto", scale: 1 }}
                         exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                        className="rounded-3xl border border-amber-500/30 bg-[#140D05]/80 backdrop-blur-md p-6 overflow-hidden shadow-[0_8px_32px_rgba(245,158,11,0.1)] relative group"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="flex flex-col gap-4 relative z-10">
-                          <div className="flex items-start gap-4">
-                            <div className="mt-1 w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 flex-shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                              <UserX className="w-6 h-6 text-amber-400" />
-                            </div>
-                            <div>
-                              <h4 className="text-base font-semibold text-amber-100 mb-1">Account nicht gefunden</h4>
-                              <p className="text-sm text-amber-200/80 leading-relaxed">
-                                {errorMsg}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-2 mt-3">
+                        <OnboardingFeedbackCard
+                          tone="warning"
+                          icon={<UserX className="h-6 w-6" />}
+                          title="Account nicht gefunden"
+                          actions={
+                            <>
                             <ButtonPrimary
                               type="button"
                               onClick={() => {
@@ -937,18 +987,21 @@ export function OnboardingWizard({
                                 setErrorType(null);
                                 setErrorMsg(null);
                               }}
-                              className="h-12 w-full border-amber-500/50 bg-amber-600 text-white shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-[background-color,box-shadow,scale] duration-200 ease-out hover:bg-amber-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)]"
+                              className="onboarding-feedback-action onboarding-feedback-action-primary h-12 w-full"
                             >
                               Jetzt registrieren
                             </ButtonPrimary>
                             <a
                               href={`mailto:support@jobbridge.app?subject=Account nicht gefunden (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Aich versuche mich mit ${email} anzumelden, aber der Account existiert angeblich nicht.%0D%0A%0D%0ABitte helft mir weiter.`}
-                              className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-medium text-white/80 transition-[background-color,color,scale,border-color] duration-200 ease-out hover:bg-white/10 hover:text-white active:scale-[0.96]"
+                              className="onboarding-feedback-action onboarding-feedback-action-secondary flex h-12 w-full items-center justify-center text-sm font-semibold transition-[background-color,color,scale,border-color,box-shadow] duration-200 ease-out active:scale-[0.98]"
                             >
                               Support kontaktieren
                             </a>
-                          </div>
-                        </div>
+                            </>
+                          }
+                        >
+                          <p>{errorMsg}</p>
+                        </OnboardingFeedbackCard>
                       </motion.div>
                     ) : errorType === "general" ? (
                       <motion.div
@@ -957,9 +1010,9 @@ export function OnboardingWizard({
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                       >
-                        <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
+                        <OnboardingInlineFeedback>
                           {errorMsg}
-                        </div>
+                        </OnboardingInlineFeedback>
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
@@ -998,9 +1051,9 @@ export function OnboardingWizard({
                   />
                   {emailConfirmed && (
                     <div className="space-y-4">
-                      <div className="rounded-2xl border border-green-400/50 bg-green-500/20 px-5 py-4 text-green-100">
+                      <OnboardingInlineFeedback tone="success">
                         E-Mail erfolgreich bestätigt! Du wirst weitergeleitet...
-                      </div>
+                      </OnboardingInlineFeedback>
                       <ButtonPrimary
                         onClick={() => checkSessionAfterEmailConfirm()}
                         loading={loading}
@@ -1072,13 +1125,14 @@ export function OnboardingWizard({
                           </ButtonSecondary>
 
                           {emailConfirmStatus && (
-                            <motion.p
+                            <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
-                              className={`text-center text-sm font-medium ${emailConfirmStatusClass}`}
                             >
-                              {emailConfirmStatus}
-                            </motion.p>
+                              <OnboardingInlineFeedback tone={emailConfirmStatusTone}>
+                                {emailConfirmStatus}
+                              </OnboardingInlineFeedback>
+                            </motion.div>
                           )}
                         </div>
 
@@ -1086,9 +1140,10 @@ export function OnboardingWizard({
                           <motion.div
                             initial={{ opacity: 0, y: -5 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="rounded-2xl border border-rose-500/20 bg-rose-950/30 px-4 py-3 text-center text-sm text-rose-200"
                           >
-                            {codeError}
+                            <OnboardingInlineFeedback>
+                              {codeError}
+                            </OnboardingInlineFeedback>
                           </motion.div>
                         )}
 
@@ -1182,9 +1237,9 @@ export function OnboardingWizard({
 
                 {/* Error Display */}
                 {errorMsg && (
-                  <div className="mb-6 rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100 text-center">
+                  <OnboardingInlineFeedback className="mb-6">
                     {errorMsg}
-                  </div>
+                  </OnboardingInlineFeedback>
                 )}
 
                 {/* Continue Button */}
@@ -1352,15 +1407,19 @@ export function OnboardingWizard({
                         />
                       </div>
                       {errorMsg && (
-                        <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
+                        <OnboardingInlineFeedback
+                          action={(
+                            <button
+                              type="button"
+                              onClick={handleCompanyContact}
+                              className="onboarding-inline-feedback-action"
+                            >
+                              Noch einmal versuchen
+                            </button>
+                          )}
+                        >
                           {errorMsg}
-                          <button
-                            onClick={handleCompanyContact}
-                            className="mt-2 text-sm underline text-rose-200 hover:text-rose-100"
-                          >
-                            Noch einmal versuchen
-                          </button>
-                        </div>
+                        </OnboardingInlineFeedback>
                       )}
                       <div className="flex gap-4">
                         <ButtonSecondary onClick={prevStep} className="flex-1">
@@ -1445,15 +1504,19 @@ export function OnboardingWizard({
                         </div>
                       </div>
                       {errorMsg && (
-                        <div className="rounded-2xl border border-rose-400/50 bg-rose-500/20 px-5 py-4 text-rose-100">
+                        <OnboardingInlineFeedback
+                          action={(
+                            <button
+                              type="button"
+                              onClick={handleCompleteOnboarding}
+                              className="onboarding-inline-feedback-action"
+                            >
+                              Noch einmal versuchen
+                            </button>
+                          )}
+                        >
                           {errorMsg}
-                          <button
-                            onClick={handleCompleteOnboarding}
-                            className="mt-2 text-sm underline text-rose-200 hover:text-rose-100"
-                          >
-                            Noch einmal versuchen
-                          </button>
-                        </div>
+                        </OnboardingInlineFeedback>
                       )}
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-8">
                         <ButtonSecondary onClick={() => setStep("profile")}>Daten bearbeiten</ButtonSecondary>

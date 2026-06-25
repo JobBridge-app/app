@@ -2,6 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { TestModeBanner } from "@/components/admin/TestModeBanner";
+import { getCurrentSessionAndProfile } from "@/lib/auth";
+import { normalizeThemePreference, type ThemePreference } from "@/lib/theme-preference";
 import "./globals.css";
 
 const fontSans = Plus_Jakarta_Sans({
@@ -32,14 +36,15 @@ export const viewport: Viewport = {
   themeColor: "#020617",
 };
 
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { TestModeBanner } from "@/components/admin/TestModeBanner";
+function getThemeBootstrapScript(themePreference: ThemePreference) {
+  const serializedThemePreference = JSON.stringify(themePreference);
 
-const themeBootstrapScript = `
+  return `
 (() => {
   try {
-    const theme = "system";
-    const resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const theme = ${serializedThemePreference};
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const resolvedTheme = theme === "system" ? (prefersDark ? "dark" : "light") : theme;
     const root = document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(resolvedTheme);
@@ -49,19 +54,27 @@ const themeBootstrapScript = `
   } catch {}
 })();
 `;
+}
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { profile } = await getCurrentSessionAndProfile();
+  const themePreference = normalizeThemePreference(profile?.theme_preference);
+
   return (
     <html lang="de" className="dark bg-background" suppressHydrationWarning>
       <head>
-        <Script id="theme-bootstrap" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+        <Script
+          id="theme-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: getThemeBootstrapScript(themePreference) }}
+        />
       </head>
       <body className={`${fontSans.variable} min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/30`}>
-        <ThemeProvider defaultTheme="system" enableSystem={true}>
+        <ThemeProvider defaultTheme={themePreference} enableSystem={true}>
           <TestModeBanner />
           {children}
         </ThemeProvider>

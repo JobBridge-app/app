@@ -1,9 +1,8 @@
 "use server";
 
 import { supabaseServer } from "@/lib/supabaseServer";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { Profile } from "@/lib/types";
 
 export type OnboardingData = {
     full_name: string;
@@ -15,6 +14,53 @@ export type OnboardingData = {
     company_email?: string;
     company_message?: string;
 };
+
+export type SignInEmailStatus = "registered" | "not_found" | "unknown";
+
+export async function getSignInEmailStatus(email: string): Promise<SignInEmailStatus> {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+        return "not_found";
+    }
+
+    try {
+        const adminClient = getSupabaseAdminClient();
+
+        const { data: profile, error: profileError } = await adminClient
+            .from("profiles")
+            .select("id")
+            .ilike("email", cleanEmail)
+            .limit(1)
+            .maybeSingle();
+
+        if (profileError) {
+            console.error("Onboarding sign-in email profile lookup failed:", profileError);
+            return "unknown";
+        }
+
+        if (profile) {
+            return "registered";
+        }
+
+        const { data, error } = await adminClient.auth.admin.listUsers({
+            page: 1,
+            perPage: 1000,
+        });
+
+        if (error || !data?.users) {
+            console.error("Onboarding sign-in email auth lookup failed:", error);
+            return "unknown";
+        }
+
+        return data.users.some((user) => user.email?.toLowerCase().trim() === cleanEmail)
+            ? "registered"
+            : "not_found";
+    } catch (error) {
+        console.error("Onboarding sign-in email lookup failed:", error);
+        return "unknown";
+    }
+}
 
 export async function completeOnboarding(data: OnboardingData) {
     const supabase = await supabaseServer();

@@ -1,21 +1,21 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { normalizeThemePreference, type ThemePreference } from "@/lib/theme-preference";
 
-type Theme = "dark" | "light" | "system";
 type ResolvedTheme = "dark" | "light";
 
 type ThemeProviderProps = {
     children: React.ReactNode;
-    defaultTheme?: Theme;
+    defaultTheme?: ThemePreference;
     enableSystem?: boolean;
 };
 
 type ThemeProviderState = {
-    theme: Theme;
+    theme: ThemePreference;
     resolvedTheme: ResolvedTheme;
     isHydrated: boolean;
-    setTheme: (theme: Theme) => void;
+    setTheme: (theme: ThemePreference) => void;
 };
 
 const initialState: ThemeProviderState = {
@@ -27,7 +27,7 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
-function getResolvedTheme(theme: Theme, enableSystem: boolean): ResolvedTheme {
+function getResolvedTheme(theme: ThemePreference, enableSystem: boolean): ResolvedTheme {
     if (theme !== "system" || !enableSystem) {
         return theme === "light" ? "light" : "dark";
     }
@@ -35,19 +35,36 @@ function getResolvedTheme(theme: Theme, enableSystem: boolean): ResolvedTheme {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function addMediaQueryListener(mediaQuery: MediaQueryList, listener: () => void) {
+    if (typeof mediaQuery.addEventListener === "function") {
+        mediaQuery.addEventListener("change", listener);
+        return () => mediaQuery.removeEventListener("change", listener);
+    }
+
+    const legacyMediaQuery = mediaQuery as MediaQueryList & {
+        addListener?: (listener: () => void) => void;
+        removeListener?: (listener: () => void) => void;
+    };
+
+    legacyMediaQuery.addListener?.(listener);
+    return () => legacyMediaQuery.removeListener?.(listener);
+}
+
 export function ThemeProvider({
     children,
-    defaultTheme = "dark",
+    defaultTheme = "system",
     enableSystem = true,
 }: ThemeProviderProps) {
-    const systemTheme = enableSystem ? "system" : defaultTheme;
-    const [theme, setThemeState] = useState<Theme>(systemTheme);
+    const normalizedDefaultTheme = normalizeThemePreference(defaultTheme);
+    const initialTheme = enableSystem ? normalizedDefaultTheme : normalizedDefaultTheme === "system" ? "dark" : normalizedDefaultTheme;
+    const [theme, setThemeState] = useState<ThemePreference>(initialTheme);
     const [isMounted, setIsMounted] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
     const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
 
     useEffect(() => {
-        const immediateTheme = enableSystem ? "system" : defaultTheme;
+        const nextDefaultTheme = normalizeThemePreference(defaultTheme);
+        const immediateTheme = enableSystem ? nextDefaultTheme : nextDefaultTheme === "system" ? "dark" : nextDefaultTheme;
         setThemeState(immediateTheme);
         setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
         setIsMounted(true);
@@ -75,19 +92,21 @@ export function ThemeProvider({
 
         if (theme !== "system" || !enableSystem) return;
 
-        mediaQuery.addEventListener("change", applyTheme);
-        return () => mediaQuery.removeEventListener("change", applyTheme);
+        return addMediaQueryListener(mediaQuery, applyTheme);
     }, [theme, isMounted, enableSystem]);
+
+    const setTheme = useCallback((nextThemePreference: ThemePreference) => {
+        const normalizedNextTheme = normalizeThemePreference(nextThemePreference);
+        const nextTheme = enableSystem ? normalizedNextTheme : normalizedNextTheme === "system" ? "dark" : normalizedNextTheme;
+        setThemeState(nextTheme);
+    }, [enableSystem]);
 
     const value = useMemo<ThemeProviderState>(() => ({
         theme,
         resolvedTheme,
         isHydrated,
-        setTheme: () => {
-            const nextTheme = enableSystem ? "system" : defaultTheme;
-            setThemeState(nextTheme);
-        },
-    }), [defaultTheme, enableSystem, isHydrated, resolvedTheme, theme]);
+        setTheme,
+    }), [isHydrated, resolvedTheme, setTheme, theme]);
 
     return (
         <ThemeProviderContext.Provider value={value}>
