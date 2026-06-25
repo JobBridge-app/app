@@ -1,16 +1,43 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { Suspense, useState, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { MiniFooter } from "@/components/layout/MiniFooter";
+import { LogoBadge } from "@/components/ui/LogoBadge";
+
+type WaitlistShellProps = {
+    children: ReactNode;
+    size?: string;
+};
+
+function WaitlistShell({ children, size = "max-w-2xl" }: WaitlistShellProps) {
+    return (
+        <div className="landing-auth-shell min-h-dvh bg-[#07090f]">
+            <main className="onboarding-shell waitlist-shell flex min-h-dvh items-start justify-center overflow-y-auto overflow-x-hidden px-4 py-4 pb-16 no-scrollbar md:items-center md:py-4 md:pb-16">
+                <div className={`onboarding-panel waitlist-panel relative w-full ${size} overflow-hidden rounded-3xl p-6 md:p-12`}>
+                    <div className="onboarding-panel-glow pointer-events-none absolute -left-20 -top-20 h-56 w-56" />
+                    <div className="onboarding-panel-texture pointer-events-none absolute inset-0" />
+                    <div className="relative z-10">
+                        {children}
+                    </div>
+                </div>
+            </main>
+            <MiniFooter />
+        </div>
+    );
+}
 
 function WaitlistContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const city = searchParams.get("city") || "";
     const state = searchParams.get("state") || "";
     const country = searchParams.get("country") || "DE";
+    const cityLabel = city || "deiner Region";
+    const stateLabel = state || "Noch nicht hinterlegt";
     const [email, setEmail] = useState("");
     const [role, setRole] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +56,7 @@ function WaitlistContent() {
 
         const supabase = createBrowserClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         );
 
         try {
@@ -42,9 +69,6 @@ function WaitlistContent() {
             });
 
             if (insertError) {
-                // Ignore duplicate key error for email+city if logic was unique, but we used ID PK.
-                // If we want to prevent duplicates, we might get an error if we added unique constraint.
-                // Here we assume it succeeds.
                 throw insertError;
             }
 
@@ -57,132 +81,170 @@ function WaitlistContent() {
         }
     };
 
+    const handleBack = () => {
+        if (window.history.length > 1) {
+            router.back();
+            return;
+        }
+
+        router.push("/");
+    };
+
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#07090f]">
-                <div className="max-w-md w-full relative bg-white/10 backdrop-blur-[28px] border border-white/10 rounded-3xl p-8 md:p-12 text-center">
-                    <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-6">
-                        <CheckCircle2 className="w-8 h-8 text-green-400" />
+            <WaitlistShell size="max-w-md">
+                <div className="waitlist-success text-center">
+                    <div className="waitlist-success-icon mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full">
+                        <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-4">Vielen Dank!</h2>
-                    <p className="text-slate-300 mb-8">
-                        Wir melden uns per E-Mail bei dir, sobald JobBridge in <strong>{city}</strong> startet.
+                    <h2 className="waitlist-heading text-2xl font-bold text-white">Vielen Dank!</h2>
+                    <p className="waitlist-copy mt-4 text-slate-300">
+                        Wir melden uns per E-Mail bei dir, sobald JobBridge in <strong>{cityLabel}</strong> startet.
                     </p>
                     <Link
                         href="/"
-                        className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+                        className="waitlist-link-button mt-8 inline-flex h-12 items-center justify-center rounded-[1.125rem] px-6 text-sm font-semibold transition-[background-color,color,box-shadow,scale] duration-200 ease-out active:scale-[0.96]"
                     >
                         Zurück zur Startseite
                     </Link>
                 </div>
-            </div>
+            </WaitlistShell>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#07090f]">
-            <div className="max-w-xl w-full relative bg-white/10 backdrop-blur-[28px] border border-white/10 rounded-3xl shadow-2xl p-8 md:p-12">
-                <div className="pointer-events-none absolute -top-16 -left-16 w-56 h-56 bg-blue-500/20 blur-[100px] opacity-50" />
-
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-3">JobBridge ist in deiner Region noch nicht gestartet.</h1>
-                    <p className="text-slate-300 leading-relaxed">
-                        Wir expandieren Schritt für Schritt. Trage dich unverbindlich ein, und wir informieren dich, sobald es in <strong>{city}</strong> losgeht.
+        <WaitlistShell>
+            <div className="waitlist-header mb-7 flex items-center gap-4">
+                <LogoBadge size="md" className="waitlist-header-badge shrink-0" />
+                <div className="min-w-0 flex-1">
+                    <h1 className="waitlist-heading text-2xl font-bold leading-tight tracking-tight text-white md:text-3xl">
+                        <span className="block">{cityLabel} ist noch</span>
+                        {" "}
+                        <span className="block">nicht gestartet.</span>
+                    </h1>
+                    <p className="waitlist-copy mt-2.5 leading-relaxed text-slate-300">
+                        Trag dich ein, und wir informieren dich, sobald JobBridge in <strong>{cityLabel}</strong> verfügbar ist.
                     </p>
-                    <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-blue-200">
-                        Kein Spam, kein Newsletter. Nur eine Benachrichtigung zum Start.
+                </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div>
+                        <label htmlFor="waitlist-city" className="waitlist-label mb-1.5 block text-base font-semibold">
+                            Stadt
+                        </label>
+                        <input
+                            id="waitlist-city"
+                            type="text"
+                            value={cityLabel}
+                            readOnly
+                            className="waitlist-input waitlist-input-readonly w-full rounded-[1.125rem] px-4 py-3 text-base font-medium"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="waitlist-state" className="waitlist-label mb-1.5 block text-base font-semibold">
+                            Bundesland
+                        </label>
+                        <input
+                            id="waitlist-state"
+                            type="text"
+                            value={stateLabel}
+                            readOnly
+                            className="waitlist-input waitlist-input-readonly w-full rounded-[1.125rem] px-4 py-3 text-base font-medium"
+                        />
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Stadt</label>
-                            <input
-                                type="text"
-                                value={city}
-                                readOnly
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white opacity-60 cursor-not-allowed"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Bundesland</label>
-                            <input
-                                type="text"
-                                value={state}
-                                readOnly
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white opacity-60 cursor-not-allowed"
-                            />
-                        </div>
-                    </div>
+                <div>
+                    <label htmlFor="waitlist-email" className="waitlist-label mb-1.5 block text-base font-semibold">
+                        Deine E-Mail-Adresse
+                    </label>
+                    <input
+                        id="waitlist-email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        inputMode="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder="name@beispiel.de"
+                        className="waitlist-input w-full rounded-[1.125rem] px-4 py-3 text-base font-medium transition-[background-color,border-color,box-shadow,color] duration-200 ease-out focus:outline-none focus:ring-2"
+                    />
+                </div>
 
-                    <div>
-                        <label htmlFor="waitlist-email" className="block text-lg font-medium text-white mb-2">Deine E-Mail-Adresse</label>
-                        <input
-                            id="waitlist-email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                            spellCheck={false}
-                            inputMode="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            placeholder="name@beispiel.de"
-                            className="w-full bg-white/5 border border-white/20 rounded-xl px-5 py-4 text-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-lg font-medium text-white mb-2">Ich bin...</label>
+                <div>
+                    <label htmlFor="waitlist-role" className="waitlist-label mb-1.5 block text-base font-semibold">
+                        Ich bin...
+                    </label>
+                    <div className="relative">
                         <select
+                            id="waitlist-role"
                             value={role}
                             onChange={(e) => setRole(e.target.value)}
                             required
-                            className="w-full bg-white/5 border border-white/20 rounded-xl px-5 py-4 text-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-no-repeat bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZT0id2hpdGUiIGNsYXNzPSJ3LTYgaC02Ij48cGF0aCBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGQ9Ik0xOS41IDguMjVsLTcuNSA3LjUtNy41LTcuNSIgLz48L3N2Zz4=')] bg-[right_1.25rem_center] bg-[length:1.25rem_1.25rem]"
+                            data-empty={role ? undefined : "true"}
+                            className="waitlist-select w-full appearance-none rounded-[1.125rem] px-4 py-3 pr-12 text-base font-medium transition-[background-color,border-color,box-shadow,color] duration-200 ease-out focus:outline-none focus:ring-2"
                         >
-                            <option value="" className="bg-slate-900">Bitte wählen</option>
-                            <option value="youth" className="bg-slate-900">Jugendliche/r</option>
-                            <option value="parent" className="bg-slate-900">Elternteil</option>
-                            <option value="client" className="bg-slate-900">Auftraggeber/in</option>
-                            <option value="company" className="bg-slate-900">Organisation</option>
+                            <option value="">Bitte wählen</option>
+                            <option value="youth">Jugendliche/r</option>
+                            <option value="parent">Elternteil</option>
+                            <option value="client">Auftraggeber/in</option>
+                            <option value="company">Organisation</option>
                         </select>
+                        <ChevronDown className="waitlist-select-icon pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2" aria-hidden="true" />
                     </div>
+                </div>
 
-                    {error && (
-                        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-sm">
-                            {error}
-                        </div>
-                    )}
+                {error && (
+                    <div className="waitlist-error rounded-[1rem] px-4 py-3 text-sm font-medium">
+                        {error}
+                    </div>
+                )}
 
+                <div className="waitlist-actions space-y-3 pt-5">
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 mt-4"
+                        className="waitlist-submit flex h-14 w-full items-center justify-center gap-2 rounded-[1.125rem] px-6 font-semibold transition-[background-color,box-shadow,color,scale] duration-200 ease-out enabled:active:scale-[0.96] disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? (
                             <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
                                 <span>Wird gespeichert...</span>
                             </>
                         ) : (
                             <>
                                 <span>Informiert mich</span>
-                                <ArrowRight className="w-5 h-5" />
+                                <ArrowRight className="h-5 w-5" aria-hidden="true" />
                             </>
                         )}
                     </button>
-                </form>
-            </div>
-        </div>
+
+                    <button
+                        type="button"
+                        onClick={handleBack}
+                        className="waitlist-back-button flex h-14 w-full items-center justify-center rounded-[1.125rem] px-6 font-semibold transition-[background-color,box-shadow,color,scale] duration-200 ease-out active:scale-[0.96]"
+                    >
+                        Zurück
+                    </button>
+                </div>
+            </form>
+        </WaitlistShell>
     );
 }
 
 export default function WaitlistPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#07090f] text-white">Laden...</div>}>
+        <Suspense fallback={
+            <WaitlistShell size="max-w-md">
+                <div className="text-center text-white">Laden...</div>
+            </WaitlistShell>
+        }>
             <WaitlistContent />
         </Suspense>
     );

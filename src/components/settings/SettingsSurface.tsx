@@ -2,17 +2,14 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { MobileNavPreferenceControl } from "@/components/settings/MobileNavPreferenceControl";
-import { ThemeModeToggle } from "@/components/settings/ThemeModeToggle";
 import type { MobileNavPreference } from "@/lib/mobile-nav-preference";
 
 type SettingsSurfaceProps = {
     mobileNavPreference: MobileNavPreference;
-    themePreference?: "light" | "dark" | "system";
 };
 
-export function SettingsSurface({ mobileNavPreference, themePreference = "dark" }: SettingsSurfaceProps) {
+export function SettingsSurface({ mobileNavPreference }: SettingsSurfaceProps) {
     const navigationStatus = mobileNavPreference === "bottom" ? "Dock unten" : "Tabs oben";
-    const themeStatus = "Hell, Dunkel oder System";
 
     return (
         <div className="settings-page mx-auto w-full max-w-5xl px-4 pb-14 pt-8 md:px-6">
@@ -22,25 +19,12 @@ export function SettingsSurface({ mobileNavPreference, themePreference = "dark" 
                         Einstellungen
                     </h1>
                     <p className="mt-3 max-w-2xl text-sm leading-6 md:text-base">
-                        Lege fest, wie JobBridge auf deinen Geräten aussieht und navigiert.
+                        Lege fest, wie JobBridge auf deinen Geräten navigiert und welche Kontobereiche du verwalten möchtest.
                     </p>
                 </div>
             </header>
 
             <div className="settings-panel mt-7 space-y-4 md:space-y-0 md:overflow-hidden">
-                <SettingsGroup
-                    id="darstellung"
-                    title="Darstellung"
-                    description="Alles, was das visuelle Verhalten der App betrifft."
-                >
-                    <SettingsRow
-                        title="Design-Modus"
-                        description={themeStatus}
-                    >
-                        <ThemeModeToggle />
-                    </SettingsRow>
-                </SettingsGroup>
-
                 <SettingsGroup
                     id="navigation"
                     title="Navigation"

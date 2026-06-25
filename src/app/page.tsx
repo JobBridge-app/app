@@ -29,7 +29,7 @@ export default async function LandingPage({
 
   // Ohne Session zeigt der Client-Wizard ggf. einen lokal gespeicherten Pending-Onboarding-Stand.
   return (
-    <div className="min-h-dvh bg-[#07090f]">
+    <div className="landing-auth-shell min-h-dvh bg-[#07090f]">
       <AuthBridge authState={authState} redirectTo={redirectTo} initialMode={authMode} />
       <MiniFooter />
     </div>

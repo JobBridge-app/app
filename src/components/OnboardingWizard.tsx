@@ -656,7 +656,7 @@ export function OnboardingWizard({
           "relative z-10 my-auto w-full max-w-2xl",
         ].join(" ")}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence initial={false} mode="wait">
           {/* Schritt 1: Willkommen */}
           {step === "welcome" && (
             <motion.div
@@ -757,10 +757,11 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className={`${panelClass} min-h-[400px]`}>
+              <div className={`${panelClass} onboarding-location-panel mx-auto w-full max-w-2xl`}>
                 <div className={panelGlowClass} />
                 <div className={panelTextureClass} />
                 <LocationStep
+                  onBack={prevStep}
                   onComplete={(regionData) => {
                     setProfileData((prev) => ({
                       ...prev,
@@ -770,11 +771,6 @@ export function OnboardingWizard({
                     setStep("auth");
                   }}
                 />
-                <div className="mt-8 flex justify-center">
-                  <ButtonSecondary onClick={prevStep} className="w-full">
-                    Zurück
-                  </ButtonSecondary>
-                </div>
               </div>
             </motion.div>
           )}
@@ -850,7 +846,7 @@ export function OnboardingWizard({
                     </p>
                   </div>
 
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence initial={false} mode="wait">
                     {resetSuccess ? (
                       <motion.div
                         key="success"
@@ -898,13 +894,13 @@ export function OnboardingWizard({
                               type="button"
                               onClick={handleResetPassword}
                               loading={resettingPassword}
-                              className="w-full bg-rose-600 hover:bg-rose-500 text-white border-rose-500/50 shadow-[0_0_20px_rgba(225,29,72,0.3)] transition-all hover:shadow-[0_0_30px_rgba(225,29,72,0.5)] h-12"
+                              className="h-12 w-full border-rose-500/50 bg-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.3)] transition-[background-color,box-shadow,scale] duration-200 ease-out hover:bg-rose-500 hover:shadow-[0_0_30px_rgba(225,29,72,0.5)]"
                             >
                               Passwort Link anfordern
                             </ButtonPrimary>
                             <a
                               href={`mailto:support@jobbridge.app?subject=Hilfe bei Passwort (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Amein Passwort für ${email} wird nicht akzeptiert.%0D%0A%0D%0ABitte helft mir weiter.`}
-                              className="w-full h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-white/80 font-medium hover:bg-white/10 hover:text-white transition-all text-sm"
+                              className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-medium text-white/80 transition-[background-color,color,scale,border-color] duration-200 ease-out hover:bg-white/10 hover:text-white active:scale-[0.96]"
                             >
                               Support kontaktieren
                             </a>
@@ -941,13 +937,13 @@ export function OnboardingWizard({
                                 setErrorType(null);
                                 setErrorMsg(null);
                               }}
-                              className="w-full bg-amber-600 hover:bg-amber-500 text-white border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] h-12"
+                              className="h-12 w-full border-amber-500/50 bg-amber-600 text-white shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-[background-color,box-shadow,scale] duration-200 ease-out hover:bg-amber-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)]"
                             >
                               Jetzt registrieren
                             </ButtonPrimary>
                             <a
                               href={`mailto:support@jobbridge.app?subject=Account nicht gefunden (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Aich versuche mich mit ${email} anzumelden, aber der Account existiert angeblich nicht.%0D%0A%0D%0ABitte helft mir weiter.`}
-                              className="w-full h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-white/80 font-medium hover:bg-white/10 hover:text-white transition-all text-sm"
+                              className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-medium text-white/80 transition-[background-color,color,scale,border-color] duration-200 ease-out hover:bg-white/10 hover:text-white active:scale-[0.96]"
                             >
                               Support kontaktieren
                             </a>
@@ -1050,7 +1046,7 @@ export function OnboardingWizard({
                               inputMode="numeric"
                               pattern="[0-9]*"
                               maxLength={8}
-                              className={`min-w-0 flex-1 rounded-2xl border ${codeError ? "border-rose-400/50 bg-rose-500/10 focus:ring-rose-500/25" : "border-white/15 bg-[#0F0F12] focus:border-cyan-300/40 focus:ring-cyan-300/20"} px-5 py-4 text-center text-xl font-semibold tracking-[0.34em] text-white placeholder:text-slate-700 focus:outline-none focus:ring-2 transition-all`}
+                              className={`min-w-0 flex-1 rounded-2xl border ${codeError ? "border-rose-400/50 bg-rose-500/10 focus:ring-rose-500/25" : "border-white/15 bg-[#0F0F12] focus:border-cyan-300/40 focus:ring-cyan-300/20"} px-5 py-4 text-center text-xl font-semibold tracking-[0.34em] text-white placeholder:text-slate-700 transition-[background-color,border-color,box-shadow,color] duration-200 ease-out focus:outline-none focus:ring-2`}
                               placeholder="12345678"
                               value={code}
                               autoFocus

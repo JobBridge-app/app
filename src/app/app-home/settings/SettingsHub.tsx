@@ -1,21 +1,9 @@
 "use client";
 
-import { User, Bell, Shield, Moon, Sun, Monitor, ChevronRight } from "lucide-react";
+import { User, Bell, Shield, Monitor, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from "@/components/providers/ThemeProvider";
-import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
 
 export function SettingsHub() {
-    const { theme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    if (!mounted) return null;
-
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -73,43 +61,10 @@ export function SettingsHub() {
                         Appearance
                     </h3>
 
-                    {/* Theme Toggle */}
                     <div className="space-y-4">
-                        <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Theme Mode</p>
-                        <div className="grid grid-cols-3 gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5">
-                            <button
-                                onClick={() => setTheme("light")}
-                                className={cn(
-                                    "flex flex-col items-center justify-center gap-2 py-3 rounded-lg transition-all",
-                                    theme === "light" ? "bg-white text-black shadow-lg" : "text-slate-500 hover:text-white hover:bg-white/5"
-                                )}
-                            >
-                                <Sun size={20} />
-                                <span className="text-xs font-semibold">Light</span>
-                            </button>
-                            <button
-                                onClick={() => setTheme("dark")}
-                                className={cn(
-                                    "flex flex-col items-center justify-center gap-2 py-3 rounded-lg transition-all",
-                                    theme === "dark" ? "bg-slate-700 text-white shadow-lg" : "text-slate-500 hover:text-white hover:bg-white/5"
-                                )}
-                            >
-                                <Moon size={20} />
-                                <span className="text-xs font-semibold">Dark</span>
-                            </button>
-                            <button
-                                onClick={() => setTheme("system")} // Assuming ThemeProvider supports this locally even if DB assumes light/dark
-                                className={cn(
-                                    "flex flex-col items-center justify-center gap-2 py-3 rounded-lg transition-all",
-                                    (theme !== "light" && theme !== "dark") ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500 hover:text-white hover:bg-white/5"
-                                )}
-                            >
-                                <Monitor size={20} />
-                                <span className="text-xs font-semibold">System</span>
-                            </button>
-                        </div>
+                        <p className="text-sm font-medium text-slate-400 uppercase tracking-wider">Systemdesign</p>
                         <p className="text-xs text-slate-500">
-                            Deine Auswahl wird mit deinem Konto synchronisiert und standardmäßig am System ausgerichtet.
+                            JobBridge richtet Hell- und Dunkelmodus automatisch an deinen Geräteeinstellungen aus.
                         </p>
                     </div>
 

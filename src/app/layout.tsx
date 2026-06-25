@@ -38,14 +38,8 @@ import { TestModeBanner } from "@/components/admin/TestModeBanner";
 const themeBootstrapScript = `
 (() => {
   try {
-    const storageKey = "jobbridge-theme";
-    const storedTheme = localStorage.getItem(storageKey);
-    const isExplicitTheme = localStorage.getItem(storageKey + ":explicit") === "true";
-    const normalizedStoredTheme = storedTheme === "system" && !isExplicitTheme ? null : storedTheme;
-    const theme = normalizedStoredTheme === "light" || normalizedStoredTheme === "dark" || normalizedStoredTheme === "system" ? normalizedStoredTheme : "dark";
-    const resolvedTheme = theme === "system"
-      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-      : theme;
+    const theme = "system";
+    const resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     const root = document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(resolvedTheme);
@@ -67,7 +61,7 @@ export default async function RootLayout({
         <Script id="theme-bootstrap" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
       <body className={`${fontSans.variable} min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/30`}>
-        <ThemeProvider defaultTheme="dark" enableSystem={true} storageKey="jobbridge-theme">
+        <ThemeProvider defaultTheme="system" enableSystem={true}>
           <TestModeBanner />
           {children}
         </ThemeProvider>

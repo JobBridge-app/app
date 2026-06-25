@@ -198,11 +198,12 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
             }
           }}
           placeholder={placeholder || (cityOnly ? "Stadt eingeben (z.B. Bonn)..." : "Adresse suchen (z.B. Hauptstraße 12)...")}
-          className="location-search-control w-full pl-12 pr-10 h-14 rounded-2xl border text-base font-medium shadow-sm transition-all focus:outline-none focus:ring-2"
+          className="location-search-control h-14 w-full rounded-2xl border pl-12 pr-12 text-base font-medium shadow-sm transition-[background-color,border-color,box-shadow,color] duration-200 ease-out focus:outline-none focus:ring-2"
         />
         {query && (
           <button
             type="button"
+            aria-label="Suche leeren"
             onClick={() => {
               selectedLabelRef.current = "";
               searchVersionRef.current += 1;
@@ -211,7 +212,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
               setIsOpen(false);
               setIsLoading(false);
             }}
-            className="location-search-clear absolute right-4 p-1 transition-colors"
+            className="location-search-clear absolute right-2 flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-150 ease-out"
           >
             <X size={16} />
           </button>
@@ -229,7 +230,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
                 className="location-search-result group flex w-full items-start justify-between gap-3 rounded-xl p-3 text-left transition-colors focus:outline-none"
               >
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="location-search-result-icon mt-1 rounded-full p-2 transition-all">
+                  <div className="location-search-result-icon mt-1 rounded-full p-2 transition-[background-color,color] duration-150 ease-out">
                     <MapPin size={16} />
                   </div>
                   <div className="min-w-0">
@@ -247,7 +248,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
                     </div>
                   </div>
                 </div>
-                <div className="location-search-result-check mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border opacity-0 transition-all group-hover:opacity-100 group-focus:opacity-100">
+                <div className="location-search-result-check mt-2 flex h-6 w-6 shrink-0 scale-[0.96] items-center justify-center rounded-full border opacity-0 transition-[opacity,scale,background-color,border-color,color] duration-150 ease-out group-hover:scale-100 group-hover:opacity-100 group-focus:scale-100 group-focus:opacity-100">
                   <Check size={14} />
                 </div>
               </button>

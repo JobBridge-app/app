@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ReactNode } from "react";
 import clsx from "clsx";
 
@@ -33,15 +33,15 @@ export function ChoiceTile({
         y: 0,
       }}
       whileHover={interactive ? { y: -1, scale: selected ? 1.01 : 1.02 } : undefined}
-      whileTap={interactive ? { scale: 0.99 } : undefined}
+      whileTap={interactive ? { scale: 0.96 } : undefined}
       transition={{
         duration: 0.25,
         ease: "easeOut",
       }}
       className={clsx(
-        "relative w-full text-left backdrop-blur-xl border rounded-3xl overflow-hidden transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/70",
+        "relative w-full text-left backdrop-blur-xl border rounded-[1.125rem] overflow-hidden transition-[background-color,border-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/70",
         selected
-          ? "bg-white/10 border-cyan-300/80 ring-1 ring-cyan-300/40 shadow-[0_0_0_1px_rgba(34,211,238,0.25),0_18px_70px_rgba(0,0,0,0.55)]"
+          ? "bg-[#182235] border-blue-400/50 ring-1 ring-blue-500/20 shadow-[0_0_0_1px_rgba(37,99,235,0.18),0_18px_54px_rgba(0,0,0,0.38)]"
           : "bg-white/6 border-white/10 hover:bg-white/8",
         interactive ? "cursor-pointer" : "cursor-default",
         disabled && "opacity-50 cursor-not-allowed",
@@ -52,27 +52,32 @@ export function ChoiceTile({
       <div className="relative z-10 p-5 sm:p-6">{children}</div>
       
       {/* Selected state - Checkmark */}
-      {selected && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="absolute top-4 right-4 h-6 w-6 rounded-full bg-cyan-400 flex items-center justify-center"
-        >
-          <svg
-            className="h-4 w-4 text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <AnimatePresence initial={false}>
+        {selected && (
+          <motion.div
+            key="selected"
+            initial={{ opacity: 0, scale: 0.25, filter: "blur(4px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 0.25, filter: "blur(4px)" }}
+            transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+            className="absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={3}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </motion.div>
-      )}
+            <svg
+              className="h-4 w-4 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.button>
   );
 }

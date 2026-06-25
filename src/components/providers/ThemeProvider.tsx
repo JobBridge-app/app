@@ -1,7 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { supabaseBrowser } from "@/lib/supabaseClient";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 type ResolvedTheme = "dark" | "light";
@@ -10,7 +9,6 @@ type ThemeProviderProps = {
     children: React.ReactNode;
     defaultTheme?: Theme;
     enableSystem?: boolean;
-    storageKey?: string;
 };
 
 type ThemeProviderState = {
@@ -21,46 +19,13 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-    theme: "dark",
+    theme: "system",
     resolvedTheme: "dark",
     isHydrated: false,
     setTheme: () => null,
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
-const explicitThemeMarker = (storageKey: string) => `${storageKey}:explicit`;
-
-function isTheme(value: string | null | undefined): value is Theme {
-    return value === "light" || value === "dark" || value === "system";
-}
-
-function readStoredTheme(storageKey: string): Theme | null {
-    try {
-        const storedTheme = localStorage.getItem(storageKey);
-        const isExplicitTheme = localStorage.getItem(explicitThemeMarker(storageKey)) === "true";
-        if (storedTheme === "system" && !isExplicitTheme) return null;
-
-        return isTheme(storedTheme) ? storedTheme : null;
-    } catch {
-        return null;
-    }
-}
-
-function persistTheme(storageKey: string, theme: Theme) {
-    try {
-        localStorage.setItem(storageKey, theme);
-    } catch {
-        // Storage can be unavailable in hardened browser contexts.
-    }
-}
-
-function markThemeExplicit(storageKey: string) {
-    try {
-        localStorage.setItem(explicitThemeMarker(storageKey), "true");
-    } catch {
-        // Storage can be unavailable in hardened browser contexts.
-    }
-}
 
 function getResolvedTheme(theme: Theme, enableSystem: boolean): ResolvedTheme {
     if (theme !== "system" || !enableSystem) {
@@ -70,82 +35,24 @@ function getResolvedTheme(theme: Theme, enableSystem: boolean): ResolvedTheme {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function scheduleIdle(task: () => void, timeout = 2600) {
-    if (typeof window === "undefined") return () => undefined;
-
-    const idleWindow = window as typeof window & {
-        requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-        cancelIdleCallback?: (id: number) => void;
-    };
-
-    if (idleWindow.requestIdleCallback) {
-        const id = idleWindow.requestIdleCallback(task, { timeout });
-        return () => idleWindow.cancelIdleCallback?.(id);
-    }
-
-    const timeoutId = window.setTimeout(task, timeout);
-    return () => window.clearTimeout(timeoutId);
-}
-
 export function ThemeProvider({
     children,
     defaultTheme = "dark",
     enableSystem = true,
-    storageKey = "vite-ui-theme",
-    ...props
 }: ThemeProviderProps) {
-    const [theme, setThemeState] = useState<Theme>(defaultTheme);
+    const systemTheme = enableSystem ? "system" : defaultTheme;
+    const [theme, setThemeState] = useState<Theme>(systemTheme);
     const [isMounted, setIsMounted] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
     const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
-    const skipNextSyncRef = useRef(true);
 
     useEffect(() => {
-        let cancelled = false;
-
-        const storedTheme = readStoredTheme(storageKey);
-        const immediateTheme = storedTheme ?? defaultTheme;
+        const immediateTheme = enableSystem ? "system" : defaultTheme;
         setThemeState(immediateTheme);
         setResolvedTheme(getResolvedTheme(immediateTheme, enableSystem));
         setIsMounted(true);
         setIsHydrated(true);
-
-        const cancelIdle = scheduleIdle(() => {
-            if (cancelled || storedTheme) return;
-
-            const hydrateFromProfile = async () => {
-                try {
-                    const supabase = supabaseBrowser;
-                    const { data: { user } } = await supabase.auth.getUser();
-
-                    if (!user) return;
-
-                    const { data: profile } = await supabase
-                        .from("profiles")
-                        .select("theme_preference")
-                        .eq("id", user.id)
-                        .maybeSingle();
-
-                    const dbTheme = profile?.theme_preference;
-
-                    if (!cancelled && isTheme(dbTheme)) {
-                        persistTheme(storageKey, dbTheme);
-                        setThemeState(dbTheme);
-                        setResolvedTheme(getResolvedTheme(dbTheme, enableSystem));
-                    }
-                } catch {
-                    persistTheme(storageKey, immediateTheme);
-                }
-            };
-
-            hydrateFromProfile();
-        });
-
-        return () => {
-            cancelled = true;
-            cancelIdle();
-        };
-    }, [defaultTheme, enableSystem, storageKey]);
+    }, [defaultTheme, enableSystem]);
 
     useEffect(() => {
         if (!isMounted) return;
@@ -172,45 +79,18 @@ export function ThemeProvider({
         return () => mediaQuery.removeEventListener("change", applyTheme);
     }, [theme, isMounted, enableSystem]);
 
-    useEffect(() => {
-        if (!isHydrated) return;
-
-        persistTheme(storageKey, theme);
-        setResolvedTheme(getResolvedTheme(theme, enableSystem));
-
-        if (skipNextSyncRef.current) {
-            skipNextSyncRef.current = false;
-            return;
-        }
-
-        const syncTheme = async () => {
-            const supabase = supabaseBrowser;
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                await supabase.from("profiles").update({ theme_preference: theme }).eq("id", user.id);
-            }
-        };
-
-        const timeoutId = setTimeout(() => {
-            syncTheme();
-        }, 400);
-
-        return () => clearTimeout(timeoutId);
-    }, [theme, enableSystem, isHydrated, storageKey]);
-
     const value = useMemo<ThemeProviderState>(() => ({
         theme,
         resolvedTheme,
         isHydrated,
-        setTheme: (theme: Theme) => {
-            markThemeExplicit(storageKey);
-            persistTheme(storageKey, theme);
-            setThemeState(theme);
+        setTheme: () => {
+            const nextTheme = enableSystem ? "system" : defaultTheme;
+            setThemeState(nextTheme);
         },
-    }), [isHydrated, resolvedTheme, storageKey, theme]);
+    }), [defaultTheme, enableSystem, isHydrated, resolvedTheme, theme]);
 
     return (
-        <ThemeProviderContext.Provider {...props} value={value}>
+        <ThemeProviderContext.Provider value={value}>
             {children}
         </ThemeProviderContext.Provider>
     );

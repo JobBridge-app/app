@@ -30,6 +30,7 @@ export function LogoBadge({ size = "md", className }: LogoBadgeProps) {
         "shadow-[0_8px_30px_rgba(0,0,0,0.45)]",
         "flex items-center justify-center",
         "relative",
+        "logo-badge",
         className
       )}
     >
