@@ -1,4 +1,4 @@
-import { Shield, Server, Users, Globe, FileWarning, Mail } from "lucide-react";
+import { LegalHero, LegalPanel, LegalSection, LegalStamp } from "@/components/legal/LegalContent";
 
 export const dynamic = "force-static";
 
@@ -6,128 +6,97 @@ export const metadata = {
   title: "Datenschutzerklärung | JobBridge",
 };
 
-function Section({ icon: Icon, title, children }: {
-  icon: React.ElementType;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <div className="not-prose mb-4 mt-8 flex items-center gap-3 border-b border-slate-200/80 pb-4 dark:border-white/10 sm:mt-12">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600/10 text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-300">
-          <Icon className="h-4 w-4" />
-        </div>
-        <h2 className="m-0 text-lg font-bold text-slate-950 dark:text-white">{title}</h2>
-      </div>
-      {children}
-    </section>
-  );
-}
-
 export default function DatenschutzPage() {
   return (
     <>
-      <div className="not-prose mb-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-200 bg-indigo-600/10 text-indigo-600 dark:border-indigo-400/20 dark:bg-indigo-400/10 dark:text-indigo-300">
-            <Shield className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">Transparenz</p>
-            <h1 className="break-words text-2xl font-bold text-slate-950 dark:text-white">Datenschutzerklärung</h1>
-          </div>
-        </div>
-      </div>
+      <LegalHero
+        title="Datenschutzerklärung"
+      />
 
-      <p>
-        Wir nehmen den Schutz deiner persönlichen Daten sehr ernst. Hier erfährst du transparent, welche Daten wir erheben, warum wir sie brauchen und welche Rechte du hast.
-      </p>
-
-      <Section icon={Globe} title="Datenschutz auf einen Blick">
+      <LegalSection title="Datenschutz auf einen Blick">
         <p>
-          JobBridge ist eine Plattform, die Jugendliche und Auftraggeber für sichere Taschengeldjobs zusammenführt. Dabei behandeln wir deine personenbezogenen Daten vertraulich und entsprechend der gesetzlichen Datenschutzvorschriften (DSGVO) sowie dieser Datenschutzerklärung.
+          JobBridge ist eine Plattform, die Jugendliche und Auftraggeber für sichere Taschengeldjobs
+          zusammenführt. Dabei behandeln wir personenbezogene Daten vertraulich und entsprechend der
+          gesetzlichen Datenschutzvorschriften (DSGVO) sowie dieser Datenschutzerklärung.
         </p>
-      </Section>
+      </LegalSection>
 
-      <Section icon={Server} title="Datenerfassung auf unserer Plattform">
+      <LegalSection title="Datenerfassung auf unserer Plattform">
         <p>
-          Deine Daten werden zum einen dadurch erhoben, dass du uns diese mitteilst – z.B. bei der Registrierung (E-Mail, Name, Region). Andere Daten werden automatisch beim Besuch der Website durch unsere IT-Systeme erfasst. Das sind vor allem technische Daten wie Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs.
+          Deine Daten werden zum einen dadurch erhoben, dass du uns diese mitteilst – zum Beispiel
+          bei der Registrierung (E-Mail, Name, Region). Andere Daten werden automatisch beim Besuch
+          der Website durch unsere IT-Systeme erfasst. Das sind vor allem technische Daten wie
+          Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs.
         </p>
-      </Section>
+      </LegalSection>
 
-      <Section icon={Users} title="Wie nutzen wir deine Daten?">
+      <LegalSection title="Wie nutzen wir deine Daten?">
         <p>
-          Ein Teil der Daten wird erhoben, um eine fehlerfreie Bereitstellung der App zu gewährleisten. Andere Daten werden zur sicheren Identifikation und Kommunikation zwischen Jugendlichen und Auftraggebern genutzt:
+          Ein Teil der Daten wird erhoben, um die Plattform fehlerfrei bereitzustellen. Andere Daten
+          werden zur sicheren Identifikation und Kommunikation zwischen Jugendlichen und Auftraggebern
+          genutzt:
         </p>
         <ul>
           <li>Bereitstellung und Verbesserung der Plattform</li>
           <li>Sichere Authentifizierung und Verifizierung von Nutzern</li>
           <li>Standortbasierte Darstellung relevanter Job-Angebote</li>
-          <li>Kommunikation zwischen den Parteien (z.B. Bewerbungen)</li>
+          <li>Kommunikation zwischen den Parteien, zum Beispiel bei Bewerbungen</li>
         </ul>
-      </Section>
+      </LegalSection>
 
-      <Section icon={Server} title="Drittanbieter und Tools">
+      <LegalPanel title="Drittanbieter und Tools">
         <p>Wir setzen folgende vertrauenswürdige Dienste ein:</p>
         <ul>
           <li>
-            <strong>Hetzner Online GmbH</strong> – Hosting und Betrieb der Plattform auf eigenen Servern
-            in Nürnberg, Deutschland. Im Rahmen der Bereitstellung können technische Server- und
-            Verbindungsdaten verarbeitet werden.
+            <strong>Hetzner Online GmbH</strong> – Hosting und Betrieb der Plattform auf eigenen
+            Servern in Nürnberg, Deutschland.
           </li>
           <li>
             <strong>Cloudflare</strong> – DNS-, Netzwerk- und Sicherheitsdienste zum Schutz und zur
-            stabilen Auslieferung der Plattform. Dabei können insbesondere IP-Adressen und technische
-            Verbindungsdaten verarbeitet werden.
+            stabilen Auslieferung der Plattform.
           </li>
           <li>
-            <strong>Supabase</strong> – Authentifizierung und Datenbank. Deine Daten werden
-            verschlüsselt gespeichert und übertragen (TLS).
+            <strong>Supabase</strong> – Authentifizierung und Datenbank. Daten werden verschlüsselt
+            gespeichert und übertragen.
           </li>
           <li>
-            <strong>MapTiler</strong> – Darstellung von Karteninhalten innerhalb der Plattform. Hierbei
-            kann deine IP-Adresse aus technischen Gründen an den Kartenanbieter übertragen werden.
+            <strong>MapTiler</strong> – Darstellung von Karteninhalten innerhalb der Plattform.
           </li>
           <li>
             <strong>OpenStreetMap / Nominatim</strong> – Adress- und Standortsuche innerhalb der
-            Plattform. Bei einer Suchanfrage werden die von dir eingegebenen Suchbegriffe sowie
-            technische Verbindungsdaten verarbeitet.
+            Plattform.
           </li>
           <li>
-            <strong>Stripe</strong> – Sichere Zahlungsabwicklung, sofern Zahlungsfunktionen innerhalb der
-            Plattform angeboten werden. Stripe verarbeitet Zahlungsdaten nach eigenen, strengen
-            Finanz- und Sicherheitsstandards.
+            <strong>Stripe</strong> – Sichere Zahlungsabwicklung, sofern Zahlungsfunktionen angeboten
+            werden.
           </li>
           <li>
-            <strong>Twilio</strong> – Versand transaktionaler Nachrichten und Benachrichtigungen, soweit
-            entsprechende Kommunikationsfunktionen genutzt werden.
+            <strong>Twilio</strong> – Versand transaktionaler Nachrichten und Benachrichtigungen,
+            soweit entsprechende Kommunikationsfunktionen genutzt werden.
           </li>
         </ul>
-      </Section>
+      </LegalPanel>
 
-      <Section icon={FileWarning} title="Deine Rechte">
-        <p>
-          Du hast jederzeit das Recht auf:
-        </p>
+      <LegalSection title="Deine Rechte">
+        <p>Du hast jederzeit das Recht auf:</p>
         <ul>
-          <li><strong>Auskunft</strong> – Über Herkunft, Empfänger und Zweck deiner gespeicherten Daten</li>
+          <li><strong>Auskunft</strong> – über Herkunft, Empfänger und Zweck deiner gespeicherten Daten</li>
           <li><strong>Berichtigung</strong> – Korrektur unrichtiger Daten</li>
           <li><strong>Löschung</strong> – Entfernung deiner Daten (&quot;Recht auf Vergessenwerden&quot;)</li>
           <li><strong>Einschränkung der Verarbeitung</strong></li>
           <li><strong>Datenübertragbarkeit</strong></li>
-          <li><strong>Widerspruch</strong> – Gegen die Verarbeitung deiner Daten</li>
+          <li><strong>Widerspruch</strong> – gegen die Verarbeitung deiner Daten</li>
         </ul>
-      </Section>
+      </LegalSection>
 
-      <Section icon={Mail} title="Kontakt">
+      <LegalSection title="Kontakt">
         <p>
-          Für Datenschutzanfragen wende dich bitte an unsere im <a href="/legal/impressum">Impressum</a> angegebene E-Mail-Adresse. Wir antworten zeitnah und transparent.
+          Für Datenschutzanfragen wende dich bitte an unsere im <a href="/legal/impressum">Impressum</a>{" "}
+          angegebene E-Mail-Adresse. Wir antworten zeitnah und transparent.
         </p>
-      </Section>
+      </LegalSection>
 
-      <div className="not-prose mt-8 text-xs font-medium text-slate-500 dark:text-slate-400">
-        Stand: April 2026
-      </div>
+      <LegalStamp>Stand: April 2026</LegalStamp>
     </>
   );
 }

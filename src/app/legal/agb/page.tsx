@@ -1,4 +1,4 @@
-import { Scale, Users, ShieldCheck, Handshake, AlertTriangle, FileText } from "lucide-react";
+import { LegalHero, LegalSection, LegalStamp } from "@/components/legal/LegalContent";
 
 export const dynamic = "force-static";
 
@@ -6,60 +6,42 @@ export const metadata = {
   title: "AGB | JobBridge",
 };
 
-function Section({ icon: Icon, title, children }: {
-  icon: React.ElementType;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <div className="not-prose mb-4 mt-8 flex items-center gap-3 border-b border-slate-200/80 pb-4 dark:border-white/10 sm:mt-12">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600/10 text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-300">
-          <Icon className="h-4 w-4" />
-        </div>
-        <h2 className="m-0 text-lg font-bold text-slate-950 dark:text-white">{title}</h2>
-      </div>
-      {children}
-    </section>
-  );
-}
-
 export default function AGBPage() {
   return (
     <>
-      <div className="not-prose mb-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-200 bg-indigo-600/10 text-indigo-600 dark:border-indigo-400/20 dark:bg-indigo-400/10 dark:text-indigo-300">
-            <Scale className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">Vereinbarung</p>
-            <h1 className="text-2xl font-bold text-slate-950 dark:text-white">Allgemeine Geschäftsbedingungen</h1>
-          </div>
-        </div>
-      </div>
+      <LegalHero
+        title="AGB"
+      />
 
-      <Section icon={FileText} title="1. Geltungsbereich">
+      <LegalSection title="Geltungsbereich">
         <p>
-          Diese Vertragsbedingungen gelten für die Nutzung der Plattform JobBridge, auf der Jugendliche und private oder gewerbliche Auftraggeber für kleine, legale Handreichungen und Taschengeldjobs zusammengeführt werden.
+          Diese Vertragsbedingungen gelten für die Nutzung der Plattform JobBridge, auf der Jugendliche
+          und private oder gewerbliche Auftraggeber für kleine, legale Handreichungen und Taschengeldjobs
+          zusammengeführt werden.
         </p>
-      </Section>
+      </LegalSection>
 
-      <Section icon={Users} title="2. Registrierung und Konto">
+      <LegalSection title="Registrierung und Konto">
         <p>
-          Die Nutzung der Plattform setzt eine Registrierung voraus. Bei Minderjährigen erfordert dies die explizite Bestätigung der Erziehungsberechtigten gemäß unserer Verifizierungs-Richtlinien. Du verpflichtest dich, bei der Registrierung wahrheitsgemäße Angaben zu machen.
+          Die Nutzung der Plattform setzt eine Registrierung voraus. Bei Minderjährigen erfordert dies
+          die explizite Bestätigung der Erziehungsberechtigten gemäß unserer Verifizierungs-Richtlinien.
+          Du verpflichtest dich, bei der Registrierung wahrheitsgemäße Angaben zu machen.
         </p>
-      </Section>
+      </LegalSection>
 
-      <Section icon={Handshake} title="3. Leistungen von JobBridge">
+      <LegalSection title="Leistungen von JobBridge">
         <p>
-          JobBridge fungiert als technischer Vermittler und stellt die Plattform zur Verfügung. Vertragliche Beziehungen bei der Annahme eines Jobs entstehen ausschließlich zwischen den registrierten Nutzern (Auftraggeber und Auftragnehmer). JobBridge ist an diesen Verträgen nicht beteiligt.
+          JobBridge fungiert als technischer Vermittler und stellt die Plattform zur Verfügung.
+          Vertragliche Beziehungen bei der Annahme eines Jobs entstehen ausschließlich zwischen den
+          registrierten Nutzern. JobBridge ist an diesen Verträgen nicht beteiligt.
         </p>
-      </Section>
+      </LegalSection>
 
-      <Section icon={ShieldCheck} title="4. Pflichten der Nutzer">
+      <LegalSection title="Pflichten der Nutzer">
         <p>
-          Nutzer verpflichten sich, kommunizierte Arbeiten gewissenhaft auszuführen bzw. faire, jugendgerechte Arbeitsbedingungen und Bezahlung sicherzustellen. Ein Verstoß gegen gesetzliche Jugendschutzbestimmungen oder unsere Community-Richtlinien führt zum sofortigen Ausschluss.
+          Nutzer verpflichten sich, kommunizierte Arbeiten gewissenhaft auszuführen bzw. faire,
+          jugendgerechte Arbeitsbedingungen und Bezahlung sicherzustellen. Ein Verstoß gegen gesetzliche
+          Jugendschutzbestimmungen oder unsere Community-Richtlinien führt zum sofortigen Ausschluss.
         </p>
         <ul>
           <li>Keine illegalen oder gefährlichen Tätigkeiten</li>
@@ -67,23 +49,24 @@ export default function AGBPage() {
           <li>Respektvoller und professioneller Umgang</li>
           <li>Einhaltung des Jugendarbeitsschutzgesetzes (JArbSchG)</li>
         </ul>
-      </Section>
+      </LegalSection>
 
-      <Section icon={AlertTriangle} title="5. Haftungsbeschränkung">
+      <LegalSection title="Haftungsbeschränkung">
         <p>
-          JobBridge haftet nicht für Schäden, die aus der Vermittlung resultieren. Wir übernehmen keine Garantie für die Qualität der Arbeit oder die Zahlungsfähigkeit der Auftraggeber, wenngleich wir Identitäten prüfen.
+          JobBridge haftet nicht für Schäden, die aus der Vermittlung resultieren. Wir übernehmen keine
+          Garantie für die Qualität der Arbeit oder die Zahlungsfähigkeit der Auftraggeber, wenngleich
+          wir Identitäten prüfen.
         </p>
-      </Section>
+      </LegalSection>
 
-      <Section icon={Scale} title="6. Schlussbestimmungen">
+      <LegalSection title="Schlussbestimmungen">
         <p>
-          Sollten einzelne Bestimmungen dieser AGB unwirksam sein, bleibt der Vertrag im Übrigen wirksam. Es gilt das Recht der Bundesrepublik Deutschland.
+          Sollten einzelne Bestimmungen dieser AGB unwirksam sein, bleibt der Vertrag im Übrigen
+          wirksam. Es gilt das Recht der Bundesrepublik Deutschland.
         </p>
-      </Section>
+      </LegalSection>
 
-      <div className="not-prose mt-8 text-xs font-medium text-slate-500 dark:text-slate-400">
-        Stand: April 2026
-      </div>
+      <LegalStamp>Stand: April 2026</LegalStamp>
     </>
   );
 }
