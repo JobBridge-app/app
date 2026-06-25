@@ -5,6 +5,21 @@ import { supabaseServer } from "./supabaseServer";
 import { Profile, isProfileComplete, SystemRoleType, AccountType } from "./types";
 import type { EffectiveViewSnapshot } from "./types/jobbridge";
 
+const emptySessionContext = {
+  session: null,
+  profile: null,
+  systemRoles: [],
+  effectiveView: null,
+} satisfies {
+  session: Session | null;
+  profile: Profile | null;
+  systemRoles: string[];
+  effectiveView: EffectiveViewSnapshot | null;
+};
+
+const isMissingSupabaseEnvError = (error: unknown) =>
+  error instanceof Error && error.message.includes("Missing Supabase env vars");
+
 export type AuthState =
   | { state: "no-session" }
   | { state: "email-unconfirmed"; session: Session; profile: Profile | null; systemRoles: string[]; effectiveView: EffectiveViewSnapshot | null }
@@ -50,7 +65,17 @@ const getCurrentSessionAndProfileCached = cache(async (): Promise<{
   systemRoles: string[];
   effectiveView: EffectiveViewSnapshot | null;
 }> => {
-  const supabase = await supabaseServer();
+  let supabase: Awaited<ReturnType<typeof supabaseServer>>;
+
+  try {
+    supabase = await supabaseServer();
+  } catch (error) {
+    if (isMissingSupabaseEnvError(error)) {
+      return emptySessionContext;
+    }
+
+    throw error;
+  }
 
   // Use getUser() first — this contacts the Supabase Auth server and
   // refreshes the session if the access token has expired.
