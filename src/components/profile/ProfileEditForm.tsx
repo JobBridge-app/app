@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Profile } from "@/lib/types";
-import { LockKeyhole, Building2, User, MapPin, Briefcase, Sparkles, Clock, ShieldCheck, ShieldAlert, ArrowRight, Plus, Users, Calendar, Fingerprint, Search } from "lucide-react";
+import { LockKeyhole, User, MapPin, Briefcase, Sparkles, Clock, ShieldCheck, ShieldAlert, ArrowRight, Plus, Users, Calendar, Search, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { LocationAutocomplete, LocationDetails } from "@/components/ui/LocationAutocomplete";
@@ -194,7 +194,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                 <div className="profile-page-header flex flex-col md:flex-row md:items-end justify-between gap-8 mb-6 md:mb-8">
                     <div className="profile-page-heading space-y-2 relative">
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.16] py-1 drop-shadow-2xl">
-                            {(isProvider && profile.provider_kind === 'company') ? "Firmenprofil" : "Das Profil"}<span className="text-indigo-500">.</span>
+                            {(isProvider && profile.provider_kind === 'company') ? "Firmenprofil" : "Dein Profil"}
                         </h1>
                     </div>
 
@@ -202,9 +202,9 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                         <button
                             type="button"
                             onClick={() => setShowPreview(true)}
-                            className="profile-action-secondary inline-flex items-center gap-2 px-4 md:px-6 py-3 rounded-2xl border text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                            className="profile-action-secondary inline-flex min-h-11 items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] active:scale-[0.96] md:px-5"
                         >
-                            <User size={18} className="text-indigo-400" />
+                            <User size={17} className="profile-action-icon" />
                             <span className="hidden md:inline">Vorschau</span>
                             <span className="md:hidden">Vorschau</span>
                         </button>
@@ -213,8 +213,8 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                             onClick={onSave}
                             disabled={saving}
                             className={cn(
-                                "profile-action-primary group inline-flex items-center gap-2 rounded-2xl px-8 py-3 text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98]",
-                                "bg-[#4F46E5] text-white hover:bg-[#4338CA] disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+                                "profile-action-primary group inline-flex min-h-11 items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold transition-[background-color,border-color,box-shadow,transform] active:scale-[0.96]",
+                                "text-white disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
                             )}
                         >
                             {saving ? (
@@ -224,7 +224,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                 </>
                             ) : (
                                 <>
-                                    <Sparkles size={18} className="fill-white/20 group-hover:fill-white/40 transition-all" />
+                                    <ShieldCheck size={17} className="profile-action-icon" />
                                     Speichern
                                 </>
                             )}
@@ -341,27 +341,22 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
 
                     <div className="lg:col-span-4 lg:sticky lg:top-8 z-20 space-y-8">
 
-                        <div className="relative group perspective-1000">
-                            <div className="absolute -inset-1 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-[2.2rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-
-                            <div className="profile-card profile-id-card relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#0A0A0C] shadow-2xl transition-transform duration-500 hover:scale-[1.005]">
-
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-[1px]" />
-                                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-1 rounded-full bg-black/40 border border-white/5" />
+                        <div className="relative group">
+                            <div className="profile-card profile-id-card relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#0A0A0C] shadow-2xl">
 
                                 <div className="relative px-6 pt-8 pb-4 border-b border-white/[0.03]">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-xl bg-[#15151A] border border-white/5 flex items-center justify-center shadow-inner">
-                                                <Building2 size={16} className="text-indigo-400" />
+                                            <div className="profile-id-mark w-9 h-9 rounded-xl bg-[#15151A] border border-white/5 flex items-center justify-center shadow-inner">
+                                                <Fingerprint size={16} className="text-slate-400" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] uppercase tracking-[0.25em] font-extrabold text-slate-500">Digital ID</span>
-                                                <span className="text-[11px] font-mono text-indigo-400/80 tracking-wide">ID-{profile.id.substring(0, 8).toUpperCase()}</span>
+                                                <span className="profile-id-kicker text-[10px] uppercase tracking-[0.22em] font-extrabold text-slate-500">Digital ID</span>
+                                                <span className="profile-id-code font-mono text-[11px] font-semibold text-slate-400 tracking-[0.08em]">ID-{profile.id.substring(0, 8).toUpperCase()}</span>
                                             </div>
                                         </div>
-                                        <div className="w-8 h-8 rounded-full bg-[#15151A] border border-white/5 flex items-center justify-center group-hover:bg-white/5 transition-colors cursor-help" title={lastLogin ? `Letzter Login: ${new Date(lastLogin.created_at).toLocaleString("de-DE")}` : "Noch nie eingeloggt"}>
-                                            <LockKeyhole size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
+                                        <div className="profile-id-lock w-8 h-8 rounded-full bg-[#15151A] border border-white/5 flex items-center justify-center cursor-help" title={lastLogin ? `Letzter Login: ${new Date(lastLogin.created_at).toLocaleString("de-DE")}` : "Kontoschutz aktiv"}>
+                                            <LockKeyhole size={14} className="text-slate-500" />
                                         </div>
                                     </div>
                                 </div>
@@ -369,9 +364,9 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                 <div className="p-6 relative">
                                     <div className="flex flex-col items-center text-center mb-8">
                                         <div className="relative w-28 h-28 mb-5 group/avatar">
-                                            <div className="absolute inset-0 rounded-full bg-indigo-500 blur-[40px] opacity-10 group-hover/avatar:opacity-20 transition-opacity duration-700" />
+                                            <div className="profile-avatar-glow absolute inset-0 rounded-full bg-slate-400 blur-[34px] opacity-[0.09] group-hover/avatar:opacity-[0.13] transition-opacity duration-300" />
 
-                                            <div className="relative w-full h-full rounded-full border-[3px] border-[#18181B] bg-[#121215] p-1 shadow-2xl">
+                                            <div className="profile-avatar-frame relative w-full h-full rounded-full border-[3px] border-[#18181B] bg-[#121215] p-1 shadow-2xl">
                                                 <div className="w-full h-full rounded-full bg-[#1A1A20] flex items-center justify-center overflow-hidden">
                                                     {profile.avatar_url ? (
                                                         <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -384,7 +379,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
 
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); showDevToast(); }}
-                                                    className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#4F46E5] border-[3px] border-[#18181B] flex items-center justify-center text-white hover:bg-[#4338CA] transition-all shadow-lg z-20 hover:scale-110 active:scale-90"
+                                                    className="profile-avatar-action absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#4F46E5] border-[3px] border-[#18181B] flex items-center justify-center text-white hover:bg-[#4338CA] transition-[background-color,transform] shadow-lg z-20 hover:scale-[1.04] active:scale-[0.96]"
                                                     title="Profilbild ändern"
                                                 >
                                                     <Plus size={16} />
@@ -407,7 +402,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="rounded-2xl bg-[#121215] border border-white/[0.04] p-4 flex items-center justify-between">
+                                        <div className="profile-id-summary rounded-2xl bg-[#121215] border border-white/[0.04] p-4 flex items-center justify-between">
                                             <div className="flex flex-col">
                                                 <span className="text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-1">Status</span>
                                                 {isProvider ? (
@@ -416,7 +411,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                             <ShieldCheck size={14} /> Verifiziert
                                                         </span>
                                                     ) : (
-                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-indigo-400">
+                                                        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
                                                             <User size={14} /> Basis
                                                         </span>
                                                     )
@@ -435,14 +430,14 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                             <div className="h-8 w-px bg-white/5 mx-2" />
                                             <div className="flex flex-col items-end">
                                                 <span className="text-[9px] uppercase tracking-widest font-bold text-slate-500 mb-1">Rolle</span>
-                                                <span className={cn("text-xs font-bold", isProvider ? "text-amber-500" : "text-sky-400")}>
+                                                <span className="profile-role-value text-xs font-bold text-slate-300">
                                                     {isProvider ? "ANBIETER" : "SUCHEND"}
                                                 </span>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div className="p-3 rounded-2xl bg-[#121215] border border-white/[0.04] flex flex-col items-center justify-center text-center gap-1 hover:bg-white/[0.02] transition-colors">
+                                            <div className="profile-id-metric p-3 rounded-2xl bg-[#121215] border border-white/[0.04] flex flex-col items-center justify-center text-center gap-1">
                                                 <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
                                                     <Calendar size={10} /> Seit
                                                 </span>
@@ -450,12 +445,12 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                     {profile.created_at ? new Date(profile.created_at).toLocaleDateString("de-DE", { month: 'short', year: 'numeric' }) : "-"}
                                                 </span>
                                             </div>
-                                            <div className="p-3 rounded-2xl bg-[#121215] border border-white/[0.04] flex flex-col items-center justify-center text-center gap-1 hover:bg-white/[0.02] transition-colors">
+                                            <div className="profile-id-metric p-3 rounded-2xl bg-[#121215] border border-white/[0.04] flex flex-col items-center justify-center text-center gap-1">
                                                 <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
-                                                    <Fingerprint size={10} /> Geboren
+                                                    <ShieldCheck size={10} /> Schutz
                                                 </span>
                                                 <span className="text-xs font-bold text-slate-300">
-                                                    {profile.birthdate ? new Date(profile.birthdate).toLocaleDateString("de-DE") : "-"}
+                                                    {isProvider ? (isVerified ? "Geprüft" : "Basis") : (profile.guardian_status === "linked" ? "Freigegeben" : "Standard")}
                                                 </span>
                                             </div>
                                         </div>
@@ -548,7 +543,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                             <div>
                                 <div className="profile-card-header flex flex-col md:flex-row md:items-center gap-6 mb-10 pb-8 border-b border-white/[0.03]">
                                     <div className="min-w-0 flex-1">
-                                        <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Persönliche Daten</h3>
+                                        <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Profilangaben</h3>
                                     </div>
                                 </div>
 
@@ -575,7 +570,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="profile-field-block space-y-3 group">
                                                 <label className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
-                                                    <Briefcase size={12} /> Skills
+                                                    <Briefcase size={12} /> Fähigkeiten
                                                 </label>
                                                 <div className="relative">
                                                     <input

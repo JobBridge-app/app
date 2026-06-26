@@ -78,8 +78,6 @@ function persistState(sortOption: SortOption, filterState: FilterState): void {
     } catch { /* storage unavailable — ignore */ }
 }
 
-const TAB_ORDER: Tab[] = ["active", "waitlist", "applied"];
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function JobsList({
@@ -191,14 +189,12 @@ export function JobsList({
     }, [showFilterPanel]);
 
     const getPanelClassName = (tab: Tab) => {
-        const offset = TAB_ORDER.indexOf(tab) > TAB_ORDER.indexOf(activeTab) ? 20 : -20;
-
         return cn(
-            "col-start-1 row-start-1 transform-gpu transition-[opacity,transform,filter] duration-300 ease-out will-change-transform motion-reduce:transition-none",
+            "col-start-1 row-start-1 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
             activeTab === tab
-                ? "relative z-10 translate-x-0 opacity-100 blur-0 pointer-events-auto"
+                ? "relative z-10 translate-y-0 opacity-100 pointer-events-auto"
                 : visitedTabs[tab]
-                    ? `pointer-events-none opacity-0 blur-[1px] ${offset > 0 ? "translate-x-5" : "-translate-x-5"}`
+                    ? "pointer-events-none opacity-0 translate-y-1"
                     : "hidden",
         );
     };
@@ -212,12 +208,12 @@ export function JobsList({
                         <MobileTab
                             active={activeTab === "active"}
                             onClick={() => handleTabChange("active")}
-                            activeClass="bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                            activeClass="bg-white/[0.075] text-white border-white/10"
                         >
                             <Briefcase size={14} />
                             Aktuell
                             {totalVisibleActiveJobs > 0 && (
-                                <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded-full font-bold">
+                                <span className="jobs-mobile-tab-badge">
                                     {totalVisibleActiveJobs}
                                 </span>
                             )}
@@ -225,12 +221,12 @@ export function JobsList({
                         <MobileTab
                             active={activeTab === "waitlist"}
                             onClick={() => handleTabChange("waitlist")}
-                            activeClass="bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            activeClass="bg-white/[0.075] text-white border-white/10"
                         >
                             <Clock size={14} />
                             Warteliste
                             {sortedWaitlistedJobs.length > 0 && (
-                                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-bold">
+                                <span className="jobs-mobile-tab-badge">
                                     {sortedWaitlistedJobs.length}
                                 </span>
                             )}
@@ -238,12 +234,12 @@ export function JobsList({
                         <MobileTab
                             active={activeTab === "applied"}
                             onClick={() => handleTabChange("applied")}
-                            activeClass="bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            activeClass="bg-white/[0.075] text-white border-white/10"
                         >
                             <CheckCircle2 size={14} />
                             Beworben
                             {sortedAppliedJobs.length > 0 && (
-                                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full font-bold">
+                                <span className="jobs-mobile-tab-badge">
                                     {sortedAppliedJobs.length}
                                 </span>
                             )}
@@ -267,7 +263,7 @@ export function JobsList({
                     <DesktopTab
                         active={activeTab === "active"}
                         onClick={() => handleTabChange("active")}
-                        activeClass="bg-indigo-500/10 text-white ring-indigo-400/20 shadow-[0_14px_34px_-24px_rgba(99,102,241,0.75)]"
+                        activeClass="bg-indigo-500/10 text-white ring-indigo-400/20"
                     >
                         <Briefcase size={15} className={cn(activeTab === "active" ? "text-indigo-400" : "text-slate-500")} />
                         Aktuell
@@ -276,7 +272,7 @@ export function JobsList({
                     <DesktopTab
                         active={activeTab === "waitlist"}
                         onClick={() => handleTabChange("waitlist")}
-                        activeClass="bg-amber-500/10 text-white ring-amber-400/20 shadow-[0_14px_34px_-24px_rgba(245,158,11,0.65)]"
+                        activeClass="bg-amber-500/10 text-white ring-amber-400/20"
                     >
                         <Clock size={15} className={cn(activeTab === "waitlist" ? "text-amber-400" : "text-slate-500")} />
                         Warteliste
@@ -285,7 +281,7 @@ export function JobsList({
                     <DesktopTab
                         active={activeTab === "applied"}
                         onClick={() => handleTabChange("applied")}
-                        activeClass="bg-emerald-500/10 text-white ring-emerald-400/20 shadow-[0_14px_34px_-24px_rgba(16,185,129,0.65)]"
+                        activeClass="bg-emerald-500/10 text-white ring-emerald-400/20"
                     >
                         <CheckCircle2 size={15} className={cn(activeTab === "applied" ? "text-emerald-400" : "text-slate-500")} />
                         Beworben
@@ -296,7 +292,7 @@ export function JobsList({
                 <button
                     onClick={() => setShowFilterPanel(true)}
                     className={cn(
-                        "jobs-filter-trigger relative ml-4 flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-transparent px-3.5 py-2.5 text-slate-400 transition-all duration-200 hover:border-white/10 hover:bg-white/5 hover:text-white sm:px-4",
+                        "jobs-filter-trigger relative ml-4 flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-transparent px-3.5 py-2.5 text-slate-400 transition-colors duration-200 hover:border-white/10 hover:bg-white/5 hover:text-white sm:px-4",
                         showFilterPanel && "bg-white/10 text-indigo-300 border-indigo-500/20",
                         hasChanges && !showFilterPanel && "text-indigo-300 border-indigo-500/20 bg-indigo-500/10"
                     )}
@@ -363,7 +359,6 @@ export function JobsList({
                     <div className={getPanelClassName("waitlist")}>
                         <JobsListSection
                             title="Warteliste"
-                            icon={Clock}
                             colorClass="text-amber-400"
                             jobs={sortedWaitlistedJobs}
                             emptyMsg="Aktuell sind keine Jobs für die Warteliste verfügbar."
@@ -377,7 +372,6 @@ export function JobsList({
                     <div className={getPanelClassName("applied")}>
                         <JobsListSection
                             title="Bereits Beworben"
-                            icon={CheckCircle2}
                             colorClass="text-emerald-400"
                             jobs={sortedAppliedJobs}
                             emptyMsg="Noch keine Bewerbungen versendet."
@@ -436,7 +430,7 @@ function MobileTab({
             onClick={onClick}
             data-active={active}
             className={cn(
-                "jobs-mobile-tab relative flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-2 text-[11px] font-semibold transition-all sm:gap-1.5 sm:rounded-xl sm:px-3 sm:text-xs",
+                "jobs-mobile-tab relative flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-2 text-[11px] font-semibold transition-colors sm:gap-1.5 sm:rounded-xl sm:px-3 sm:text-xs",
                 active ? activeClass : "text-slate-400 hover:text-slate-200 hover:bg-white/5 border-transparent"
             )}
         >
@@ -461,7 +455,7 @@ function DesktopTab({
             onClick={onClick}
             data-active={active}
             className={cn(
-                "jobs-desktop-tab relative flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 sm:px-4",
+                "jobs-desktop-tab relative flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-semibold transition-colors duration-200 sm:px-4",
                 active
                     ? cn("ring-1", activeClass)
                     : "text-slate-400 hover:bg-white/5 hover:text-white"
@@ -496,7 +490,7 @@ function FilterButton({
             onClick={onClick}
             aria-label="Filter & Sortierung"
             className={cn(
-                "jobs-filter-icon-button relative flex shrink-0 items-center justify-center text-slate-400 transition-all hover:bg-white/5 hover:text-white",
+                "jobs-filter-icon-button relative flex shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-white/5 hover:text-white",
                 isActive && "text-indigo-400 bg-white/5",
                 className
             )}
@@ -522,11 +516,8 @@ function EmptyState({
 }) {
     return (
         <div className="jobs-empty-copy flex flex-col items-center justify-center space-y-4 px-4 py-8">
-            <div className="relative">
-                <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full scale-110 pointer-events-none" />
-                <div className="jobs-empty-icon relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-white/[0.05] bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900 text-indigo-400/80 shadow-xl">
-                    <Icon size={32} className="opacity-80" />
-                </div>
+            <div className="jobs-empty-icon flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.05] bg-slate-900/60 text-indigo-400/80">
+                <Icon size={26} className="opacity-80" />
             </div>
             <div className="text-center space-y-1.5">
                 <h3 className="jobs-empty-title text-xl font-bold tracking-tight text-white">{title}</h3>

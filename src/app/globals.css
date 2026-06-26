@@ -6304,3 +6304,1038 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main {
     animation-duration: 1ms !important;
   }
 }
+
+/* App seeker polish pass: shared surfaces for jobs, activities, profile and settings. */
+.jobs-home-surface,
+.activities-command-center,
+.profile-page,
+.settings-page {
+  --app-page-max: 78rem;
+  --app-card-radius: 1.35rem;
+  --app-panel-radius: 1.6rem;
+}
+
+.jobs-home-surface.container,
+.activities-page.container,
+.profile-page > .relative.container,
+.settings-page {
+  max-width: var(--app-page-max) !important;
+}
+
+.jobs-home-heading h1,
+.activity-home-heading h1,
+.profile-page-heading h1,
+.settings-header h1 {
+  letter-spacing: -0.015em !important;
+  line-height: 1.04 !important;
+}
+
+.jobs-home-heading p,
+.activity-home-heading p,
+.settings-header p {
+  color: var(--text-muted) !important;
+  letter-spacing: 0 !important;
+}
+
+.jobs-section-rule,
+.job-card::before,
+.job-card::after,
+.profile-edit-card::before,
+.profile-location-card::before {
+  display: none !important;
+}
+
+.jobs-desktop-tabs {
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.jobs-tab-group,
+.activity-home-controls .activity-filter-strip {
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-raised) 78%, transparent);
+  padding: 0.28rem;
+  box-shadow: var(--shadow-card);
+}
+
+.dark .jobs-tab-group,
+.dark .activity-home-controls .activity-filter-strip {
+  border-color: rgba(148, 163, 184, 0.12);
+  background: rgba(8, 13, 29, 0.72);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.jobs-desktop-tab,
+.jobs-mobile-tab,
+.activity-home-controls .activity-filter-strip button {
+  border-radius: 999px !important;
+  transition-property: background-color, color, border-color !important;
+}
+
+.jobs-desktop-tab[data-active="true"],
+.jobs-mobile-tab[data-active="true"],
+.activity-home-controls .activity-filter-strip button.is-active {
+  background: var(--surface-solid) !important;
+  color: var(--text-strong) !important;
+  box-shadow: 0 10px 24px rgba(31, 45, 74, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+}
+
+.dark .jobs-desktop-tab[data-active="true"],
+.dark .jobs-mobile-tab[data-active="true"],
+.dark .activity-home-controls .activity-filter-strip button.is-active {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+.jobs-filter-trigger,
+.jobs-filter-icon-button,
+.activity-search {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-raised) 78%, transparent) !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+}
+
+.jobs-filter-trigger:hover,
+.jobs-filter-icon-button:hover,
+.activity-search:focus-within {
+  border-color: var(--brand-border) !important;
+  background: var(--surface-solid) !important;
+  color: var(--text-strong) !important;
+}
+
+.jobs-section {
+  scroll-margin-top: 7rem;
+}
+
+.jobs-section-heading {
+  color: var(--text-strong) !important;
+  font-size: clamp(1.28rem, 1.2vw + 1rem, 1.55rem) !important;
+  line-height: 1.1 !important;
+}
+
+.jobs-section-count {
+  border: 1px solid var(--border-subtle) !important;
+  background: var(--surface-muted) !important;
+  color: var(--text-muted) !important;
+}
+
+.jobs-section-icon {
+  border-color: var(--border-subtle) !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+}
+
+.jobs-card-grid {
+  gap: clamp(1rem, 1.5vw, 1.35rem) !important;
+}
+
+.job-card {
+  min-height: 13.8rem !important;
+  border-color: var(--border-subtle) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 98%, transparent), color-mix(in srgb, var(--surface-solid) 96%, transparent)) !important;
+  box-shadow: var(--shadow-card) !important;
+  filter: none !important;
+}
+
+.job-card:hover {
+  border-color: color-mix(in srgb, var(--brand) 24%, var(--border-subtle)) !important;
+  box-shadow: var(--shadow-card-hover) !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.dark .job-card {
+  border-color: rgba(148, 163, 184, 0.115) !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(8, 13, 29, 0.99)) !important;
+  box-shadow: 0 22px 62px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.dark .job-card:hover {
+  border-color: rgba(129, 140, 248, 0.28) !important;
+  box-shadow: 0 28px 76px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.055) !important;
+}
+
+.job-card[data-card-state="applied"] {
+  opacity: 1;
+  border-color: color-mix(in srgb, #10b981 24%, var(--border-subtle)) !important;
+  filter: none !important;
+}
+
+.dark .job-card[data-card-state="applied"] {
+  border-color: rgba(16, 185, 129, 0.28) !important;
+}
+
+.light .job-card[data-card-state="applied"] {
+  border-color: rgba(5, 150, 105, 0.24) !important;
+}
+
+.job-card[data-card-state="waitlist"] {
+  border-color: color-mix(in srgb, #d97706 20%, var(--border-subtle)) !important;
+}
+
+.job-card-title,
+.job-card:hover .job-card-title {
+  color: var(--text-strong) !important;
+  font-weight: 760 !important;
+  text-shadow: none !important;
+}
+
+.job-card-description {
+  color: var(--text-muted) !important;
+  line-height: 1.65 !important;
+}
+
+.job-card-footer {
+  border-color: var(--border-subtle) !important;
+}
+
+.job-card-category {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-muted) 82%, transparent) !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+}
+
+.job-card-category svg,
+.job-card-icon {
+  color: var(--brand) !important;
+}
+
+.job-card[data-card-state="waitlist"] .job-card-category {
+  border-color: rgba(217, 119, 6, 0.24) !important;
+  background: rgba(217, 119, 6, 0.1) !important;
+  color: #fbbf24 !important;
+}
+
+.job-card[data-card-state="waitlist"] .job-card-category svg {
+  color: #f59e0b !important;
+}
+
+.light .job-card[data-card-state="waitlist"] .job-card-category {
+  border-color: rgba(180, 83, 9, 0.22) !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: #92400e !important;
+}
+
+.light .job-card[data-card-state="waitlist"] .job-card-category svg {
+  color: #b45309 !important;
+}
+
+.job-card[data-card-state="applied"] .job-card-category {
+  border-color: rgba(16, 185, 129, 0.24) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #6ee7b7 !important;
+}
+
+.job-card[data-card-state="applied"] .job-card-category svg {
+  color: #34d399 !important;
+}
+
+.light .job-card[data-card-state="applied"] .job-card-category {
+  border-color: rgba(5, 150, 105, 0.22) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #047857 !important;
+}
+
+.light .job-card[data-card-state="applied"] .job-card-category svg {
+  color: #059669 !important;
+}
+
+.jobs-empty-state {
+  border-style: solid !important;
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-raised) 84%, transparent) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.jobs-empty-icon {
+  border-color: var(--border-subtle) !important;
+  background: var(--surface-muted) !important;
+  color: var(--brand) !important;
+  box-shadow: none !important;
+}
+
+.activities-command-center {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.activity-home-controls {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--app-card-radius) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 94%, transparent), color-mix(in srgb, var(--surface-solid) 90%, transparent)) !important;
+  padding: 0.62rem !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.dark .activity-home-controls {
+  background: rgba(8, 13, 29, 0.72) !important;
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.activity-home-controls .activity-filter-strip {
+  flex: 1 1 auto;
+  max-width: none !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.activity-search {
+  height: 2.85rem !important;
+  border-radius: 1rem !important;
+}
+
+.activity-workspace {
+  gap: 1.05rem !important;
+}
+
+.activity-inbox-panel,
+.activity-chat-stage,
+.activity-empty-command {
+  border-color: var(--border-subtle) !important;
+  border-radius: var(--app-card-radius) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 98%, transparent), color-mix(in srgb, var(--surface-solid) 96%, transparent)) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.dark .activity-inbox-panel,
+.dark .activity-chat-stage,
+.dark .activity-empty-command {
+  border-color: rgba(148, 163, 184, 0.115) !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(8, 13, 29, 0.99)) !important;
+  box-shadow: 0 22px 62px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.activity-panel-heading {
+  border-color: var(--border-subtle) !important;
+  min-height: 3rem !important;
+}
+
+.activity-panel-heading span {
+  color: var(--text-muted) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.activity-inbox-item {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-muted) 70%, var(--surface-solid) 30%) !important;
+  box-shadow: none !important;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease !important;
+}
+
+.activity-inbox-item:hover,
+.activity-inbox-item[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--brand) 25%, var(--border-subtle)) !important;
+  background: var(--surface-solid) !important;
+  box-shadow: 0 14px 34px rgba(31, 45, 74, 0.08) !important;
+  transform: none !important;
+}
+
+.dark .activity-inbox-item:hover,
+.dark .activity-inbox-item[data-selected="true"] {
+  background: rgba(15, 23, 42, 0.86) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055) !important;
+}
+
+.profile-page > .relative.container {
+  padding-top: 1.5rem !important;
+}
+
+.profile-page-header {
+  margin-bottom: 1.35rem !important;
+}
+
+.profile-card {
+  border-color: var(--border-subtle) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 98%, transparent), color-mix(in srgb, var(--surface-solid) 96%, transparent)) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.dark .profile-card {
+  border-color: rgba(148, 163, 184, 0.115) !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(8, 13, 29, 0.99)) !important;
+  box-shadow: 0 22px 62px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.profile-id-card,
+.profile-edit-card,
+.profile-location-card {
+  border-radius: var(--app-panel-radius) !important;
+}
+
+.profile-edit-card,
+.profile-location-card {
+  padding: clamp(1.35rem, 2vw, 2.15rem) !important;
+}
+
+.profile-edit-card .profile-card-header,
+.profile-location-card .profile-card-header {
+  margin-bottom: 1.35rem !important;
+  padding-bottom: 1.15rem !important;
+}
+
+.profile-card :where(h3, h4) {
+  font-weight: 760 !important;
+}
+
+.profile-field-label {
+  color: var(--text-muted) !important;
+  font-size: 0.73rem !important;
+  letter-spacing: 0.08em !important;
+}
+
+.profile-field-control {
+  border-width: 1px !important;
+  border-radius: 1.05rem !important;
+  box-shadow: none !important;
+}
+
+.profile-field-control:focus {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 9%, transparent) !important;
+}
+
+.settings-page {
+  padding-top: 2rem !important;
+}
+
+.settings-header {
+  border-color: var(--border-subtle) !important;
+}
+
+.settings-panel,
+.settings-section {
+  border-radius: var(--app-card-radius);
+}
+
+@media (max-width: 760px) {
+  .jobs-home-surface.container,
+  .activities-page.container,
+  .profile-page > .relative.container,
+  .settings-page {
+    max-width: 100% !important;
+  }
+
+  .jobs-desktop-tabs,
+  .activity-home-controls,
+  .job-card,
+  .profile-card,
+  .settings-panel {
+    border-radius: 1.18rem !important;
+  }
+
+  .job-card {
+    min-height: auto !important;
+  }
+
+  .activity-home-controls {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Activity page correction: quieter toolbar and less boxed chat workspace. */
+.activities-command-center {
+  gap: clamp(1rem, 1.4vw, 1.45rem) !important;
+}
+
+.activity-home-heading {
+  align-items: flex-start !important;
+}
+
+.activity-home-heading h1 {
+  margin-bottom: 0.38rem !important;
+  text-wrap: balance;
+}
+
+.activity-home-heading p {
+  max-width: 44rem;
+  text-wrap: pretty;
+}
+
+.activity-home-controls {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 32rem);
+  gap: 0.8rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.activity-home-controls .activity-filter-strip {
+  min-height: 3rem;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.11) !important;
+  border-radius: 1.08rem !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(8, 13, 29, 0.78)) !important;
+  padding: 0.34rem !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.018),
+    0 14px 36px rgba(0, 0, 0, 0.22) !important;
+}
+
+.light .activity-home-controls .activity-filter-strip {
+  border-color: rgba(24, 36, 64, 0.1) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.92)) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.018),
+    0 14px 34px rgba(31, 45, 74, 0.1) !important;
+}
+
+.activity-home-controls .activity-filter-strip button {
+  min-height: 2.28rem !important;
+  border-radius: 0.78rem !important;
+  color: color-mix(in srgb, var(--activity-muted) 86%, transparent) !important;
+  font-size: 0.86rem !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-home-controls .activity-filter-strip button.is-active {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.145), rgba(255, 255, 255, 0.09)) !important;
+  color: #ffffff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    0 10px 24px rgba(0, 0, 0, 0.16) !important;
+}
+
+.light .activity-home-controls .activity-filter-strip button.is-active {
+  background: #ffffff !important;
+  color: var(--text-strong) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 10px 24px rgba(31, 45, 74, 0.08) !important;
+}
+
+.activity-home-controls .activity-filter-strip button span {
+  min-width: 1ch;
+  margin-left: 0.35rem !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-home-controls .activity-search {
+  width: 100%;
+  height: 3rem !important;
+  border-color: rgba(148, 163, 184, 0.12) !important;
+  border-radius: 1.08rem !important;
+  background: rgba(6, 12, 29, 0.72) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.018),
+    0 14px 36px rgba(0, 0, 0, 0.18) !important;
+}
+
+.light .activity-home-controls .activity-search {
+  border-color: rgba(24, 36, 64, 0.1) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.018),
+    0 14px 34px rgba(31, 45, 74, 0.1) !important;
+}
+
+.activity-home-controls .activity-search:focus-within {
+  border-color: rgba(129, 140, 248, 0.3) !important;
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.12),
+    0 14px 36px rgba(0, 0, 0, 0.18) !important;
+}
+
+.activity-workspace {
+  grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr) !important;
+  gap: clamp(0.9rem, 1.3vw, 1.2rem) !important;
+}
+
+.activity-inbox-panel,
+.activity-chat-stage {
+  border-color: rgba(148, 163, 184, 0.105) !important;
+  border-radius: 1.35rem !important;
+  background:
+    linear-gradient(180deg, rgba(12, 18, 35, 0.78), rgba(5, 10, 24, 0.92)) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.018),
+    0 18px 54px rgba(0, 0, 0, 0.28) !important;
+}
+
+.activity-chat-stage {
+  overflow: hidden;
+}
+
+.light .activity-inbox-panel,
+.light .activity-chat-stage {
+  border-color: rgba(24, 36, 64, 0.1) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94)) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.018),
+    0 18px 54px rgba(31, 45, 74, 0.12) !important;
+}
+
+.activity-panel-heading {
+  min-height: 3.35rem !important;
+  padding: 0.9rem 1.05rem !important;
+}
+
+.activity-panel-heading span {
+  color: var(--activity-muted) !important;
+  font-size: 0.78rem !important;
+  font-weight: 760 !important;
+}
+
+.activity-inbox-list {
+  padding: 0.82rem !important;
+}
+
+.activity-inbox-item {
+  border-radius: 1rem !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.activity-inbox-item[data-selected="true"] {
+  border-color: rgba(129, 140, 248, 0.34) !important;
+  background:
+    linear-gradient(180deg, rgba(99, 102, 241, 0.105), rgba(255, 255, 255, 0.035)) !important;
+}
+
+.light .activity-inbox-item {
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+
+.light .activity-inbox-item[data-selected="true"] {
+  border-color: var(--brand-border) !important;
+  background: color-mix(in srgb, var(--brand) 8%, #ffffff) !important;
+}
+
+.activities-command-center .application-chat {
+  background: transparent !important;
+}
+
+.activities-command-center .application-chat-sidebar {
+  width: 20rem !important;
+  min-width: 20rem !important;
+  border-color: rgba(148, 163, 184, 0.105) !important;
+  background:
+    linear-gradient(180deg, rgba(14, 20, 38, 0.82), rgba(6, 11, 25, 0.82)) !important;
+}
+
+.light .activities-command-center .application-chat-sidebar {
+  border-color: rgba(24, 36, 64, 0.1) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 251, 255, 0.78)) !important;
+}
+
+.activities-command-center .application-chat-context-header {
+  border-color: rgba(148, 163, 184, 0.105) !important;
+  background: transparent !important;
+}
+
+.activities-command-center .application-chat-sidebar :where(.h-px) {
+  background: rgba(148, 163, 184, 0.11) !important;
+}
+
+.activities-command-center .application-chat-main {
+  background: transparent !important;
+}
+
+.activities-command-center .application-chat-messages {
+  background:
+    radial-gradient(circle at 68% 0%, rgba(99, 102, 241, 0.055), transparent 22rem),
+    linear-gradient(180deg, rgba(4, 9, 22, 0.3), rgba(4, 9, 22, 0.5)) !important;
+}
+
+.light .activities-command-center .application-chat-messages {
+  background:
+    radial-gradient(circle at 68% 0%, rgba(33, 79, 208, 0.04), transparent 22rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 250, 255, 0.88)) !important;
+}
+
+.activities-command-center .application-chat-inputbar {
+  border-color: rgba(148, 163, 184, 0.105) !important;
+  background: rgba(6, 12, 29, 0.76) !important;
+}
+
+.light .activities-command-center .application-chat-inputbar {
+  border-color: rgba(24, 36, 64, 0.1) !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+}
+
+.activities-command-center .activity-premium-composer {
+  gap: 0.7rem;
+}
+
+.activities-command-center .activity-composer-toolbar {
+  gap: 0.6rem;
+}
+
+.activities-command-center .activity-quick-replies {
+  min-width: 0;
+}
+
+.activities-command-center .activity-quick-replies button {
+  min-height: 2.35rem;
+  border-color: rgba(148, 163, 184, 0.13) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.activities-command-center .activity-quick-replies button:hover {
+  background: rgba(255, 255, 255, 0.065) !important;
+}
+
+.activities-command-center .activity-composer-input {
+  border-radius: 1rem !important;
+}
+
+@media (max-width: 1023px) {
+  .activity-home-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-home-controls .activity-filter-strip,
+  .activity-home-controls .activity-search {
+    width: 100% !important;
+  }
+}
+
+/* Mobile jobs tabs: rectangular shell with quieter selected state. */
+.jobs-mobile-tabs {
+  border-radius: 1.08rem !important;
+  padding: 0.34rem !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(8, 13, 29, 0.84)) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.018),
+    0 16px 42px rgba(0, 0, 0, 0.26) !important;
+}
+
+.jobs-mobile-tabs > :first-child {
+  gap: 0.22rem !important;
+}
+
+.jobs-mobile-tab {
+  min-height: 2.55rem;
+  border-radius: 0.74rem !important;
+  padding-inline: 0.72rem !important;
+  color: rgba(148, 163, 184, 0.82) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.jobs-mobile-tab[data-active="true"] {
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.065)) !important;
+  color: #f8fafc !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.075),
+    0 10px 26px rgba(0, 0, 0, 0.2) !important;
+}
+
+.jobs-mobile-tab-badge {
+  display: inline-flex;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.48rem;
+  padding-inline: 0.38rem;
+  background: rgba(148, 163, 184, 0.12);
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 0.68rem;
+  font-weight: 750;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.jobs-mobile-tab[data-active="true"] .jobs-mobile-tab-badge {
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+}
+
+.jobs-mobile-tabs .jobs-filter-icon-button {
+  border-radius: 0.74rem !important;
+}
+
+.light .jobs-mobile-tabs {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94)) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.018),
+    0 14px 34px rgba(31, 45, 74, 0.1) !important;
+}
+
+.light .jobs-mobile-tab {
+  color: rgba(79, 91, 115, 0.86) !important;
+}
+
+.light .jobs-mobile-tab[data-active="true"] {
+  border-color: rgba(24, 36, 64, 0.11) !important;
+  background: #ffffff !important;
+  color: var(--text-strong) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 10px 24px rgba(31, 45, 74, 0.08) !important;
+}
+
+.light .jobs-mobile-tab-badge {
+  background: rgba(24, 36, 64, 0.08);
+  color: rgba(24, 36, 64, 0.74);
+}
+
+.light .jobs-mobile-tab[data-active="true"] .jobs-mobile-tab-badge {
+  background: rgba(24, 36, 64, 0.09);
+  color: var(--text-strong);
+}
+
+/* Profile edit correction: restore Digital ID and remove cheap blue surface tint. */
+.profile-page .profile-card {
+  border-color: rgba(148, 163, 184, 0.12) !important;
+  background:
+    linear-gradient(180deg, rgba(12, 15, 22, 0.98), rgba(6, 8, 13, 0.995)) !important;
+  box-shadow:
+    0 20px 58px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.profile-page .profile-id-card {
+  background:
+    linear-gradient(180deg, rgba(13, 16, 23, 0.99), rgba(7, 9, 14, 0.995)) !important;
+}
+
+.profile-page .profile-id-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.055), transparent 13rem);
+  opacity: 0.82;
+}
+
+.profile-page .profile-id-mark,
+.profile-page .profile-id-lock,
+.profile-page .profile-id-summary,
+.profile-page .profile-id-metric {
+  border-color: rgba(148, 163, 184, 0.1) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.profile-page .profile-id-kicker {
+  color: rgba(226, 232, 240, 0.64) !important;
+}
+
+.profile-page .profile-id-role,
+.profile-page .profile-role-value {
+  color: rgba(203, 213, 225, 0.78) !important;
+}
+
+.profile-page .profile-avatar-glow {
+  background: rgba(255, 255, 255, 0.12) !important;
+  opacity: 0.1 !important;
+}
+
+.profile-page .profile-avatar-frame {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.profile-page .profile-avatar-frame > div {
+  background: rgba(255, 255, 255, 0.045) !important;
+}
+
+.profile-page .profile-avatar-action {
+  border-color: rgb(8, 10, 15) !important;
+  background: linear-gradient(180deg, rgba(49, 56, 72, 0.98), rgba(27, 32, 43, 0.98)) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.profile-page .profile-avatar-action:hover {
+  background: linear-gradient(180deg, rgba(60, 68, 86, 0.98), rgba(35, 41, 54, 0.98)) !important;
+}
+
+.profile-page .profile-edit-card,
+.profile-page .profile-location-card {
+  background:
+    linear-gradient(180deg, rgba(12, 15, 22, 0.98), rgba(6, 8, 13, 0.995)) !important;
+}
+
+.profile-page .profile-field-control {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: rgba(148, 163, 184, 0.12) !important;
+}
+
+.profile-page .profile-field-control:focus {
+  border-color: rgba(203, 213, 225, 0.26) !important;
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.035),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.light .profile-page .profile-card,
+.light .profile-page .profile-id-card,
+.light .profile-page .profile-edit-card,
+.light .profile-page .profile-location-card {
+  border-color: rgba(24, 36, 64, 0.1) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 251, 255, 0.96)) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.018),
+    0 18px 48px rgba(31, 45, 74, 0.1) !important;
+}
+
+.light .profile-page .profile-id-card::before {
+  background: radial-gradient(circle at 50% 0%, rgba(24, 36, 64, 0.035), transparent 13rem);
+}
+
+.light .profile-page .profile-id-mark,
+.light .profile-page .profile-id-lock,
+.light .profile-page .profile-id-summary,
+.light .profile-page .profile-id-metric {
+  border-color: rgba(24, 36, 64, 0.09) !important;
+  background: rgba(244, 247, 252, 0.78) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.light .profile-page .profile-id-kicker {
+  color: rgba(24, 36, 64, 0.62) !important;
+}
+
+.light .profile-page .profile-id-role,
+.light .profile-page .profile-role-value {
+  color: rgba(24, 36, 64, 0.68) !important;
+}
+
+.light .profile-page .profile-avatar-glow {
+  background: rgba(24, 36, 64, 0.12) !important;
+  opacity: 0.08 !important;
+}
+
+.light .profile-page .profile-avatar-frame {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 16px 38px rgba(31, 45, 74, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.light .profile-page .profile-avatar-frame > div {
+  background: rgba(244, 247, 252, 0.9) !important;
+}
+
+.light .profile-page .profile-avatar-action {
+  border-color: #ffffff !important;
+  background: linear-gradient(180deg, #1f2937, #111827) !important;
+}
+
+.light .profile-page .profile-field-control {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(24, 36, 64, 0.12) !important;
+}
+
+.light .profile-page .profile-field-control:focus {
+  border-color: rgba(24, 36, 64, 0.22) !important;
+  box-shadow:
+    0 0 0 4px rgba(24, 36, 64, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+.profile-page .profile-action-secondary,
+.profile-page .profile-action-primary {
+  border-radius: 1rem !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-page .profile-action-secondary {
+  border-color: rgba(148, 163, 184, 0.14) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  color: rgba(226, 232, 240, 0.9) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 10px 28px rgba(0, 0, 0, 0.16) !important;
+}
+
+.profile-page .profile-action-secondary:hover {
+  border-color: rgba(203, 213, 225, 0.2) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.profile-page .profile-action-primary {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(203, 213, 225, 0.96)) !important;
+  color: #0f172a !important;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86) !important;
+}
+
+.profile-page .profile-action-primary:hover {
+  background:
+    linear-gradient(180deg, #ffffff, rgba(226, 232, 240, 0.98)) !important;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.profile-page .profile-action-icon {
+  color: currentColor !important;
+}
+
+.profile-page .profile-id-code {
+  color: rgba(203, 213, 225, 0.82) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.light .profile-page .profile-action-secondary {
+  border-color: rgba(24, 36, 64, 0.11) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  color: rgba(24, 36, 64, 0.82) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.018),
+    0 10px 24px rgba(31, 45, 74, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.light .profile-page .profile-action-secondary:hover {
+  border-color: rgba(24, 36, 64, 0.16) !important;
+  background: #ffffff !important;
+}
+
+.light .profile-page .profile-action-primary {
+  border-color: rgba(24, 36, 64, 0.16) !important;
+  background:
+    linear-gradient(180deg, #1f2937, #111827) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 12px 30px rgba(31, 45, 74, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.light .profile-page .profile-action-primary:hover {
+  background:
+    linear-gradient(180deg, #273244, #172033) !important;
+}
+
+.light .profile-page .profile-id-code {
+  color: rgba(24, 36, 64, 0.72) !important;
+}

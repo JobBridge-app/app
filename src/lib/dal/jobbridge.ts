@@ -623,7 +623,7 @@ export async function fetchCandidateApplications(
 
   const { data, error } = await supabase
     .from("applications")
-    .select("status, job:jobs(*)")
+    .select("id, status, job:jobs(*)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 

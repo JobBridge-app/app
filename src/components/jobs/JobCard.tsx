@@ -22,8 +22,31 @@ interface JobCardProps {
 }
 
 export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked, hideStatusLabel, providerStatus, isCrossRegionalBadge, onSelect, href }: JobCardProps) {
-    const isWaitlistMode = job.status === 'reserved' && !providerStatus;
+    const isReservedJob = job.status === 'reserved' && !providerStatus;
     const isUserWaitlisted = job.application_status === 'waitlisted';
+    const showWaitlistBadges = isReservedJob && !isApplied;
+    const cardState = isLocked
+        ? "locked"
+        : isApplied
+            ? "applied"
+            : isReservedJob
+                ? "waitlist"
+                : "open";
+    const categoryTone =
+        cardState === "waitlist"
+            ? {
+                chip: "bg-amber-500/10 text-amber-300 border border-amber-500/20",
+                icon: "text-amber-400",
+            }
+            : cardState === "applied"
+                ? {
+                    chip: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 group-hover:bg-emerald-500/15 group-hover:border-emerald-500/25",
+                    icon: "text-emerald-400",
+                }
+                : {
+                    chip: "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 group-hover:bg-indigo-500/15 group-hover:border-indigo-500/25",
+                    icon: "text-indigo-400",
+                };
 
     const getStatusBadge = () => {
         if (providerStatus) {
@@ -109,20 +132,12 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
 
     const CardContent = (
         <div
+            data-card-state={cardState}
             onClick={handleSelect}
             onMouseEnter={() => void warmJobsUI()}
             onFocus={() => void warmJobsUI()}
             onPointerDown={() => void warmJobsUI()}
-            className={`job-card group relative flex h-full min-h-[236px] transform-gpu cursor-pointer flex-col overflow-hidden rounded-[1.35rem] border bg-slate-900/40 p-6 transition-[border-color,box-shadow,background-color,filter,transform] duration-300 md:p-7
-                ${isApplied && !isUserWaitlisted
-                    ? "bg-slate-900/50 grayscale-[0.5] hover:grayscale-0 hover:bg-slate-900/80 border-white/5"
-                    : isLocked
-                        ? "bg-slate-900/40 border-white/[0.05] hover:border-white/10" // Locked style
-                        : isWaitlistMode
-                            ? "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-amber-500/35 hover:shadow-[0_18px_30px_-22px_rgba(245,158,11,0.45)]"
-                            : "bg-gradient-to-br from-slate-900/90 via-slate-800/70 to-slate-900/90 border-white/[0.08] hover:border-indigo-500/35 hover:shadow-[0_18px_30px_-22px_rgba(99,102,241,0.45)]"
-                }
-            `}
+            className="job-card group relative flex h-full min-h-[236px] cursor-pointer flex-col overflow-hidden rounded-[1.35rem] border p-6 transition-[border-color,box-shadow,background-color] duration-200 md:p-7"
         >
             {/* Locked Overlay */}
             {isLocked && (
@@ -138,26 +153,10 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                 </div>
             )}
 
-            {/* Premium Gradient Accent Line */}
-            {!isApplied && !isLocked && !isWaitlistMode && (
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            )}
-            {isWaitlistMode && !isLocked && (
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            )}
-
-            {/* Subtle Glow at bottom */}
-            {!isApplied && !isLocked && !isWaitlistMode && (
-                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-indigo-900/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            )}
-            {isWaitlistMode && !isLocked && (
-                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-amber-900/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            )}
-
-            <div className={`relative z-10 flex flex-col h-full ${isLocked ? 'md:opacity-50 md:blur-[1px] md:group-hover:blur-sm transition-all duration-300' : ''}`}>
+            <div className={`relative z-10 flex flex-col h-full ${isLocked ? 'md:opacity-55 md:transition-opacity md:duration-200' : ''}`}>
                 <div className="mb-5 flex flex-col gap-2.5">
                     {/* Waitlist Badges - Keep in flow if they exist so title gets pushed down naturally */}
-                    {(isWaitlistMode) && (
+                    {showWaitlistBadges && (
                         <div className="flex items-start mb-1">
                             <div className="flex flex-wrap items-center gap-2">
                                 {job.active_applicant && !isUserWaitlisted && (
@@ -167,8 +166,8 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                                     </div>
                                 )}
                                 {isUserWaitlisted && (
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]">
-                                        <CheckCircle2 size={10} className="text-emerald-400" />
+                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]">
+                                        <CheckCircle2 size={10} className="text-amber-400" />
                                         <span>Du stehst auf der Warteliste</span>
                                     </div>
                                 )}
@@ -184,12 +183,12 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                         </h3>
 
                         {/* Right-Aligned Badges */}
-                        {((isCrossRegionalBadge && job.market_name && !isApplied && !isWaitlistMode) || isLocked) && (
+                        {((isCrossRegionalBadge && job.market_name && !isApplied && !isReservedJob) || isLocked) && (
                             <div className="flex flex-col items-end gap-2 shrink-0">
                                 {/* Extended Job Badge */}
-                                {isCrossRegionalBadge && job.market_name && !isApplied && !isWaitlistMode && (
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-right-2 shadow-[0_0_15px_-3px_rgba(139,92,246,0.3)]">
-                                        <MapPin size={10} className="animate-pulse text-violet-400" />
+                                {isCrossRegionalBadge && job.market_name && !isApplied && !isReservedJob && (
+                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold uppercase tracking-wider">
+                                        <MapPin size={10} className="text-violet-400" />
                                         <span>Aus {job.market_name}</span>
                                     </div>
                                 )}
@@ -206,12 +205,10 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                             const categoryLabel = JOB_CATEGORIES.find(c => c.id === job.category)?.label || "Sonstiges";
                             return (
                                 <span className={cn(
-                                    "job-card-category flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold tracking-wide transition-all duration-300",
-                                    isWaitlistMode
-                                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_10px_-2px_rgba(245,158,11,0.15)]"
-                                        : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_10px_-2px_rgba(99,102,241,0.15)] group-hover:bg-indigo-500/20 group-hover:border-indigo-500/30 group-hover:shadow-[0_0_15px_-2px_rgba(99,102,241,0.25)]"
+                                    "job-card-category flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold tracking-wide transition-colors duration-200",
+                                    categoryTone.chip
                                 )}>
-                                    {CategoryIcon && <CategoryIcon size={12} className={cn(isWaitlistMode ? "text-amber-400" : "text-indigo-400")} />}
+                                    {CategoryIcon && <CategoryIcon size={12} className={cn(categoryTone.icon)} />}
                                     {categoryLabel}
                                 </span>
                             );

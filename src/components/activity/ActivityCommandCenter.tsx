@@ -202,12 +202,12 @@ export function ActivityCommandCenter({
             <div className="jobs-home-heading activity-home-heading">
                 <div>
                     <h1 className="mb-2 text-3xl font-bold tracking-tight text-white">
-                        {role === "provider" ? "Bewerbungen" : "Aktivitäten"}
+                        {role === "provider" ? "Bewerbungen" : "Deine Bewerbungen"}
                     </h1>
                     <p className="text-slate-400">
                         {role === "provider"
                             ? "Prüfe Bewerbungen und kommuniziere direkt mit Talenten."
-                            : "Behalte deine Bewerbungen, Antworten und nächsten Schritte im Blick."}
+                            : "Alle laufenden Bewerbungen, Antworten und nächsten Schritte an einem Ort."}
                     </p>
                 </div>
 
@@ -250,7 +250,7 @@ export function ActivityCommandCenter({
                 <aside className={cn("activity-inbox-panel", selectedApp ? "hidden lg:flex" : "flex")}>
                     <div className="activity-panel-heading">
                         <div>
-                            <span>Verlauf</span>
+                            <span>{role === "provider" ? "Eingänge" : "Bewerbungen"}</span>
                         </div>
                     </div>
 

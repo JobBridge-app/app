@@ -87,7 +87,7 @@ export default async function ActivityPage({
 
         return (
             <div className="activities-page jobs-home-surface container mx-auto py-2 px-4 md:px-6">
-                <div className="mx-auto max-w-6xl">
+                <div className="mx-auto max-w-[78rem]">
                     {/* @ts-ignore - Supabase types are tricky with joins, verified manually */}
                     <ProviderActivityList
                         applications={visibleApplications}
@@ -145,7 +145,7 @@ export default async function ActivityPage({
 
     return (
         <div className="activities-page jobs-home-surface container mx-auto py-2 px-4 md:px-6">
-            <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-[78rem]">
                 <ActivitiesPageClient applications={applications} userId={profile.id} />
             </div>
         </div>

@@ -39,7 +39,9 @@ interface JobDetailModalProps {
     context?: 'feed' | 'activity';
 }
 export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guardianStatus, context = 'feed' }: JobDetailModalProps) {
-    const isWaitlistMode = job?.status === 'reserved' && !['negotiating', 'accepted'].includes(job?.application_status || '');
+    const isUserWaitlisted = job?.application_status === "waitlisted";
+    const isAppliedConversation = Boolean(job?.is_applied && job.application_status && !isUserWaitlisted);
+    const isWaitlistMode = job?.status === 'reserved' && !isAppliedConversation;
     // ... component implementation ...
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
@@ -167,23 +169,36 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
 
                                         <div className="relative z-10 flex flex-col gap-6">
                                             <div className="flex gap-3">
-                                                {job.is_applied && (
+                                                {job.is_applied && !isUserWaitlisted && (
                                                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 border border-emerald-500/20">
                                                         <CheckCircle2 size={12} /> Bereits beworben
+                                                    </span>
+                                                )}
+                                                {isUserWaitlisted && (
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300 border border-amber-500/20">
+                                                        <Clock size={12} /> Warteliste
                                                     </span>
                                                 )}
                                                 {(() => {
                                                     const categoryData = job.category ? JOB_CATEGORIES.find(c => c.id === job.category) : undefined;
                                                     const CategoryIcon = categoryData?.icon;
                                                     const categoryLabel = categoryData?.label || job.category;
+                                                    const categoryTone = isWaitlistMode
+                                                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                                                        : job.is_applied
+                                                            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_15px_-3px_rgba(16,185,129,0.18)]"
+                                                            : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_15px_-3px_rgba(99,102,241,0.2)]";
+                                                    const iconTone = isWaitlistMode
+                                                        ? "text-amber-400"
+                                                        : job.is_applied
+                                                            ? "text-emerald-400"
+                                                            : "text-indigo-400";
                                                     return job.category ? (
                                                         <span className={cn(
                                                             "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold tracking-wide transition-all duration-300",
-                                                            isWaitlistMode
-                                                                ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
-                                                                : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_15px_-3px_rgba(99,102,241,0.2)]"
+                                                            categoryTone
                                                         )}>
-                                                            {CategoryIcon && <CategoryIcon size={14} className={cn(isWaitlistMode ? "text-amber-400" : "text-indigo-400")} />}
+                                                            {CategoryIcon && <CategoryIcon size={14} className={cn(iconTone)} />}
                                                             {categoryLabel}
                                                         </span>
                                                     ) : null;
@@ -197,11 +212,19 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                             {isWaitlistMode && (
                                                 <div className="job-detail-waitlist-callout mt-6 mb-2 rounded-xl border p-4 flex gap-3">
                                                     <div className="mt-0.5 shrink-0">
-                                                        <Clock size={20} className="job-detail-waitlist-icon" />
+                                                        {isUserWaitlisted ? (
+                                                            <CheckCircle2 size={20} className="job-detail-waitlist-icon" />
+                                                        ) : (
+                                                            <Clock size={20} className="job-detail-waitlist-icon" />
+                                                        )}
                                                     </div>
                                                     <div className="job-detail-waitlist-copy text-sm leading-relaxed">
-                                                        <strong className="job-detail-waitlist-title block mb-1">Momentan reserviert</strong>
-                                                        Dieses Angebot ist aktuell für {job.active_applicant ? `${job.active_applicant.full_name?.split(' ')[0]} ` : 'einen anderen Nutzer '}reserviert. Trage dich unverbindlich auf die Warteliste ein, um sofort nachzurücken, falls der Platz wieder frei wird.
+                                                        <strong className="job-detail-waitlist-title block mb-1">
+                                                            {isUserWaitlisted ? "Du stehst auf der Warteliste" : "Momentan reserviert"}
+                                                        </strong>
+                                                        {isUserWaitlisted
+                                                            ? "Du bist vorgemerkt und rückst nach, sobald der Platz wieder frei wird."
+                                                            : <>Dieses Angebot ist aktuell für {job.active_applicant ? `${job.active_applicant.full_name?.split(' ')[0]} ` : 'einen anderen Nutzer '}reserviert. Trage dich unverbindlich auf die Warteliste ein, um sofort nachzurücken, falls der Platz wieder frei wird.</>}
                                                     </div>
                                                 </div>
                                             )}

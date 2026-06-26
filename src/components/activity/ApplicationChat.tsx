@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Send, MessageSquare, AlertCircle, Trash2, CheckCircle2, Clock, Building2, MapPin, Euro, ArrowLeft, XCircle, User, ShieldCheck, Sparkles } from "lucide-react";
+import { X, Send, MessageSquare, AlertCircle, Trash2, CheckCircle2, Clock, MapPin, Euro, ArrowLeft, XCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/lib/types/supabase";
@@ -268,16 +268,12 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
 
                     {/* Left Side: Job Summary & Actions */}
                     {contextPanel && (
-                    <div className="application-chat-sidebar hidden md:flex w-1/3 min-w-[320px] bg-[#111116] border-r border-white/5 flex-col">
+                    <div className="application-chat-sidebar hidden md:flex md:w-[20rem] md:min-w-[20rem] xl:w-[21rem] xl:min-w-[21rem] bg-[#111116] border-r border-white/5 flex-col">
                         {/* Premium Header */}
-                        <div className="p-6 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                                {currentUserRole === 'seeker' ? <Building2 size={64} /> : <User size={64} />}
-                            </div>
-
+                        <div className="application-chat-context-header p-6 border-b border-white/5 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden">
                             <div className="relative z-10">
                                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
-                                    {currentUserRole === 'seeker' ? 'Arbeitgeber' : 'Bewerber'}
+                                    {currentUserRole === 'seeker' ? 'Auftraggeber' : 'Bewerber'}
                                 </h3>
 
                                 <div onClick={openProfile} className="group cursor-pointer">
@@ -297,7 +293,7 @@ export function ApplicationChat({ application, currentUserRole = "seeker", onWit
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             {/* Context Title */}
                             <div>
-                                <h4 className="text-sm font-medium text-slate-400 mb-1">Betrifft:</h4>
+                                <h4 className="text-sm font-medium text-slate-400 mb-1">Job</h4>
                                 <div className="text-white font-bold leading-tight">
                                     {application.job?.title}
                                 </div>

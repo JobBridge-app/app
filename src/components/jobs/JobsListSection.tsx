@@ -33,12 +33,12 @@ export const JobsListSection = memo(function JobsListSection({
     onSelect
 }: SectionProps) {
     return (
-        <div className={cn("jobs-section space-y-7", hiddenOnMobile ? "hidden lg:block" : "")}>
-            <div className="jobs-section-heading-row flex items-center gap-4">
-                <h2 className={cn("jobs-section-heading flex min-w-0 items-center gap-3 text-2xl font-bold tracking-[-0.01em]", isWhiteTitle ? "text-white" : colorClass)}>
+        <div className={cn("jobs-section space-y-6", hiddenOnMobile ? "hidden lg:block" : "")}>
+            <div className="jobs-section-heading-row flex items-center">
+                <h2 className={cn("jobs-section-heading flex min-w-0 items-center gap-2.5 text-2xl font-bold tracking-[-0.01em]", isWhiteTitle ? "text-white" : colorClass)}>
                     {Icon && (
-                        <div className={cn("jobs-section-icon rounded-xl border p-2.5", isWhiteTitle ? "border-white/10 bg-white/10 text-indigo-400" : "border-white/10 bg-white/5")}>
-                            <Icon size={20} />
+                        <div className={cn("jobs-section-icon rounded-lg border p-2", isWhiteTitle ? "border-white/10 bg-white/10 text-indigo-400" : "border-white/10 bg-white/5")}>
+                            <Icon size={18} />
                         </div>
                     )}
                     <span className="truncate">{title}</span>
@@ -46,12 +46,11 @@ export const JobsListSection = memo(function JobsListSection({
                         {jobs.length}
                     </span>
                 </h2>
-                <div className="jobs-section-rule hidden h-px flex-1 bg-gradient-to-r from-white/10 via-white/[0.04] to-transparent md:block" />
             </div>
 
             <div className="jobs-card-grid grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {jobs.length === 0 ? (
-                    <div className="jobs-empty-state col-span-full rounded-2xl border border-dashed border-white/10 bg-gradient-to-b from-white/[0.02] to-transparent py-12 text-center">
+                    <div className="jobs-empty-state col-span-full rounded-[1.35rem] border border-white/10 bg-white/[0.025] py-10 text-center">
                         <div className="text-slate-400">{emptyMsg}</div>
                     </div>
                 ) : (

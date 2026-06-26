@@ -1,8 +1,25 @@
 import { redirect } from "next/navigation";
 import { fetchJobs, fetchCandidateApplications } from "@/lib/dal/jobbridge";
 import { JobsList } from "@/components/jobs/JobsList";
-import type { JobsListItem } from "@/lib/types/jobbridge";
+import type { ApplicationStatus, JobsListItem } from "@/lib/types/jobbridge";
 import { getAppHomeSnapshot } from "@/lib/app-shell";
+
+const APPLIED_APPLICATION_STATUSES = new Set<ApplicationStatus>([
+    "submitted",
+    "negotiating",
+    "accepted",
+]);
+
+const WAITLIST_APPLICATION_STATUSES = new Set<ApplicationStatus>([
+    "waitlisted",
+]);
+
+const VISIBLE_APPLICATION_STATUSES = new Set<ApplicationStatus>([
+    "submitted",
+    "negotiating",
+    "accepted",
+    "waitlisted",
+]);
 
 export default async function JobsPage() {
     const snapshot = await getAppHomeSnapshot();
@@ -31,22 +48,49 @@ export default async function JobsPage() {
     const rawActiveJobs: JobsListItem[] = jobsRes.ok ? jobsRes.data : [];
     const allApps = appsRes.ok ? appsRes.data : [];
 
-    // Applied Jobs: 'submitted', 'pending', 'negotiating', 'accepted', AND 'waitlisted'
+    const mapApplicationToJob = (application: (typeof allApps)[number]): JobsListItem | null => {
+        if (!application.job) return null;
+        const richJob = rawActiveJobs.find((job) => job.id === application.job.id);
+        return richJob
+            ? { ...richJob, is_applied: true, application_status: application.status }
+            : { ...application.job, is_applied: true, application_status: application.status };
+    };
+
+    // Applied jobs are active application conversations. Waitlist entries live in the waitlist tab.
     const appliedJobs = allApps
-        .filter(a => ['submitted', 'pending', 'negotiating', 'accepted', 'waitlisted'].includes(a.status))
-        .map(a => {
-            const richJob = rawActiveJobs.find(rj => rj.id === a.job?.id);
-            return richJob ? { ...richJob, is_applied: true, application_status: a.status } : { ...a.job, is_applied: true, application_status: a.status };
-        })
-        .filter(j => !!j) as JobsListItem[];
+        .filter((application) => APPLIED_APPLICATION_STATUSES.has(application.status))
+        .map(mapApplicationToJob)
+        .filter((job): job is JobsListItem => Boolean(job));
 
-    // Rejected/Withdrawn/Archived Applications could be interesting but usually not "Active"
-    // For now, we focus on Active Apps.
+    const userWaitlistedJobs = allApps
+        .filter((application) => WAITLIST_APPLICATION_STATUSES.has(application.status))
+        .map(mapApplicationToJob)
+        .filter((job): job is JobsListItem => Boolean(job));
 
-    const appliedJobIds = new Set(appliedJobs.map(j => j.id));
+    const visibleApplicationJobIds = new Set(
+        allApps
+            .filter((application) => VISIBLE_APPLICATION_STATUSES.has(application.status))
+            .map((application) => application.job?.id)
+            .filter((jobId): jobId is string => Boolean(jobId))
+    );
 
-    // Active Feed: ONLY Open jobs
-    // EXCLUDING any job I already have an application for (waitlist or active)
+    /*
+     * Waitlist tab:
+     * - own waitlist entries first
+     * - then reserved jobs where the user has no active/waitlist application yet
+     */
+    const waitlistedJobs = [
+        ...userWaitlistedJobs,
+        ...rawActiveJobs.filter((job) =>
+            job.status === "reserved" &&
+            !visibleApplicationJobIds.has(job.id)
+        ),
+    ];
+
+    // Rejected/Withdrawn/Archived Applications could be interesting, but they should not hide open jobs here.
+    const appliedJobIds = visibleApplicationJobIds;
+
+    // Active Feed: ONLY open jobs, excluding jobs with an active or waitlist application.
     const allActiveJobs = rawActiveJobs.filter(job =>
         !appliedJobIds.has(job.id) &&
         job.status === 'open'
@@ -55,15 +99,9 @@ export default async function JobsPage() {
     const localActiveJobs = allActiveJobs.filter(job => job.market_id === profile.market_id);
     const extendedActiveJobs = allActiveJobs.filter(job => job.market_id !== profile.market_id && job.reach === 'extended');
 
-    // Waitlist Opportunities: Reserved jobs that I haven't applied to or waitlisted for
-    const waitlistedJobs = rawActiveJobs.filter(job =>
-        !appliedJobIds.has(job.id) &&
-        job.status === 'reserved'
-    );
-
     return (
         <div className="jobs-home-surface container mx-auto py-2 px-4 md:px-6">
-            <div className="mx-auto max-w-6xl space-y-8">
+            <div className="mx-auto max-w-[78rem] space-y-8">
                 <div className="jobs-home-heading">
                     <h1 className="mb-2 text-3xl font-bold tracking-tight text-white">
                         Finde deinen Job
