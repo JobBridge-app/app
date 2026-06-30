@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Check, MapPin, Search, Loader2, X } from "lucide-react";
+import {
+  getResultCity,
+  getResultPostcode,
+  getSelectedLocationLabel,
+  type LocationSearchResult,
+} from "@/lib/locationSearch";
 import { cn } from "@/lib/utils";
 
 export type LocationDetails = {
@@ -17,26 +23,9 @@ export type LocationDetails = {
   house_number?: string;
 };
 
-type LocationSearchResult = {
-  lat: string;
-  lon: string;
-  display_name: string;
-  address?: {
-    road?: string;
-    pedestrian?: string;
-    footway?: string;
-    house_number?: string | number;
-    city?: string;
-    town?: string;
-    village?: string;
-    postcode?: string;
-    state?: string;
-    country?: string;
-  };
-};
-
 interface LocationAutocompleteProps {
   onSelect: (location: LocationDetails) => void;
+  onInputChange?: () => void;
   defaultValue?: string;
   className?: string;
   placeholder?: string;
@@ -44,7 +33,7 @@ interface LocationAutocompleteProps {
   autoFocus?: boolean;
 }
 
-export function LocationAutocomplete({ onSelect, defaultValue = "", className, placeholder, cityOnly = false, autoFocus = false }: LocationAutocompleteProps) {
+export function LocationAutocomplete({ onSelect, onInputChange, defaultValue = "", className, placeholder, cityOnly = false, autoFocus = false }: LocationAutocompleteProps) {
   const [query, setQuery] = useState(defaultValue);
   const [results, setResults] = useState<LocationSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -144,10 +133,9 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
     }
 
     const fullStreet = street + (houseNumber ? ` ${houseNumber}` : "");
-    const city = addr.city || addr.town || addr.village || "Rheinbach";
-    const zip = addr.postcode || "";
-
-    const localityLabel = [zip, city].filter(Boolean).join(" ");
+    const city = getResultCity(item);
+    const zip = getResultPostcode(item);
+    const localityLabel = getSelectedLocationLabel(item, query, cityOnly);
     const label = fullStreet ? `${fullStreet}, ${localityLabel}` : localityLabel;
 
     const details: LocationDetails = {
@@ -173,6 +161,17 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
     inputRef.current?.blur();
   };
 
+  const getResultSubtitle = (item: LocationSearchResult) => {
+    const addr = item.address || {};
+    const city = getResultCity(item);
+    const postcode = getResultPostcode(item);
+    const region = postcode
+      ? addr.state || addr.country || ""
+      : addr.state && addr.state !== city ? addr.state : addr.country || "";
+
+    return [postcode, region].filter(Boolean).join(" ");
+  };
+
   return (
     <div ref={wrapperRef} className={cn("location-search-root relative", isOpen && "is-open", className)}>
       <div className="relative flex items-center">
@@ -189,6 +188,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
           onChange={(e) => {
             const nextQuery = e.target.value;
             selectedLabelRef.current = "";
+            onInputChange?.();
             setQuery(nextQuery);
             setIsOpen(false);
           }}
@@ -207,6 +207,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
             onClick={() => {
               selectedLabelRef.current = "";
               searchVersionRef.current += 1;
+              onInputChange?.();
               setQuery("");
               setResults([]);
               setIsOpen(false);
@@ -236,14 +237,14 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
                   <div className="min-w-0">
                     <div className="location-search-result-title truncate text-sm font-bold transition-colors">
                       {cityOnly
-                        ? (item.address?.city || item.address?.town || item.address?.village || item.display_name.split(",")[0])
+                        ? getResultCity(item)
                         : (item.address?.road || item.display_name.split(",")[0])}
                       {!cityOnly && item.address?.house_number && <span className="location-search-result-accent"> {item.address.house_number}</span>}
                     </div>
                     <div className="location-search-result-subtitle mt-1 truncate text-xs font-medium">
                       {cityOnly
-                        ? `${item.address?.postcode || ""} ${item.address?.state || ""}`.trim() || item.address?.country
-                        : `${item.address?.postcode || ""} ${item.address?.city || item.address?.town || item.address?.village}, ${item.address?.country}`.trim()
+                        ? getResultSubtitle(item)
+                        : `${getResultPostcode(item)} ${getResultCity(item)}, ${item.address?.country}`.trim()
                       }
                     </div>
                   </div>
@@ -256,7 +257,7 @@ export function LocationAutocomplete({ onSelect, defaultValue = "", className, p
           </div>
           {!cityOnly && (
             <div className="location-search-menu-footer flex items-center justify-between border-t px-4 py-2 text-[10px] font-bold uppercase tracking-wider">
-              Rheinbach & Umgebung
+              Deutschlandweit
             </div>
           )}
         </div>

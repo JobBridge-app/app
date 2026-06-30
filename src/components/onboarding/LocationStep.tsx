@@ -91,6 +91,10 @@ export function LocationStep({ onComplete, onBack }: LocationStepProps) {
             <LocationAutocomplete
                 cityOnly={true}
                 placeholder="Stadt (z.B. Bonn)"
+                onInputChange={() => {
+                    setSelectedLocality(null);
+                    setError(null);
+                }}
                 onSelect={(loc) => {
                     setSelectedLocality(loc);
                     setError(null);
