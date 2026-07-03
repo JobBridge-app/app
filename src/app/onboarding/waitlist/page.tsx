@@ -13,11 +13,11 @@ type WaitlistShellProps = {
     size?: string;
 };
 
-function WaitlistShell({ children, size = "max-w-2xl" }: WaitlistShellProps) {
+function WaitlistShell({ children, size = "max-w-3xl" }: WaitlistShellProps) {
     return (
-        <div className="landing-auth-shell min-h-dvh bg-[#07090f]">
+        <div className="landing-auth-shell min-h-dvh bg-background">
             <main className="onboarding-shell waitlist-shell flex min-h-dvh items-start justify-center overflow-y-auto overflow-x-hidden px-4 py-4 pb-16 no-scrollbar md:items-center md:py-4 md:pb-16">
-                <div className={`onboarding-panel waitlist-panel relative w-full ${size} overflow-hidden rounded-3xl p-6 md:p-12`}>
+                <div className={`onboarding-panel waitlist-panel relative w-full ${size} overflow-hidden rounded-[2rem] p-6 md:p-12`}>
                     <div className="onboarding-panel-glow pointer-events-none absolute -left-20 -top-20 h-56 w-56" />
                     <div className="onboarding-panel-texture pointer-events-none absolute inset-0" />
                     <div className="relative z-10">
@@ -92,7 +92,7 @@ function WaitlistContent() {
 
     if (success) {
         return (
-            <WaitlistShell size="max-w-md">
+            <WaitlistShell size="max-w-lg">
                 <div className="waitlist-success text-center">
                     <div className="waitlist-success-icon mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full">
                         <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
@@ -118,9 +118,7 @@ function WaitlistContent() {
                 <LogoBadge size="md" className="waitlist-header-badge shrink-0" />
                 <div className="min-w-0 flex-1">
                     <h1 className="waitlist-heading text-2xl font-bold leading-tight tracking-tight text-white md:text-3xl">
-                        <span className="block">{cityLabel} ist noch</span>
-                        {" "}
-                        <span className="block">nicht gestartet.</span>
+                        JobBridge in {cityLabel} ist noch nicht einsatzbereit.
                     </h1>
                     <p className="waitlist-copy mt-2.5 leading-relaxed text-slate-300">
                         Trag dich ein, und wir informieren dich, sobald JobBridge in <strong>{cityLabel}</strong> verfügbar ist.

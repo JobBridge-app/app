@@ -12,7 +12,7 @@ import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useEmailResend } from "@/lib/hooks/useEmailResend";
 import { type OnboardingRole, type Profile } from "@/lib/types";
 import { BRAND_EMAIL } from "@/lib/constants";
-import { Sparkles, HandHeart, Building2, Mail, UserX, KeyRound } from "lucide-react";
+import { Sparkles, HandHeart, Building2, Mail, UserX, KeyRound, UserPlus, LogIn } from "lucide-react";
 import { LocationStep } from "./onboarding/LocationStep";
 import { CinematicDateInput } from "@/components/ui/CinematicDateInput";
 import type { User } from "@supabase/supabase-js";
@@ -693,7 +693,7 @@ export function OnboardingWizard({
     setErrorMsg(null);
   };
 
-  const panelClass = "onboarding-panel relative rounded-3xl p-8 md:p-12 overflow-hidden";
+  const panelClass = "onboarding-panel relative rounded-[2rem] p-7 md:p-12 overflow-hidden";
   const panelGlowClass = "onboarding-panel-glow pointer-events-none absolute -top-16 -left-16 w-56 h-56";
   const panelTextureClass = "onboarding-panel-texture pointer-events-none absolute inset-0";
   const emailConfirmStatus = codeMessage || resendError || resendMessage;
@@ -722,7 +722,7 @@ export function OnboardingWizard({
     >
       <div
         className={[
-          "relative z-10 my-auto w-full max-w-2xl",
+          "relative z-10 my-auto w-full max-w-3xl",
         ].join(" ")}
       >
         <AnimatePresence initial={false} mode="wait">
@@ -742,14 +742,14 @@ export function OnboardingWizard({
                 <div className="flex flex-col items-start gap-4 text-left">
                   <CardHeader
                     title="JobBridge"
-                    subtitle="Sichere Taschengeldjobs zwischen Jugendlichen und Auftraggebern."
+                    subtitle="Sichere Taschengeldjobs bieten oder finden."
                     spacing="tight"
                   />
                   <p className="text-base text-slate-200/80 max-w-md">
                     Plattform mit verifizierten Aufgaben, klaren Schritten und seniorenfreundlicher Bedienung.
                   </p>
                   <div className="pt-2 w-full">
-                    <ButtonPrimary onClick={nextStep} className="w-full">Jetzt starten</ButtonPrimary>
+                    <ButtonPrimary onClick={nextStep} className="onboarding-start-button w-full">Jetzt starten</ButtonPrimary>
                   </div>
                 </div>
               </div>
@@ -770,11 +770,11 @@ export function OnboardingWizard({
                 <div className={panelTextureClass} />
 
                 <CardHeader
-                  title="Warst du schon bei JobBridge?"
+                  title="Hast du schon einen JobBridge-Account?"
                   subtitle="Damit wir dich richtig weiterleiten können."
                 />
 
-                <div className="grid gap-4 mb-8">
+                <div className="onboarding-mode-grid grid gap-4 mb-8 md:grid-cols-2">
                   <ChoiceTile
                     onClick={() => {
                       setMode("signup");
@@ -782,11 +782,16 @@ export function OnboardingWizard({
                       setErrorMsg(null);
                     }}
                     selected={mode === "signup"}
-                    className="onboarding-choice"
+                    className="onboarding-choice onboarding-mode-choice"
                   >
-                    <div className="space-y-1">
-                      <div className="onboarding-choice-title text-lg font-semibold">Ich bin neu hier</div>
-                      <div className="onboarding-choice-text text-sm">Ich möchte ein neues Konto erstellen.</div>
+                    <div className="onboarding-choice-content flex h-full items-start gap-4">
+                      <div className="onboarding-choice-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+                        <UserPlus className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="onboarding-choice-title text-lg font-semibold">Ich bin neu hier</div>
+                        <div className="onboarding-choice-text text-sm">Ich möchte ein neues Konto erstellen.</div>
+                      </div>
                     </div>
                   </ChoiceTile>
                   <ChoiceTile
@@ -796,11 +801,16 @@ export function OnboardingWizard({
                       setErrorMsg(null);
                     }}
                     selected={mode === "signin"}
-                    className="onboarding-choice"
+                    className="onboarding-choice onboarding-mode-choice"
                   >
-                    <div className="space-y-1">
-                      <div className="onboarding-choice-title text-lg font-semibold">Ich war schon hier</div>
-                      <div className="onboarding-choice-text text-sm">Ich habe bereits ein Konto.</div>
+                    <div className="onboarding-choice-content flex h-full items-start gap-4">
+                      <div className="onboarding-choice-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+                        <LogIn className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="onboarding-choice-title text-lg font-semibold">Ich war schon hier</div>
+                        <div className="onboarding-choice-text text-sm">Ich habe bereits ein Konto.</div>
+                      </div>
                     </div>
                   </ChoiceTile>
                 </div>
@@ -826,7 +836,7 @@ export function OnboardingWizard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className={`${panelClass} onboarding-location-panel mx-auto w-full max-w-2xl`}>
+              <div className={`${panelClass} onboarding-location-panel mx-auto w-full max-w-3xl`}>
                 <div className={panelGlowClass} />
                 <div className={panelTextureClass} />
                 <LocationStep
@@ -956,7 +966,7 @@ export function OnboardingWizard({
                             </ButtonPrimary>
                             <a
                               href={`mailto:support@jobbridge.app?subject=Hilfe bei Passwort (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Amein Passwort für ${email} wird nicht akzeptiert.%0D%0A%0D%0ABitte helft mir weiter.`}
-                              className="onboarding-feedback-action onboarding-feedback-action-secondary flex h-12 w-full items-center justify-center text-sm font-semibold transition-[background-color,color,scale,border-color,box-shadow] duration-200 ease-out active:scale-[0.98]"
+                              className="onboarding-feedback-action onboarding-feedback-action-secondary flex h-12 w-full items-center justify-center text-sm font-semibold transition-[background-color,color,scale,border-color,box-shadow] duration-200 ease-out active:scale-[0.96]"
                             >
                               Support kontaktieren
                             </a>
@@ -993,7 +1003,7 @@ export function OnboardingWizard({
                             </ButtonPrimary>
                             <a
                               href={`mailto:support@jobbridge.app?subject=Account nicht gefunden (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Aich versuche mich mit ${email} anzumelden, aber der Account existiert angeblich nicht.%0D%0A%0D%0ABitte helft mir weiter.`}
-                              className="onboarding-feedback-action onboarding-feedback-action-secondary flex h-12 w-full items-center justify-center text-sm font-semibold transition-[background-color,color,scale,border-color,box-shadow] duration-200 ease-out active:scale-[0.98]"
+                              className="onboarding-feedback-action onboarding-feedback-action-secondary flex h-12 w-full items-center justify-center text-sm font-semibold transition-[background-color,color,scale,border-color,box-shadow] duration-200 ease-out active:scale-[0.96]"
                             >
                               Support kontaktieren
                             </a>

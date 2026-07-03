@@ -105,6 +105,7 @@ export function LocationStep({ onComplete, onBack }: LocationStepProps) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
+                data-open={isNoticeOpen ? "true" : "false"}
                 className="onboarding-location-notice relative overflow-hidden rounded-2xl border border-amber-200/10 bg-white/[0.025] shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]"
             >
                 <motion.div

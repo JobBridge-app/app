@@ -151,11 +151,11 @@ export function CinematicDateInput({ value, onChange, error, role, onErrorChange
   const hasError = !!activeError;
 
   return (
-    <div className="space-y-3 w-full">
+    <div className="cinematic-date-input space-y-3 w-full">
       <div
         ref={containerRef}
         className={cn(
-          "relative flex items-stretch h-[72px] rounded-2xl overflow-hidden transition-all duration-300",
+          "cinematic-date-control relative flex items-stretch h-[72px] rounded-2xl overflow-hidden transition-[background-color,border-color,box-shadow] duration-300",
           "bg-white/5 cursor-text",
           !hasError && !focused ? "border border-white/10 hover:border-white/20 hover:bg-white/10" : "",
           !hasError && focused ? "border border-transparent bg-white/10" : "",
@@ -197,8 +197,8 @@ export function CinematicDateInput({ value, onChange, error, role, onErrorChange
                 y="1"
                 width="calc(100% - 2px)"
                 height="calc(100% - 2px)"
-                rx="15"
-                ry="15"
+                rx="34"
+                ry="34"
                 fill="none"
                 stroke="#f43f5e"
                 strokeWidth="2"
@@ -235,7 +235,7 @@ export function CinematicDateInput({ value, onChange, error, role, onErrorChange
             onBlur={() => setFocused(null)}
             placeholder={focused === "day" || day ? "" : "Tag (TT)"}
             className={cn(
-              "w-full h-full bg-transparent text-center text-base sm:text-lg md:text-xl font-medium focus:outline-none transition-all placeholder:text-slate-500",
+              "w-full h-full bg-transparent text-center text-base sm:text-lg md:text-xl font-medium focus:outline-none transition-[color,padding-top] placeholder:text-slate-500",
               day || focused === 'day' ? "pt-5 sm:pt-6 text-white" : "text-slate-500",
               hasError ? "text-rose-100" : ""
             )}
@@ -269,7 +269,7 @@ export function CinematicDateInput({ value, onChange, error, role, onErrorChange
             onBlur={() => setFocused(null)}
             placeholder={focused === "month" || month ? "" : "Monat (MM)"}
             className={cn(
-              "w-full h-full bg-transparent text-center text-base sm:text-lg md:text-xl font-medium focus:outline-none transition-all placeholder:text-slate-500",
+              "w-full h-full bg-transparent text-center text-base sm:text-lg md:text-xl font-medium focus:outline-none transition-[color,padding-top] placeholder:text-slate-500",
               month || focused === 'month' ? "pt-5 sm:pt-6 text-white" : "text-slate-500",
               hasError ? "text-rose-100" : ""
             )}
@@ -303,7 +303,7 @@ export function CinematicDateInput({ value, onChange, error, role, onErrorChange
             onBlur={() => setFocused(null)}
             placeholder={focused === "year" || year ? "" : "Jahr (JJJJ)"}
             className={cn(
-              "w-full h-full bg-transparent text-center text-base sm:text-lg md:text-xl font-medium focus:outline-none transition-all placeholder:text-slate-500",
+              "w-full h-full bg-transparent text-center text-base sm:text-lg md:text-xl font-medium focus:outline-none transition-[color,padding-top] placeholder:text-slate-500",
               year || focused === 'year' ? "pt-5 sm:pt-6 text-white" : "text-slate-500",
               hasError ? "text-rose-100" : ""
             )}

@@ -880,7 +880,9 @@ button,
   color-scheme: dark;
   height: 100vh;
   min-height: 100vh;
-  background: #07090f;
+  background:
+    radial-gradient(circle at 34% 18%, rgba(37, 99, 235, 0.055), transparent 68%),
+    var(--background);
   color: #f8fafc;
 }
 
@@ -900,23 +902,28 @@ button,
 }
 
 .onboarding-panel {
-  background: #202630;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.75);
+  isolation: isolate;
+  border: 0;
+  border-radius: 2rem !important;
+  background:
+    linear-gradient(180deg, rgba(12, 19, 36, 0.92), rgba(7, 12, 27, 0.96));
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.085),
+    0 24px 70px rgba(0, 0, 0, 0.28);
   color: #f8fafc;
 }
 
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .onboarding-panel {
-    background: rgba(32, 38, 48, 0.9);
     -webkit-backdrop-filter: blur(24px) saturate(160%);
     backdrop-filter: blur(24px) saturate(160%);
   }
 }
 
 .onboarding-panel-glow {
-  background: rgba(255, 255, 255, 0.08);
-  filter: blur(56px);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.16), transparent 62%);
+  filter: blur(64px);
+  opacity: 0.45;
 }
 
 .onboarding-panel-texture {
@@ -924,23 +931,50 @@ button,
 }
 
 .onboarding-choice {
-  background: #343b47 !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  border-radius: 1.125rem !important;
+  background: rgba(15, 23, 42, 0.52) !important;
+  border-color: rgba(148, 163, 184, 0.1) !important;
+  border-radius: 1.5rem !important;
   color: #f8fafc !important;
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.065),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
 }
 
 .onboarding-choice:hover {
-  background: #3a4250 !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(30, 41, 59, 0.6) !important;
+  border-color: rgba(129, 140, 248, 0.24) !important;
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.16),
+    0 16px 40px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
 }
 
 .onboarding-choice[aria-pressed="true"] {
-  background: #182235 !important;
-  border-color: rgba(96, 165, 250, 0.46) !important;
+  background: rgba(37, 99, 235, 0.13) !important;
+  border-color: rgba(129, 140, 248, 0.3) !important;
   box-shadow:
-    0 0 0 1px rgba(37, 99, 235, 0.18),
-    0 18px 54px rgba(0, 0, 0, 0.38);
+    0 0 0 1px rgba(129, 140, 248, 0.2),
+    0 20px 52px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055) !important;
+}
+
+.onboarding-mode-choice {
+  min-height: 8.25rem;
+}
+
+.onboarding-choice-icon {
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(15, 23, 42, 0.48);
+  color: rgba(129, 140, 248, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.onboarding-choice[aria-pressed="true"] .onboarding-choice-icon {
+  border-color: rgba(129, 140, 248, 0.32);
+  background: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
 }
 
 .onboarding-choice-title {
@@ -1059,7 +1093,7 @@ button,
 }
 
 .onboarding-feedback-action {
-  border-radius: 1.125rem !important;
+  border-radius: 999px !important;
 }
 
 .onboarding-feedback-action-primary {
@@ -1121,7 +1155,89 @@ button,
 
 .onboarding-panel :where(button[class*="bg-blue-600"], button[class*="border-white/30"]) {
   min-height: 3.5rem;
-  border-radius: 1.125rem !important;
+  border-radius: 999px !important;
+}
+
+.onboarding-panel :where(button[class*="bg-blue-600"]) {
+  border: 1px solid rgba(147, 197, 253, 0.26) !important;
+  background: #2563eb !important;
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.18),
+    0 0 0 6px rgba(37, 99, 235, 0.08),
+    0 18px 42px rgba(37, 99, 235, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.onboarding-panel :where(button[class*="bg-blue-600"]):hover:not(:disabled) {
+  border-color: rgba(191, 219, 254, 0.36) !important;
+  background: #3b82f6 !important;
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.24),
+    0 0 0 7px rgba(37, 99, 235, 0.11),
+    0 22px 54px rgba(37, 99, 235, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+
+.onboarding-panel :where(button[class*="border-white/30"]) {
+  background: rgba(15, 23, 42, 0.42) !important;
+  border-color: transparent !important;
+  color: #e2e8f0 !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+.onboarding-panel :where(button[class*="border-white/30"]):hover:not(:disabled) {
+  background: rgba(30, 41, 59, 0.6) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.onboarding-panel :where(input, textarea, select) {
+  border-color: transparent !important;
+  background: rgba(15, 23, 42, 0.48) !important;
+  color: #f8fafc;
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+  transition-property: background-color, box-shadow, color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+.onboarding-panel :where(input, select) {
+  border-radius: 999px !important;
+}
+
+.onboarding-panel textarea {
+  border-radius: 1.5rem !important;
+}
+
+.onboarding-panel :where(input, textarea, select)::placeholder {
+  color: #64748b;
+}
+
+.onboarding-panel :where(input, textarea, select):focus {
+  background: rgba(15, 23, 42, 0.62) !important;
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.38),
+    0 0 0 4px rgba(99, 102, 241, 0.14) !important;
+}
+
+.onboarding-panel .cinematic-date-control {
+  border-radius: 999px !important;
+  background: rgba(15, 23, 42, 0.48) !important;
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+.onboarding-panel .cinematic-date-input :where(input) {
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .onboarding-shell .theme-logo-dark {
@@ -1453,7 +1569,7 @@ button,
 }
 
 .onboarding-location-panel {
-  border-radius: 1.75rem;
+  border-radius: 2rem !important;
 }
 
 .onboarding-location-header-badge {
@@ -1463,24 +1579,33 @@ button,
 
 .onboarding-location-panel .location-search-control {
   height: 3.25rem;
-  border-radius: 1.125rem !important;
+  border-radius: 999px !important;
 }
 
 .onboarding-location-panel .location-search-menu {
-  border-radius: 1.125rem !important;
+  border-radius: 2rem !important;
 }
 
 .onboarding-location-panel .location-search-result {
-  border-radius: 0.625rem !important;
+  border-radius: 999px !important;
 }
 
 .onboarding-location-panel .onboarding-location-notice {
-  border-radius: 1rem !important;
+  border-radius: 999px !important;
+}
+
+.onboarding-location-panel .onboarding-location-notice[data-open="true"] {
+  border-radius: 2rem !important;
 }
 
 .onboarding-location-panel .onboarding-location-notice-trigger {
   min-height: 4rem;
   padding: 0.95rem 1rem;
+  border-radius: 999px !important;
+}
+
+.onboarding-location-panel .onboarding-location-notice[data-open="true"] .onboarding-location-notice-trigger {
+  border-radius: 2rem 2rem 0 0 !important;
 }
 
 .onboarding-location-panel .onboarding-location-notice-title {
@@ -1495,17 +1620,13 @@ button,
 .onboarding-location-panel .onboarding-location-primary,
 .onboarding-location-panel .onboarding-location-back {
   height: 3.5rem;
-  border-radius: 1.125rem !important;
+  border-radius: 999px !important;
 }
 
 .onboarding-location-panel .onboarding-location-back {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
-}
-
-.onboarding-location-panel .onboarding-location-back:hover:not(:active) {
-  transform: none;
 }
 
 @media (min-width: 768px) {
@@ -1524,7 +1645,7 @@ button,
 }
 
 .light .onboarding-location-panel {
-  border-radius: 1.75rem;
+  border-radius: 2rem !important;
 }
 
 .light .onboarding-location-heading {
@@ -1561,17 +1682,23 @@ button,
 }
 
 .light .onboarding-location-panel .onboarding-location-primary {
+  border: 1px solid rgba(33, 79, 208, 0.26) !important;
   background: #214fd0 !important;
   box-shadow:
     0 0 0 1px rgba(33, 79, 208, 0.18),
-    0 18px 42px rgba(33, 79, 208, 0.22) !important;
+    0 0 0 6px rgba(33, 79, 208, 0.08),
+    0 18px 42px rgba(33, 79, 208, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
 }
 
 .light .onboarding-location-panel .onboarding-location-primary:hover:not(:disabled) {
+  border-color: rgba(33, 79, 208, 0.36) !important;
   background: #1d46bd !important;
   box-shadow:
-    0 0 0 1px rgba(33, 79, 208, 0.22),
-    0 22px 54px rgba(33, 79, 208, 0.26) !important;
+    0 0 0 1px rgba(33, 79, 208, 0.24),
+    0 0 0 7px rgba(33, 79, 208, 0.1),
+    0 22px 54px rgba(33, 79, 208, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .light .onboarding-location-panel .onboarding-location-primary:disabled {
@@ -1660,11 +1787,12 @@ button,
 .waitlist-input,
 .waitlist-select {
   border: 0;
-  background: rgba(255, 255, 255, 0.055);
+  border-radius: 999px !important;
+  background: rgba(15, 23, 42, 0.48);
   color: #ffffff;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 0 0 1px rgba(148, 163, 184, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .waitlist-input::placeholder {
@@ -1674,18 +1802,18 @@ button,
 .waitlist-input:focus,
 .waitlist-select:focus {
   --tw-ring-color: rgba(59, 130, 246, 0.2);
-  background: rgba(255, 255, 255, 0.075);
+  background: rgba(15, 23, 42, 0.62);
   box-shadow:
-    0 0 0 1px rgba(96, 165, 250, 0.38),
-    0 0 0 4px rgba(59, 130, 246, 0.16);
+    0 0 0 1px rgba(129, 140, 248, 0.38),
+    0 0 0 4px rgba(99, 102, 241, 0.14);
 }
 
 .waitlist-input-readonly {
   cursor: not-allowed;
   color: #94a3b8;
-  background: rgba(15, 23, 42, 0.28);
+  background: rgba(15, 23, 42, 0.36);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.09),
+    0 0 0 1px rgba(148, 163, 184, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
@@ -1703,18 +1831,25 @@ button,
 }
 
 .waitlist-submit {
+  border-radius: 999px !important;
+  border: 1px solid rgba(147, 197, 253, 0.26);
   background: #2563eb;
   color: #ffffff;
   box-shadow:
-    0 0 0 1px rgba(147, 197, 253, 0.22),
-    0 18px 42px rgba(37, 99, 235, 0.22);
+    0 0 0 1px rgba(129, 140, 248, 0.18),
+    0 0 0 6px rgba(37, 99, 235, 0.08),
+    0 18px 42px rgba(37, 99, 235, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .waitlist-submit:hover:not(:disabled) {
-  background: #1d4ed8;
+  border-color: rgba(191, 219, 254, 0.36);
+  background: #3b82f6;
   box-shadow:
-    0 0 0 1px rgba(147, 197, 253, 0.3),
-    0 22px 54px rgba(37, 99, 235, 0.28);
+    0 0 0 1px rgba(129, 140, 248, 0.24),
+    0 0 0 7px rgba(37, 99, 235, 0.11),
+    0 22px 54px rgba(37, 99, 235, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .waitlist-submit:disabled {
@@ -1723,7 +1858,8 @@ button,
 }
 
 .waitlist-back-button {
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px !important;
+  background: rgba(15, 23, 42, 0.42);
   color: #e2e8f0;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12),
@@ -1731,21 +1867,23 @@ button,
 }
 
 .waitlist-back-button:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(30, 41, 59, 0.6);
   color: #ffffff;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 0 0 1px rgba(129, 140, 248, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
 
 .waitlist-link-button {
-  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px !important;
+  background: rgba(15, 23, 42, 0.42);
   color: #ffffff;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .waitlist-link-button:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(30, 41, 59, 0.6);
+  box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.24);
 }
 
 .waitlist-success-icon {
@@ -1811,18 +1949,24 @@ button,
 }
 
 .light .waitlist-submit {
+  border: 1px solid rgba(33, 79, 208, 0.26);
   background: #214fd0;
   color: #ffffff;
   box-shadow:
     0 0 0 1px rgba(33, 79, 208, 0.18),
-    0 18px 42px rgba(33, 79, 208, 0.22);
+    0 0 0 6px rgba(33, 79, 208, 0.08),
+    0 18px 42px rgba(33, 79, 208, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .light .waitlist-submit:hover:not(:disabled) {
+  border-color: rgba(33, 79, 208, 0.36);
   background: #1d46bd;
   box-shadow:
-    0 0 0 1px rgba(33, 79, 208, 0.22),
-    0 22px 54px rgba(33, 79, 208, 0.26);
+    0 0 0 1px rgba(33, 79, 208, 0.24),
+    0 0 0 7px rgba(33, 79, 208, 0.1),
+    0 22px 54px rgba(33, 79, 208, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .light .waitlist-back-button {
@@ -5005,14 +5149,31 @@ textarea.profile-field-control {
 
 .location-search-menu {
   z-index: 1300 !important;
+  border-radius: 1.75rem !important;
   border-color: var(--border-subtle) !important;
   background: var(--surface-overlay) !important;
   box-shadow: var(--shadow-popover) !important;
 }
 
+.location-search-result {
+  border-radius: 999px !important;
+  transform: translateY(0);
+  transition-property: background-color, box-shadow, color, transform;
+  transition-duration: 180ms;
+  transition-timing-function: ease-out;
+}
+
 .location-search-result:hover,
 .location-search-result:focus {
+  transform: translateY(-1px);
   background: color-mix(in srgb, var(--brand) 7%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--brand) 28%, transparent),
+    0 10px 26px color-mix(in srgb, var(--brand) 10%, transparent);
+}
+
+.location-search-result:active {
+  transform: translateY(0);
 }
 
 .location-search-result-icon {
@@ -5077,7 +5238,7 @@ textarea.profile-field-control {
 }
 
 .job-create-location-search .location-search-menu {
-  border-radius: 0.75rem !important;
+  border-radius: 1.5rem !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
   background: rgba(2, 6, 23, 0.98) !important;
 }
@@ -5089,6 +5250,9 @@ textarea.profile-field-control {
 .job-create-location-search .location-search-result:hover,
 .job-create-location-search .location-search-result:focus {
   background: rgba(99, 102, 241, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(165, 180, 252, 0.32),
+    0 10px 26px rgba(37, 99, 235, 0.16);
 }
 
 .jobbridge-map-frame,
@@ -6420,6 +6584,14 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main {
   border: 1px solid var(--border-subtle) !important;
   background: var(--surface-muted) !important;
   color: var(--text-muted) !important;
+  min-width: 2.15rem !important;
+  height: 2.15rem !important;
+  padding-inline: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  font-variant-numeric: tabular-nums;
 }
 
 .jobs-section-icon {
@@ -7011,9 +7183,9 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main {
   }
 }
 
-/* Mobile jobs tabs: rectangular shell with quieter selected state. */
+/* Mobile jobs tabs: rounded shell with quieter selected state. */
 .jobs-mobile-tabs {
-  border-radius: 1.08rem !important;
+  border-radius: 999px !important;
   padding: 0.34rem !important;
   background:
     linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(8, 13, 29, 0.84)) !important;
@@ -7028,7 +7200,7 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main {
 
 .jobs-mobile-tab {
   min-height: 2.55rem;
-  border-radius: 0.74rem !important;
+  border-radius: 999px !important;
   padding-inline: 0.72rem !important;
   color: rgba(148, 163, 184, 0.82) !important;
   font-variant-numeric: tabular-nums;
@@ -7046,12 +7218,13 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main {
 
 .jobs-mobile-tab-badge {
   display: inline-flex;
+  width: 1.35rem;
   min-width: 1.35rem;
   height: 1.35rem;
   align-items: center;
   justify-content: center;
-  border-radius: 0.48rem;
-  padding-inline: 0.38rem;
+  border-radius: 999px;
+  padding-inline: 0;
   background: rgba(148, 163, 184, 0.12);
   color: rgba(226, 232, 240, 0.82);
   font-size: 0.68rem;
@@ -7066,7 +7239,10 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main {
 }
 
 .jobs-mobile-tabs .jobs-filter-icon-button {
-  border-radius: 0.74rem !important;
+  width: 2.55rem !important;
+  height: 2.55rem !important;
+  min-width: 2.55rem !important;
+  border-radius: 999px !important;
 }
 
 .light .jobs-mobile-tabs {

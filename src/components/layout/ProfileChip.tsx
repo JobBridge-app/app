@@ -51,7 +51,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
     if (!profile) {
         return (
             <div className={cn("relative", className)}>
-                <div className="flex h-[52px] items-center gap-2 rounded-full border border-white/10 bg-slate-900/40 px-[6px] md:pr-3 shadow-xl backdrop-blur-md">
+                <div className="flex h-[52px] w-[52px] items-center justify-center gap-0 rounded-full border border-white/10 bg-slate-900/40 p-[6px] shadow-xl backdrop-blur-md md:w-auto md:justify-start md:gap-2 md:py-0 md:pl-[6px] md:pr-3">
                     <div className="h-10 w-10 rounded-full bg-white/10 animate-pulse" />
                     <div className="hidden md:flex flex-col gap-1.5">
                         <div className="h-3 w-20 rounded bg-white/10 animate-pulse" />
@@ -100,7 +100,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
                 className={cn(
-                    "app-profile-chip group flex h-[52px] items-center gap-2 rounded-full border pl-[6px] pr-2 shadow-xl backdrop-blur-md transition-colors duration-200 md:pr-3",
+                    "app-profile-chip group flex h-[52px] w-[52px] items-center justify-center gap-0 rounded-full border p-[6px] shadow-xl backdrop-blur-md transition-colors duration-200 md:w-auto md:justify-start md:gap-2 md:py-0 md:pl-[6px] md:pr-3",
                     isOpen && "is-open"
                 )}
             >
