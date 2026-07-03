@@ -1,0 +1,71 @@
+.jobs-filter-trigger {
+  min-height: 2.8rem;
+  border-radius: 999px !important;
+  padding-inline: 1rem 1.12rem !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.jobs-filter-trigger[data-active="true"] {
+  border-color: var(--brand-border) !important;
+  background: var(--surface-solid) !important;
+  color: var(--text-strong) !important;
+}
+
+.dark .jobs-filter-trigger {
+  border-color: rgba(148, 163, 184, 0.12) !important;
+  background: rgba(8, 13, 29, 0.72) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.dark .jobs-filter-trigger:hover,
+.dark .jobs-filter-trigger[data-active="true"] {
+  border-color: rgba(129, 140, 248, 0.28) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.jobs-empty-state {
+  position: relative;
+  isolation: isolate;
+  border-color: transparent !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 88%, transparent), color-mix(in srgb, var(--surface-solid) 84%, transparent)) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--border-subtle) 72%, transparent),
+    0 22px 58px rgba(31, 45, 74, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+}
+
+.dark .jobs-empty-state {
+  background:
+    linear-gradient(180deg, rgba(12, 19, 36, 0.92), rgba(7, 12, 27, 0.96)) !important;
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.085),
+    0 24px 70px rgba(0, 0, 0, 0.28) !important;
+}
+
+.jobs-empty-title {
+  text-wrap: balance;
+}
+
+.jobs-empty-message {
+  text-wrap: pretty;
+}
+
+.jobs-empty-icon {
+  border-color: color-mix(in srgb, var(--border-subtle) 82%, transparent) !important;
+  background: color-mix(in srgb, var(--surface-muted) 76%, transparent) !important;
+  color: color-mix(in srgb, var(--brand) 56%, var(--text-muted)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 26px rgba(31, 45, 74, 0.08) !important;
+}
+
+.dark .jobs-empty-icon {
+  border-color: rgba(148, 163, 184, 0.09) !important;
+  background: rgba(15, 23, 42, 0.48) !important;
+  color: rgba(129, 140, 248, 0.54) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 12px 30px rgba(0, 0, 0, 0.18) !important;
+}

@@ -7,6 +7,7 @@ import { TestModeBanner } from "@/components/admin/TestModeBanner";
 import { getCurrentSessionAndProfile } from "@/lib/auth";
 import { normalizeThemePreference, type ThemePreference } from "@/lib/theme-preference";
 import "./globals.css";
+import "./jobs-polish.css";
 
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
