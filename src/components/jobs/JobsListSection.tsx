@@ -50,8 +50,8 @@ export const JobsListSection = memo(function JobsListSection({
 
             <div className="jobs-card-grid grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {jobs.length === 0 ? (
-                    <div className="jobs-empty-state col-span-full rounded-[1.35rem] border border-white/10 bg-white/[0.025] py-10 text-center">
-                        <div className="text-slate-400">{emptyMsg}</div>
+                    <div className="jobs-empty-state col-span-full flex min-h-[17.5rem] items-center justify-center overflow-hidden rounded-[1.5rem] border-0 px-5 py-10 text-center">
+                        <div className="w-full">{emptyMsg}</div>
                     </div>
                 ) : (
                     jobs.map(job => (

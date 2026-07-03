@@ -291,8 +291,9 @@ export function JobsList({
 
                 <button
                     onClick={() => setShowFilterPanel(true)}
+                    data-active={showFilterPanel || hasChanges}
                     className={cn(
-                        "jobs-filter-trigger relative ml-4 flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-transparent px-3.5 py-2.5 text-slate-400 transition-colors duration-200 hover:border-white/10 hover:bg-white/5 hover:text-white sm:px-4",
+                        "jobs-filter-trigger relative ml-4 flex items-center gap-2.5 whitespace-nowrap rounded-full border border-transparent px-3.5 py-2.5 text-slate-400 transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out active:scale-[0.96] sm:px-4",
                         showFilterPanel && "bg-white/10 text-indigo-300 border-indigo-500/20",
                         hasChanges && !showFilterPanel && "text-indigo-300 border-indigo-500/20 bg-indigo-500/10"
                     )}
@@ -322,7 +323,7 @@ export function JobsList({
                                 emptyMsg={
                                     <EmptyState
                                         icon={Briefcase}
-                                        title="Aktuell keine lokalen Jobs"
+                                        title="Keine lokalen Jobs gefunden"
                                         message={
                                             hasChanges
                                                 ? "Keine lokalen Jobs für deine aktuellen Filter. Versuche, die Filter anzupassen."
@@ -515,12 +516,12 @@ function EmptyState({
     message: string;
 }) {
     return (
-        <div className="jobs-empty-copy flex flex-col items-center justify-center space-y-4 px-4 py-8">
-            <div className="jobs-empty-icon flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.05] bg-slate-900/60 text-indigo-400/80">
-                <Icon size={26} className="opacity-80" />
+        <div className="jobs-empty-copy flex flex-col items-center justify-center space-y-3 px-4 py-8">
+            <div className="jobs-empty-icon flex h-12 w-12 items-center justify-center rounded-[0.95rem] border border-white/[0.05] bg-slate-900/40 text-indigo-300/50">
+                <Icon size={20} className="opacity-[0.62]" />
             </div>
-            <div className="text-center space-y-1.5">
-                <h3 className="jobs-empty-title text-xl font-bold tracking-tight text-white">{title}</h3>
+            <div className="space-y-1.5 text-center">
+                <h3 className="jobs-empty-title text-lg font-bold leading-tight tracking-tight text-white">{title}</h3>
                 <p className="jobs-empty-message mx-auto max-w-sm text-sm leading-relaxed text-slate-400">{message}</p>
             </div>
         </div>
