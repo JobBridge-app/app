@@ -53,6 +53,26 @@
   --glass-border: rgba(15, 23, 42, 0.1);
   --glass-bg: rgba(255, 255, 255, 0.78);
 
+  --chrome-surface: rgba(255, 255, 255, 0.94);
+  --chrome-surface-hover: #ffffff;
+  --chrome-ring: rgba(0, 0, 0, 0.06);
+  --chrome-ring-hover: rgba(0, 0, 0, 0.09);
+  --chrome-shadow:
+    0 0 0 1px var(--chrome-ring),
+    0 1px 2px -1px rgba(0, 0, 0, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.04);
+  --chrome-shadow-hover:
+    0 0 0 1px var(--chrome-ring-hover),
+    0 2px 4px -1px rgba(0, 0, 0, 0.08),
+    0 5px 12px rgba(0, 0, 0, 0.055);
+  --chrome-popover: rgba(255, 255, 255, 0.985);
+  --chrome-popover-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.075),
+    0 12px 32px rgba(31, 45, 74, 0.14),
+    0 3px 8px rgba(31, 45, 74, 0.07);
+  --chrome-active: color-mix(in srgb, #0062ff 94%, #000000);
+  --chrome-active-strong: color-mix(in srgb, #0062ff 80%, #000000);
+
   --app-mobile-dock-edge-gap: 0.125rem;
   --app-mobile-dock-panel-height: 3.76rem;
   --app-mobile-dock-content-clearance: 1.125rem;
@@ -127,6 +147,26 @@ html.light {
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-bg: rgba(2, 6, 23, 0.7);
 
+  --chrome-surface: rgba(10, 14, 22, 0.94);
+  --chrome-surface-hover: rgba(14, 19, 29, 0.98);
+  --chrome-ring: rgba(255, 255, 255, 0.08);
+  --chrome-ring-hover: rgba(255, 255, 255, 0.13);
+  --chrome-shadow:
+    0 0 0 1px var(--chrome-ring),
+    0 10px 24px rgba(0, 0, 0, 0.2),
+    0 2px 5px rgba(0, 0, 0, 0.18);
+  --chrome-shadow-hover:
+    0 0 0 1px var(--chrome-ring-hover),
+    0 12px 28px rgba(0, 0, 0, 0.25),
+    0 3px 7px rgba(0, 0, 0, 0.2);
+  --chrome-popover: rgba(13, 19, 29, 0.985);
+  --chrome-popover-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 18px 42px rgba(0, 0, 0, 0.42),
+    0 5px 12px rgba(0, 0, 0, 0.24);
+  --chrome-active: color-mix(in srgb, #0062ff 92%, #000000);
+  --chrome-active-strong: color-mix(in srgb, #0062ff 78%, #000000);
+
   --map-background: #121217;
   --map-muted: #71717a;
   --map-border: rgba(255, 255, 255, 0.08);
@@ -171,7 +211,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition-property: background-color, color;
+  transition-duration: 220ms;
+  transition-timing-function: ease-out;
 }
 
 .dark body {
@@ -179,6 +221,14 @@ body {
   background-image:
     radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.03) 0%, transparent 50%),
     radial-gradient(circle at 80% 70%, rgba(79, 70, 229, 0.03) 0%, transparent 50%);
+}
+
+.app-shell-background {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 18rem);
+}
+
+.dark .app-shell-background {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.012), transparent 14rem);
 }
 
 html,
@@ -503,13 +553,6 @@ button,
   opacity: 0.78;
 }
 
-.app-center-nav-active {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 48%),
-    linear-gradient(180deg, #2d63df, var(--brand));
-  box-shadow: 0 16px 36px rgba(33, 79, 208, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.36);
-}
-
 .dark .app-brand-chip,
 .dark .app-profile-chip,
 .dark .app-center-nav-pill {
@@ -706,9 +749,288 @@ button,
   color: var(--brand) !important;
 }
 
+/* Restrained application chrome: neutral depth, no ambient glow. */
+.app-brand-chip,
+.app-profile-chip,
+.app-center-nav-pill,
+.notifications-trigger {
+  border-color: transparent !important;
+  background: var(--chrome-surface) !important;
+  box-shadow: var(--chrome-shadow) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+  backdrop-filter: blur(10px) saturate(115%);
+}
+
+.app-brand-chip:hover,
+.app-profile-chip:hover,
+.app-profile-chip.is-open,
+.notifications-trigger:hover,
+.notifications-popover-root:has(.notifications-panel) .notifications-trigger {
+  border-color: transparent !important;
+  background: var(--chrome-surface-hover) !important;
+  box-shadow: var(--chrome-shadow-hover) !important;
+}
+
+.app-brand-logo-ring,
+.app-profile-avatar-frame {
+  border-color: transparent !important;
+  background: transparent;
+  box-shadow: 0 0 0 1px var(--chrome-ring);
+}
+
+.app-brand-logo-badge {
+  background: color-mix(in srgb, var(--chrome-surface-hover) 88%, var(--brand-soft) 12%);
+}
+
+.app-brand-logo-image {
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  outline-offset: -1px;
+}
+
+.dark .app-brand-logo-image {
+  outline-color: rgba(255, 255, 255, 0.1);
+}
+
+.app-profile-avatar {
+  background: color-mix(in srgb, var(--chrome-surface-hover) 72%, #dbe7ff 28%);
+  color: var(--chrome-active);
+}
+
+.dark .app-profile-avatar {
+  background: color-mix(in srgb, var(--chrome-surface-hover) 84%, #2f66d5 16%);
+  color: #a9c5ff;
+}
+
+.app-profile-photo {
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  outline-offset: -1px;
+}
+
+.dark .app-profile-photo {
+  outline-color: rgba(255, 255, 255, 0.1);
+}
+
+.app-center-nav-hover {
+  background: transparent;
+  transition-property: background-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.app-center-nav-pill a:hover .app-center-nav-hover {
+  background: rgba(15, 23, 42, 0.045);
+}
+
+.dark .app-center-nav-pill a:hover .app-center-nav-hover {
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.app-center-nav-active,
 .dark .app-center-nav-active {
-  background: linear-gradient(180deg, rgba(96, 165, 250, 0.22), rgba(37, 99, 235, 0.92));
-  box-shadow: 0 0 24px rgba(37, 99, 235, 0.34), inset 0 1px 0 rgba(191, 219, 254, 0.18);
+  background: linear-gradient(180deg, var(--chrome-active), var(--chrome-active-strong));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.13),
+    0 1px 2px rgba(13, 34, 82, 0.24),
+    0 5px 12px rgba(13, 34, 82, 0.16);
+}
+
+.app-profile-chip-title,
+.dark .app-profile-chip-title {
+  color: var(--text-strong);
+}
+
+.app-profile-chip-subtitle,
+.app-profile-chip-chevron,
+.dark .app-profile-chip-subtitle,
+.dark .app-profile-chip-chevron {
+  color: var(--text-muted);
+}
+
+.app-profile-menu,
+.dark .app-profile-menu,
+.notifications-panel,
+.dark .notifications-panel {
+  border-color: transparent !important;
+  background: var(--chrome-popover) !important;
+  color: var(--text-default);
+  box-shadow: var(--chrome-popover-shadow) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(110%);
+  backdrop-filter: blur(12px) saturate(110%);
+}
+
+.app-profile-menu-account {
+  border: 0 !important;
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--surface-muted) 64%, transparent);
+}
+
+.app-profile-menu-role {
+  color: var(--text-muted) !important;
+}
+
+.app-profile-menu-item,
+.dark .app-profile-menu-item {
+  min-height: 2.75rem;
+  color: var(--text-default) !important;
+  font-weight: 620;
+}
+
+.app-profile-menu-item:hover,
+.dark .app-profile-menu-item:hover {
+  background: color-mix(in srgb, var(--text-strong) 5.5%, transparent) !important;
+  color: var(--text-strong) !important;
+}
+
+.app-profile-menu-item-icon,
+.app-profile-menu-item svg,
+.dark .app-profile-menu-item svg {
+  flex: none;
+  color: var(--text-muted) !important;
+  transition-property: color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.app-profile-menu-item:hover .app-profile-menu-item-icon,
+.app-profile-menu-item:hover svg,
+.dark .app-profile-menu-item:hover svg {
+  color: var(--chrome-active) !important;
+}
+
+.app-profile-menu-divider,
+.dark .app-profile-menu-divider {
+  background: var(--border-subtle) !important;
+}
+
+.app-profile-menu-item-accent,
+.dark .app-profile-menu-item-accent {
+  color: var(--chrome-active) !important;
+}
+
+.app-profile-menu-item-warn,
+.dark .app-profile-menu-item-warn {
+  color: #b36b00 !important;
+}
+
+.dark .app-profile-menu-item-warn {
+  color: #f2ae45 !important;
+}
+
+.app-profile-menu-item-danger,
+.dark .app-profile-menu-item-danger {
+  color: var(--danger) !important;
+}
+
+.app-profile-menu-item-danger:hover .app-profile-menu-item-icon,
+.app-profile-menu-item-danger:hover svg {
+  color: var(--danger) !important;
+}
+
+.app-profile-verification-dot {
+  background: #d97706;
+  box-shadow: 0 0 0 2px var(--chrome-popover);
+}
+
+.notifications-trigger,
+.dark .notifications-trigger {
+  color: var(--text-muted) !important;
+}
+
+.notifications-trigger:hover,
+.notifications-popover-root:has(.notifications-panel) .notifications-trigger,
+.dark .notifications-trigger:hover,
+.dark .notifications-popover-root:has(.notifications-panel) .notifications-trigger {
+  color: var(--text-strong) !important;
+}
+
+.notification-unread-dot,
+.dark .notification-unread-dot {
+  border: 0 !important;
+  background: #e9a918 !important;
+  box-shadow: 0 0 0 2px var(--chrome-surface) !important;
+}
+
+.notifications-panel {
+  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.875rem);
+}
+
+.app-header-popover-backdrop {
+  top: calc(max(1rem, env(safe-area-inset-top)) + 3.25rem);
+}
+
+.notifications-panel-header,
+.notifications-panel-footer {
+  border-color: var(--border-subtle) !important;
+}
+
+.notifications-empty {
+  background: color-mix(in srgb, var(--surface-muted) 52%, transparent);
+}
+
+.notification-card,
+.dark .notification-card {
+  border-color: transparent !important;
+  background: color-mix(in srgb, var(--surface-muted) 62%, transparent) !important;
+  box-shadow: 0 0 0 1px var(--chrome-ring) !important;
+}
+
+.notification-card.is-unread,
+.dark .notification-card.is-unread {
+  border-color: transparent !important;
+  background: color-mix(in srgb, var(--chrome-active) 7%, var(--surface-raised) 93%) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--chrome-active) 24%, transparent) !important;
+}
+
+.notification-card:hover,
+.dark .notification-card:hover {
+  border-color: transparent !important;
+  background: color-mix(in srgb, var(--text-strong) 6%, var(--surface-raised) 94%) !important;
+  box-shadow: 0 0 0 1px var(--chrome-ring-hover) !important;
+  transform: none;
+}
+
+.notifications-view-all {
+  color: var(--chrome-active) !important;
+}
+
+@media (min-width: 768px) {
+  .notifications-panel {
+    top: calc(100% + 0.5rem);
+  }
+}
+
+@media (max-width: 359px) {
+  .app-header-shell {
+    padding-inline: 0.5rem;
+  }
+
+  .app-brand-chip,
+  .app-profile-chip,
+  .app-center-nav-pill,
+  .notifications-trigger {
+    height: 2.75rem;
+  }
+
+  .notifications-trigger {
+    width: 2.75rem;
+  }
+
+  .app-brand-logo-ring,
+  .app-profile-avatar-shell {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .app-center-nav-pill {
+    gap: 0;
+    padding: 0.125rem;
+  }
+
+  .app-center-nav-pill > a {
+    height: 2.5rem;
+    min-width: 2.5rem;
+    padding-inline: 0.625rem;
+  }
 }
 
 .settings-header,
@@ -2213,20 +2535,24 @@ button,
 }
 
 .app-header-scrim {
-  height: calc(6.25rem + env(safe-area-inset-top));
-  background:
-    linear-gradient(to bottom, rgba(2, 6, 23, 0.72), rgba(2, 6, 23, 0.38) 54%, transparent),
-    radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08), transparent 58%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  backdrop-filter: blur(18px) saturate(150%);
+  height: calc(5.875rem + env(safe-area-inset-top));
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 6, 23, 0.94),
+    rgba(2, 6, 23, 0.7) 54%,
+    transparent
+  );
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 66%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 0%, #000 66%, transparent 100%);
 }
 
 .light .app-header-scrim {
-  background:
-    linear-gradient(to bottom, rgba(246, 248, 252, 0.96), rgba(246, 248, 252, 0.7) 58%, transparent),
-    radial-gradient(ellipse at 50% 0%, rgba(33, 79, 208, 0.095), transparent 60%);
+  background: linear-gradient(
+    to bottom,
+    rgba(246, 248, 252, 0.98),
+    rgba(246, 248, 252, 0.76) 56%,
+    transparent
+  );
 }
 
 .app-shell-main {
@@ -4723,7 +5049,7 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) 
 }
 
 .dark .guardian-banner-noise {
-  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  background-image: url("/assets/jobbridge-noise.svg");
   opacity: 0.16;
   mix-blend-mode: overlay;
 }
