@@ -821,6 +821,47 @@ button,
   background: rgba(15, 23, 42, 0.045);
 }
 
+.app-nav-pending-indicator {
+  position: absolute;
+  left: 50%;
+  z-index: 20;
+  width: 1rem;
+  height: 0.125rem;
+  border-radius: 9999px;
+  background: var(--chrome-active);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) scaleX(0.25);
+}
+
+.app-nav-pending-indicator[data-pending="true"] {
+  visibility: visible;
+  animation:
+    app-nav-pending-in 160ms 100ms ease-out forwards,
+    app-nav-pending-pulse 900ms 260ms ease-in-out infinite;
+}
+
+@keyframes app-nav-pending-in {
+  to {
+    opacity: 0.72;
+    transform: translateX(-50%) scaleX(1);
+  }
+}
+
+@keyframes app-nav-pending-pulse {
+  50% {
+    opacity: 0.36;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-nav-pending-indicator[data-pending="true"] {
+    animation: none;
+    opacity: 0.72;
+    transform: translateX(-50%) scaleX(1);
+  }
+}
+
 .dark .app-center-nav-pill a:hover .app-center-nav-hover {
   background: rgba(255, 255, 255, 0.055);
 }

@@ -310,6 +310,42 @@ async function enrichWithActiveApplicants(
   });
 }
 
+async function enrichJobsInParallel(
+  supabase: SupabaseClient<Database>,
+  items: JobsListItem[],
+): Promise<JobsListItem[]> {
+  const [withMarkets, withCreators, withActiveApplicants] = await Promise.all([
+    enrichWithMarketNames(supabase, items),
+    enrichWithCreators(supabase, items),
+    enrichWithActiveApplicants(supabase, items),
+  ]);
+
+  return items.map((item, index) => ({
+    ...item,
+    market_name: withMarkets[index]?.market_name ?? item.market_name,
+    brand_prefix: withMarkets[index]?.brand_prefix ?? item.brand_prefix,
+    creator: withCreators[index]?.creator ?? item.creator,
+    active_applicant: withActiveApplicants[index]?.active_applicant ?? item.active_applicant,
+  }));
+}
+
+async function enrichCandidateJobsInParallel(
+  supabase: SupabaseClient<Database>,
+  items: JobsListItem[],
+): Promise<JobsListItem[]> {
+  const [withMarkets, withCreators] = await Promise.all([
+    enrichWithMarketNames(supabase, items),
+    enrichWithCreators(supabase, items),
+  ]);
+
+  return items.map((item, index) => ({
+    ...item,
+    market_name: withMarkets[index]?.market_name ?? item.market_name,
+    brand_prefix: withMarkets[index]?.brand_prefix ?? item.brand_prefix,
+    creator: withCreators[index]?.creator ?? item.creator,
+  }));
+}
+
 export async function fetchJobs(params: FetchJobsParams): Promise<Result<JobsListItem[]>> {
   const supabase = await supabaseServer();
   const limit = params.limit ?? 50;
@@ -391,9 +427,7 @@ export async function fetchJobs(params: FetchJobsParams): Promise<Result<JobsLis
     };
   });
 
-  items = await enrichWithMarketNames(supabase, items) as typeof items;
-  items = await enrichWithCreators(supabase, items) as typeof items;
-  items = await enrichWithActiveApplicants(supabase, items) as typeof items;
+  items = await enrichJobsInParallel(supabase, items) as typeof items;
 
   return { ok: true, data: items };
 }
@@ -653,9 +687,10 @@ export async function fetchCandidateApplications(
 
   // Enrich with market/creator (optimization: we could batch this, but for now reuse existing)
   // We need to extract the jobs list to enrich
-  let jobsList = items.map((i: any) => i.job);
-  jobsList = await enrichWithMarketNames(supabase, jobsList) as JobsListItem[];
-  jobsList = await enrichWithCreators(supabase, jobsList) as JobsListItem[];
+  const jobsList = await enrichCandidateJobsInParallel(
+    supabase,
+    items.map((i: any) => i.job),
+  );
 
   // Re-attach enriched jobs
   const enrichedItems = items.map((item: any, index: number) => ({

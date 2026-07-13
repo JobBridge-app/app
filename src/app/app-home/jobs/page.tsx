@@ -3,6 +3,7 @@ import { fetchJobs, fetchCandidateApplications } from "@/lib/dal/jobbridge";
 import { JobsList } from "@/components/jobs/JobsList";
 import type { ApplicationStatus, JobsListItem } from "@/lib/types/jobbridge";
 import { getAppHomeSnapshot } from "@/lib/app-shell";
+import { AppRouteReady } from "@/components/layout/AppNavigationProvider";
 
 const APPLIED_APPLICATION_STATUSES = new Set<ApplicationStatus>([
     "submitted",
@@ -47,10 +48,11 @@ export default async function JobsPage() {
 
     const rawActiveJobs: JobsListItem[] = jobsRes.ok ? jobsRes.data : [];
     const allApps = appsRes.ok ? appsRes.data : [];
+    const activeJobsById = new Map(rawActiveJobs.map((job) => [job.id, job]));
 
     const mapApplicationToJob = (application: (typeof allApps)[number]): JobsListItem | null => {
         if (!application.job) return null;
-        const richJob = rawActiveJobs.find((job) => job.id === application.job.id);
+        const richJob = activeJobsById.get(application.job.id);
         return richJob
             ? { ...richJob, is_applied: true, application_status: application.status }
             : { ...application.job, is_applied: true, application_status: application.status };
@@ -101,6 +103,7 @@ export default async function JobsPage() {
 
     return (
         <div className="jobs-home-surface container mx-auto py-2 px-4 md:px-6">
+            <AppRouteReady href="/app-home/jobs" />
             <div className="mx-auto max-w-[78rem] space-y-8">
                 <div className="jobs-home-heading">
                     <h1 className="mb-2 text-3xl font-bold tracking-tight text-white">

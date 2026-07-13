@@ -4,6 +4,10 @@ import { DebugRolePanel } from "@/components/debug/DebugRolePanel";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { RoleOverrideExpiryWatcher } from "@/components/auth/RoleOverrideExpiryWatcher";
 import { getAppHomeSnapshot } from "@/lib/app-shell";
+import {
+    AppNavigationProvider,
+    AppNavigationViewport,
+} from "@/components/layout/AppNavigationProvider";
 
 export default async function AppHomeLayout({
     children,
@@ -13,24 +17,26 @@ export default async function AppHomeLayout({
     const snapshot = await getAppHomeSnapshot();
 
     return (
-        <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
-            {/* Shared Background for the entire app area */}
-            <LiquidBackground />
+        <AppNavigationProvider>
+            <div className="relative flex min-h-dvh flex-col bg-background text-foreground">
+                {/* Shared Background for the entire app area */}
+                <LiquidBackground />
 
-            {/* Persistence & Logic */}
-            <RoleOverrideExpiryWatcher overrideExpiresAt={snapshot.effectiveView.overrideExpiresAt} />
-            <DebugRolePanel profile={snapshot.profile} />
-            <RoleGuard profile={snapshot.profile} />
+                {/* Persistence & Logic */}
+                <RoleOverrideExpiryWatcher overrideExpiresAt={snapshot.effectiveView.overrideExpiresAt} />
+                <DebugRolePanel profile={snapshot.profile} />
+                <RoleGuard profile={snapshot.profile} />
 
-            {/* Persistent Header */}
-            <AppHeader snapshot={snapshot} />
+                {/* Persistent Header */}
+                <AppHeader snapshot={snapshot} />
 
-            {/* Page Content */}
-            <main className="app-shell-main relative z-10 flex-1 pt-24">
-                {children}
-            </main>
+                {/* Page Content */}
+                <main className="app-shell-main relative z-10 flex-1 pt-24">
+                    <AppNavigationViewport>{children}</AppNavigationViewport>
+                </main>
 
-            {/* Shared Footer (Optional, can be added later) */}
-        </div>
+                {/* Shared Footer (Optional, can be added later) */}
+            </div>
+        </AppNavigationProvider>
     );
 }

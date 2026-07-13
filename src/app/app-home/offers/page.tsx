@@ -6,6 +6,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { ApplicationStatus, DataSource, JobsListItem } from "@/lib/types/jobbridge";
 import { getAppHomeSnapshot } from "@/lib/app-shell";
 import type { ProviderJobApplicationSummary } from "./components/MyJobsView";
+import { AppRouteReady } from "@/components/layout/AppNavigationProvider";
 
 type ApplicationSummaryRow = {
     job_id: string;
@@ -114,6 +115,7 @@ export default async function OffersPage({
 
     return (
         <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
+            <AppRouteReady href="/app-home/offers" />
             <div className="mb-7 md:mb-9">
                 <div className="max-w-2xl">
                     <h1 className="text-4xl font-semibold tracking-tight text-white md:text-6xl">Jobs</h1>

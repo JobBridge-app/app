@@ -2,25 +2,27 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
 import { warmRouteAdjacentUI } from "@/lib/ui-warmup";
 import { usePhoneDevice } from "@/hooks/use-phone-device";
+import { useAppNavigation } from "../AppNavigationProvider";
+import { AppNavPendingIndicator } from "./AppNavPendingIndicator";
 import { getAppNavItems } from "./navItems";
 
 export function MobileBottomDock({ profile, enabled }: { profile: Profile | null; enabled: boolean }) {
     const isPhoneDevice = usePhoneDevice();
     const pathname = usePathname();
     const router = useRouter();
-    const [pendingHref, setPendingHref] = useState<string | null>(null);
+    const { pendingHref, beginNavigation } = useAppNavigation();
     const currentPath = pendingHref || pathname || "";
+    const committedPath = pathname || "";
     const navItems = getAppNavItems(profile);
     const warmedRoutesRef = useRef(new Set<string>());
 
     useEffect(() => {
-        setPendingHref(null);
         endPerfMark("app-mobile-dock-route");
     }, [pathname]);
 
@@ -29,17 +31,10 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
     }
 
     const warmRoute = (href: string) => {
+        if (warmedRoutesRef.current.has(href)) return;
+        warmedRoutesRef.current.add(href);
         router.prefetch(href);
-        if (!warmedRoutesRef.current.has(href)) {
-            warmedRoutesRef.current.add(href);
-            void warmRouteAdjacentUI(href);
-        }
-    };
-
-    const activateRoute = (href: string) => {
-        startPerfMark("app-mobile-dock-route");
-        setPendingHref(href);
-        warmRoute(href);
+        void warmRouteAdjacentUI(href);
     };
 
     return (
@@ -50,19 +45,32 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
             <div className="app-mobile-dock-panel mx-auto grid grid-cols-3">
                 {navItems.map((item) => {
                     const isActive = item.activePattern.test(currentPath);
+                    const isCurrent = item.activePattern.test(committedPath);
 
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
-                            prefetch={false}
                             aria-label={item.label}
-                            aria-current={isActive ? "page" : undefined}
-                            onPointerDown={() => activateRoute(item.href)}
-                            onTouchStart={() => activateRoute(item.href)}
+                            aria-current={isCurrent ? "page" : undefined}
+                            onClick={(event) => {
+                                const isPlainPrimaryClick = event.button === 0
+                                    && !event.metaKey
+                                    && !event.ctrlKey
+                                    && !event.shiftKey
+                                    && !event.altKey;
+                                if (isCurrent && isPlainPrimaryClick) {
+                                    beginNavigation(item.href);
+                                }
+                            }}
+                            onNavigate={() => {
+                                beginNavigation(item.href);
+                                if (!isCurrent) {
+                                    startPerfMark("app-mobile-dock-route");
+                                }
+                            }}
                             onMouseEnter={() => warmRoute(item.href)}
                             onFocus={() => warmRoute(item.href)}
-                            onClick={() => activateRoute(item.href)}
                             className={cn(
                                 "app-mobile-dock-item group relative flex min-w-0 items-center justify-center outline-none",
                                 isActive && "is-active"
@@ -81,6 +89,7 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
                                     {item.label}
                                 </span>
                             </span>
+                            <AppNavPendingIndicator className="bottom-1.5" />
                         </Link>
                     );
                 })}

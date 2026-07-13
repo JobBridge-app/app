@@ -4,17 +4,22 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ActivitiesPageClient } from "@/components/activity/ActivitiesPageClient";
 import { ProviderActivityList } from "@/components/activity/ProviderActivityList";
 import { getAppHomeSnapshot } from "@/lib/app-shell";
+import { AppRouteReady } from "@/components/layout/AppNavigationProvider";
 
 export default async function ActivityPage({
     searchParams,
 }: {
     searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const snapshot = await getAppHomeSnapshot();
+    const paramsPromise: Promise<{ [key: string]: string | string[] | undefined }> =
+        searchParams ?? Promise.resolve({});
+    const [snapshot, params] = await Promise.all([
+        getAppHomeSnapshot(),
+        paramsPromise,
+    ]);
     const profile = snapshot.profile;
     const viewRole = snapshot.effectiveView.viewRole;
     const source = snapshot.effectiveView.source;
-    const params = searchParams ? await searchParams : {};
     const selectedJobId = typeof params.jobId === "string" ? params.jobId : null;
 
     const supabase = await supabaseServer();
@@ -66,9 +71,12 @@ export default async function ActivityPage({
         if (error) {
             console.error("Provider activity fetch error:", error);
             return (
-                <div className="container mx-auto py-12 px-4 text-red-400">
-                    Fehler beim Laden der Aktivitäten.
-                </div>
+                <>
+                    <AppRouteReady href="/app-home/activities" />
+                    <div className="container mx-auto py-12 px-4 text-red-400">
+                        Fehler beim Laden der Aktivitäten.
+                    </div>
+                </>
             );
         }
 
@@ -87,6 +95,7 @@ export default async function ActivityPage({
 
         return (
             <div className="activities-page jobs-home-surface container mx-auto py-2 px-4 md:px-6">
+                <AppRouteReady href="/app-home/activities" />
                 <div className="mx-auto max-w-[78rem]">
                     {/* @ts-ignore - Supabase types are tricky with joins, verified manually */}
                     <ProviderActivityList
@@ -145,6 +154,7 @@ export default async function ActivityPage({
 
     return (
         <div className="activities-page jobs-home-surface container mx-auto py-2 px-4 md:px-6">
+            <AppRouteReady href="/app-home/activities" />
             <div className="mx-auto max-w-[78rem]">
                 <ActivitiesPageClient applications={applications} userId={profile.id} />
             </div>
