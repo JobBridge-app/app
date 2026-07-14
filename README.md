@@ -1,7 +1,5 @@
 <div align="center">
-  <img src="./public/logo-jobbridge.png" width="160" alt="JobBridge Logo" />
-  <h1>JobBridge</h1>
-  <p>Sicher • Lokal • Fair | Die sichere Taschengeldbörse der Zukunft</p>
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0ea5e9,100:020617&height=300&section=header&text=JobBridge&fontSize=80&fontAlignY=30&desc=Sicher%20%E2%80%A2%20Lokal%20%E2%80%A2%20Fair%20%7C%20Die%20sichere%20Taschengeldb%C3%B6rse%20der%20Zukunft&descAlignY=55&descSize=18&animation=twinkling&fontColor=ffffff&descColor=ffffff" width="100%" alt="JobBridge Header" />
 </div>
 
 > [!CAUTION]
@@ -177,6 +175,7 @@ JobBridge leverages the absolute pinnacle of modern web development frameworks t
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
   [![Framer Motion](https://img.shields.io/badge/Framer_Motion-UI-FF0055?style=for-the-badge&logo=framer)](https://www.framer.com/motion/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Vercel](https://img.shields.io/badge/Vercel-Edge-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
 </div>
 
 <br />
@@ -240,6 +239,10 @@ The platform compiles and boots at **[http://localhost:3000](http://localhost:30
 > **ENFORCEMENT**: The Licensor reserves the right to pursue all available legal remedies under the laws of the Federal Republic of Germany for any breach of these terms.
 
 <br/>
+
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,100:0ea5e9&height=120&section=footer" width="100%" alt="Footer" />
+</div>
 
 <div align="center">
   <sub>JobBridge Web Platform &copy; 2026 Rezan Aaron Yalçin — All Rights Reserved.</sub>
