@@ -1,27 +1,123 @@
+.jobs-filter-trigger,
+.jobs-filter-icon-button {
+  border-color: rgba(24, 24, 27, 0.11) !important;
+  background: #ffffff !important;
+  color: #71717a !important;
+}
+
+.jobs-tab-group,
 .jobs-filter-trigger {
-  min-height: 2.8rem;
+  height: 3.3125rem;
+  min-height: 3.3125rem;
+}
+
+.jobs-filter-trigger {
+  min-width: 6.625rem;
   border-radius: 999px !important;
-  padding-inline: 1rem 1.12rem !important;
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-raised) 78%, transparent) !important;
+  color: var(--text-muted) !important;
+  padding-inline: 1rem !important;
   box-shadow: var(--shadow-card) !important;
 }
 
-.jobs-filter-trigger[data-active="true"] {
-  border-color: var(--brand-border) !important;
-  background: var(--surface-solid) !important;
-  color: var(--text-strong) !important;
+.jobs-filter-trigger svg {
+  color: currentColor;
+}
+
+.jobs-filter-icon-button {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.dark .jobs-filter-trigger,
+.dark .jobs-filter-icon-button {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: #242428 !important;
+  color: #a1a1aa !important;
 }
 
 .dark .jobs-filter-trigger {
   border-color: rgba(148, 163, 184, 0.12) !important;
   background: rgba(8, 13, 29, 0.72) !important;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+  color: var(--text-muted) !important;
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
 }
 
-.dark .jobs-filter-trigger:hover,
+.dark .jobs-filter-icon-button {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.jobs-filter-trigger[data-active="true"] {
+  border-color: color-mix(in srgb, var(--chrome-nav-active) 28%, transparent) !important;
+  background: color-mix(in srgb, var(--chrome-nav-active) 9%, #ffffff) !important;
+  color: var(--chrome-nav-active) !important;
+}
+
 .dark .jobs-filter-trigger[data-active="true"] {
-  border-color: rgba(129, 140, 248, 0.28) !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
+  border-color: color-mix(in srgb, var(--chrome-nav-active) 38%, transparent) !important;
+  background: color-mix(in srgb, var(--chrome-nav-active) 16%, #242428) !important;
+  color: #fafafa !important;
+}
+
+.jobs-filter-trigger[data-active="true"] svg,
+.dark .jobs-filter-trigger[data-active="true"] svg {
+  color: var(--chrome-nav-active);
+}
+
+.jobs-filter-trigger .bg-indigo-500,
+.jobs-filter-icon-button .bg-indigo-500 {
+  background: var(--chrome-nav-active) !important;
+}
+
+.jobs-filter-icon-button[data-active="true"],
+.dark .jobs-filter-icon-button[data-active="true"] {
+  background: transparent !important;
+  color: var(--chrome-nav-active) !important;
+}
+
+@media (hover: hover) {
+  .jobs-filter-trigger:hover,
+  .jobs-filter-icon-button:hover {
+    border-color: var(--border-subtle) !important;
+    background: var(--surface-solid) !important;
+    color: var(--text-strong) !important;
+  }
+
+  .dark .jobs-filter-trigger:hover,
+  .dark .jobs-filter-icon-button:hover {
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    background: #303034 !important;
+    color: #fafafa !important;
+  }
+
+  .dark .jobs-filter-trigger:hover {
+    border-color: rgba(148, 163, 184, 0.14) !important;
+    background: rgba(255, 255, 255, 0.055) !important;
+    color: var(--text-strong) !important;
+  }
+
+  .jobs-filter-trigger[data-active="true"]:hover {
+    border-color: color-mix(in srgb, var(--chrome-nav-active) 34%, transparent) !important;
+    background: color-mix(in srgb, var(--chrome-nav-active) 12%, #ffffff) !important;
+    color: var(--chrome-nav-active) !important;
+  }
+
+  .dark .jobs-filter-trigger[data-active="true"]:hover {
+    border-color: color-mix(in srgb, var(--chrome-nav-active) 44%, transparent) !important;
+    background: color-mix(in srgb, var(--chrome-nav-active) 19%, #242428) !important;
+    color: #ffffff !important;
+  }
+
+  .jobs-filter-icon-button[data-active="true"]:hover,
+  .dark .jobs-filter-icon-button[data-active="true"]:hover {
+    color: var(--chrome-nav-active) !important;
+  }
 }
 
 .jobs-empty-state {
@@ -68,4 +164,262 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
     0 12px 30px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Filter panel: neutral material, exact JobBridge blue, and no decorative glow. */
+.job-filter-panel {
+  --job-filter-accent: var(--chrome-nav-active);
+  --job-filter-accent-hover: var(--chrome-nav-active-strong);
+  --job-filter-accent-soft: color-mix(in srgb, var(--chrome-nav-active) 9%, #ffffff);
+  --job-filter-accent-border: color-mix(in srgb, var(--chrome-nav-active) 28%, transparent);
+  --job-filter-surface: #ffffff;
+  --job-filter-control: #f4f4f5;
+  --job-filter-control-hover: #ececee;
+  --job-filter-border: rgba(24, 24, 27, 0.11);
+  --job-filter-strong: #18181b;
+  --job-filter-text: #3f3f46;
+  --job-filter-muted: #71717a;
+  --job-filter-soft: #71717a;
+  --job-filter-chip-selected: var(--job-filter-accent-hover);
+
+  border-color: var(--job-filter-border);
+  background: var(--job-filter-surface);
+  color: var(--job-filter-text);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 20px 48px rgba(0, 0, 0, 0.16);
+}
+
+.dark .job-filter-panel {
+  --job-filter-accent-soft: color-mix(in srgb, var(--chrome-nav-active) 16%, #242428);
+  --job-filter-accent-border: color-mix(in srgb, var(--chrome-nav-active) 38%, rgba(255, 255, 255, 0.1));
+  --job-filter-surface: #18181b;
+  --job-filter-control: #242428;
+  --job-filter-control-hover: #303034;
+  --job-filter-border: rgba(255, 255, 255, 0.1);
+  --job-filter-strong: #fafafa;
+  --job-filter-text: #e4e4e7;
+  --job-filter-muted: #a1a1aa;
+  --job-filter-soft: #8f8f98;
+  --job-filter-chip-selected: #f4f4f5;
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 20px 52px rgba(0, 0, 0, 0.4);
+}
+
+.light .job-filter-backdrop {
+  background: rgba(24, 24, 27, 0.24);
+  backdrop-filter: blur(10px);
+}
+
+.dark .job-filter-backdrop {
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(10px);
+}
+
+.job-filter-title {
+  color: var(--job-filter-strong);
+  text-wrap: balance;
+}
+
+.job-filter-divider {
+  background: var(--job-filter-border);
+}
+
+.job-filter-section-label {
+  color: var(--job-filter-strong);
+  text-wrap: balance;
+}
+
+.job-filter-distance-value,
+.job-filter-distance-hint {
+  color: var(--job-filter-muted);
+}
+
+.job-filter-distance-hint {
+  text-wrap: pretty;
+}
+
+.job-filter-close-button,
+.job-filter-segment,
+.job-filter-chip,
+.job-filter-distance-option,
+.job-filter-secondary,
+.job-filter-cta {
+  touch-action: manipulation;
+  transition-property: background-color, color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.job-filter-close-button {
+  background: transparent;
+  color: var(--job-filter-muted);
+}
+
+.job-filter-segmented {
+  background: var(--job-filter-control);
+  box-shadow: 0 0 0 1px var(--job-filter-border);
+}
+
+.job-filter-segment {
+  color: var(--job-filter-muted);
+}
+
+.job-filter-segment-input:checked + .job-filter-segment {
+  background: var(--job-filter-accent);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--job-filter-accent-hover) 74%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.job-filter-chip {
+  background: var(--job-filter-control);
+  color: var(--job-filter-text);
+  box-shadow: 0 0 0 1px var(--job-filter-border);
+}
+
+.job-filter-chip[aria-pressed="true"] {
+  background: var(--job-filter-accent-soft);
+  color: var(--job-filter-chip-selected);
+  box-shadow: 0 0 0 1px var(--job-filter-accent-border);
+}
+
+.job-filter-distance-rail {
+  position: absolute;
+  top: 0.55rem;
+  right: 10%;
+  left: 10%;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--job-filter-border);
+  pointer-events: none;
+}
+
+.job-filter-distance-fill {
+  display: block;
+  width: var(--job-filter-distance-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--job-filter-accent);
+  transition-property: width;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+.job-filter-distance-option {
+  color: var(--job-filter-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.job-filter-distance-dot {
+  z-index: 1;
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--job-filter-control-hover);
+  box-shadow:
+    0 0 0 3px var(--job-filter-surface),
+    0 0 0 4px var(--job-filter-border);
+  transition-property: background-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.job-filter-distance-choice[data-in-range="true"] .job-filter-distance-dot {
+  background: var(--job-filter-accent);
+}
+
+.job-filter-distance-choice[data-selected="true"] .job-filter-distance-option {
+  color: var(--job-filter-strong);
+  font-weight: 600;
+}
+
+.job-filter-distance-choice[data-selected="true"] .job-filter-distance-dot {
+  box-shadow:
+    0 0 0 3px var(--job-filter-surface),
+    0 0 0 5px var(--job-filter-accent-border);
+}
+
+.job-filter-cta {
+  background: var(--job-filter-accent);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--job-filter-accent-hover) 74%, transparent),
+    0 2px 4px rgba(0, 0, 0, 0.14);
+  font-variant-numeric: tabular-nums;
+}
+
+.job-filter-secondary {
+  background: var(--job-filter-control);
+  color: var(--job-filter-strong);
+  box-shadow: 0 0 0 1px var(--job-filter-border);
+}
+
+.job-filter-close-button:focus-visible,
+.job-filter-segment-input:focus-visible + .job-filter-segment,
+.job-filter-chip:focus-visible,
+.job-filter-distance-input:focus-visible + .job-filter-distance-option,
+.job-filter-secondary:focus-visible,
+.job-filter-cta:focus-visible {
+  outline: 2px solid var(--job-filter-accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .job-filter-close-button:hover {
+    background: var(--job-filter-control);
+    color: var(--job-filter-strong);
+  }
+
+  .job-filter-segment:hover,
+  .job-filter-chip:hover {
+    background: var(--job-filter-control-hover);
+    color: var(--job-filter-strong);
+  }
+
+  .job-filter-segment-input:checked + .job-filter-segment:hover {
+    background: var(--job-filter-accent-hover);
+    color: #ffffff;
+  }
+
+  .job-filter-chip[aria-pressed="true"]:hover {
+    background: color-mix(in srgb, var(--job-filter-accent-soft) 82%, var(--job-filter-accent) 18%);
+    color: var(--job-filter-chip-selected);
+    box-shadow: 0 0 0 1px var(--job-filter-accent-border);
+  }
+
+  .job-filter-distance-option:hover {
+    color: var(--job-filter-strong);
+  }
+
+  .job-filter-secondary:hover {
+    background: var(--job-filter-control-hover);
+  }
+
+  .job-filter-cta:hover {
+    background: var(--job-filter-accent-hover);
+  }
+}
+
+.job-filter-body {
+  overscroll-behavior: contain;
+  scrollbar-color: var(--job-filter-border) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .job-filter-close-button,
+  .job-filter-segment,
+  .job-filter-chip,
+  .job-filter-distance-option,
+  .job-filter-distance-dot,
+  .job-filter-distance-fill,
+  .job-filter-secondary,
+  .job-filter-cta {
+    transition-duration: 0.01ms;
+  }
 }

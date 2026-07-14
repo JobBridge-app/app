@@ -1,44 +1,59 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type React from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { X, SlidersHorizontal, ArrowUpDown, Tag, MapPin, Navigation, Zap, Euro } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
 import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
 import {
+    MAX_DISTANCE_KM_OPTIONS,
     type SortOption,
     type FilterState,
-    SORT_META,
 } from "@/lib/jobs/sortFilter";
 
-// ─── Sort option metadata (with UI icons) ─────────────────────────────────────
+// ─── Filter choices ────────────────────────────────────────────────────────────
 
 const SORT_OPTIONS: readonly {
     value: SortOption;
     label: string;
-    description: string;
-    icon: React.ElementType;
 }[] = [
-    { value: "distance",  icon: Navigation, ...SORT_META.distance },
-    { value: "newest",    icon: Zap,        ...SORT_META.newest },
-    { value: "wage_desc", icon: Euro,       ...SORT_META.wage_desc },
+    { value: "distance", label: "Am nächsten" },
+    { value: "newest", label: "Neueste" },
+    { value: "wage_desc", label: "Bester Lohn" },
 ];
 
-const DISTANCE_OPTIONS = [5, 10, 20, 50] as const;
-/** null = "Alle" (no filter), followed by specific km values */
-const ALL_DISTANCE_OPTIONS: (number | null)[] = [null, ...DISTANCE_OPTIONS];
+const DISTANCE_OPTIONS: readonly {
+    value: number | null;
+    label: string;
+    accessibleLabel: string;
+}[] = [
+    ...MAX_DISTANCE_KM_OPTIONS.map((value) => ({
+        value,
+        label: `${value} km`,
+        accessibleLabel: `Bis zu ${value} Kilometer`,
+    })),
+    { value: null, label: "Alle", accessibleLabel: "Alle Entfernungen, keine Begrenzung" },
+];
+
+const FOCUSABLE_SELECTOR = [
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "a[href]",
+    "[tabindex]:not([tabindex='-1'])",
+].join(",");
 
 // ─── Stable animation variant objects (defined once; not re-created per render) ─
 
 /** Full motion: stagger sections + translateY */
 const ITEM_VARIANTS = {
-    hidden: { opacity: 0, y: 6 },
+    hidden: { opacity: 0, y: 4 },
     visible: {
         opacity: 1,
         y: 0,
-        transition: { type: "spring" as const, stiffness: 400, damping: 28 },
+        transition: { duration: 0.16, ease: [0.2, 0, 0, 1] as const },
     },
 };
 
@@ -50,7 +65,7 @@ const ITEM_VARIANTS_REDUCED = {
 
 const CONTAINER_VARIANTS = {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
+    visible: { transition: { staggerChildren: 0.02 } },
 };
 
 /** Spring spec for chip/card press feedback — snappy in, soft release */
@@ -67,8 +82,6 @@ interface JobFilterSortPanelProps {
     onClose: () => void;
     onReset: () => void;
     hasChanges: boolean;
-    /** Pass the current visible result count; enables context-aware CTA copy. */
-    resultCount?: number;
 }
 
 export function JobFilterSortPanel({
@@ -80,23 +93,69 @@ export function JobFilterSortPanel({
     onClose,
     onReset,
     hasChanges,
-    resultCount,
 }: JobFilterSortPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const previousFocusRef = useRef<HTMLElement | null>(null);
+    const onCloseRef = useRef(onClose);
+    const [isDialogInteractionActive, setIsDialogInteractionActive] = useState(isOpen);
     const prefersReduced = useReducedMotion() ?? false;
 
-    // Lock body scroll + Escape key
     useEffect(() => {
-        if (!isOpen) return;
+        onCloseRef.current = onClose;
+    }, [onClose]);
+
+    useEffect(() => {
+        if (isOpen) setIsDialogInteractionActive(true);
+    }, [isOpen]);
+
+    // Lock body scroll, keep keyboard focus inside the dialog, and restore it on close.
+    useEffect(() => {
+        if (!isDialogInteractionActive) return;
         const prev = document.body.style.overflow;
+        previousFocusRef.current = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
         document.body.style.overflow = "hidden";
-        function handleKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+        function handleKey(e: KeyboardEvent) {
+            if (e.key === "Escape") {
+                onCloseRef.current();
+                return;
+            }
+            if (e.key !== "Tab" || !panelRef.current) return;
+
+            const focusable = Array.from(
+                panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+            ).filter((element) => element.getClientRects().length > 0);
+            if (focusable.length === 0) {
+                e.preventDefault();
+                panelRef.current.focus();
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const active = document.activeElement;
+            if (e.shiftKey && (active === first || active === panelRef.current)) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && active === last) {
+                e.preventDefault();
+                first.focus();
+            } else if (!e.shiftKey && active === panelRef.current) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
         document.addEventListener("keydown", handleKey);
+        const focusFrame = window.requestAnimationFrame(() => panelRef.current?.focus());
         return () => {
+            window.cancelAnimationFrame(focusFrame);
             document.body.style.overflow = prev;
             document.removeEventListener("keydown", handleKey);
+            previousFocusRef.current?.focus();
         };
-    }, [isOpen, onClose]);
+    }, [isDialogInteractionActive]);
 
     const toggleCategory = useCallback((id: string) => {
         onFilterChange((prev) => ({
@@ -111,20 +170,28 @@ export function JobFilterSortPanel({
         onFilterChange((prev) => ({ ...prev, maxDistanceKm: km }));
     }, [onFilterChange]);
 
+    const handleReset = useCallback(() => {
+        onReset();
+        window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+    }, [onReset]);
+
     if (typeof document === "undefined") return null;
 
-    const isZeroResults = resultCount !== undefined && resultCount === 0;
+    const matchedDistanceIndex = DISTANCE_OPTIONS.findIndex(
+        (option) => option.value === filterState.maxDistanceKm
+    );
+    const selectedDistanceIndex = matchedDistanceIndex >= 0
+        ? matchedDistanceIndex
+        : DISTANCE_OPTIONS.length - 1;
+    const distanceProgress = selectedDistanceIndex / (DISTANCE_OPTIONS.length - 1) * 100;
+    const distanceSummary = filterState.maxDistanceKm === null
+        ? "Ohne Begrenzung"
+        : `Bis ${filterState.maxDistanceKm} km`;
 
-    const ctaLabel = isZeroResults
-        ? "Keine Treffer – Filter anpassen"
-        : resultCount !== undefined
-            ? `${resultCount} ${resultCount === 1 ? "Job" : "Jobs"} anzeigen`
-            : "Ergebnisse anzeigen";
+    // One consistent tactile press response for every interactive element.
+    const tapScale = prefersReduced ? {} : { scale: 0.96 };
 
-    // Tap scale for interactive elements — disabled when user prefers reduced motion
-    const tapScale = (scale: number) => prefersReduced ? {} : { scale };
-
-    // Panel enter/exit — reduced motion skips translate + scale
+    // Panel enter/exit — short travel keeps the compact dialog feeling immediate.
     const panelMotion = prefersReduced
         ? {
             initial: { opacity: 0 },
@@ -133,19 +200,24 @@ export function JobFilterSortPanel({
             transition: { duration: 0.18 },
         }
         : {
-            initial:  { opacity: 0, y: 48, scale: 0.97 },
-            animate:  { opacity: 1, y: 0,  scale: 1    },
-            exit:     { opacity: 0, y: 48, scale: 0.97 },
-            transition: { type: "spring" as const, stiffness: 420, damping: 32 },
+            initial:  { opacity: 0, y: 12 },
+            animate:  { opacity: 1, y: 0 },
+            exit:     { opacity: 0, y: 10 },
+            transition: { duration: 0.18, ease: [0.2, 0, 0, 1] as const },
         };
 
     // Variant set based on accessibility preference
     const sectionVariants = prefersReduced ? ITEM_VARIANTS_REDUCED : ITEM_VARIANTS;
 
     return createPortal(
-        <AnimatePresence>
+        <AnimatePresence
+            onExitComplete={() => {
+                if (!isOpen) setIsDialogInteractionActive(false);
+            }}
+        >
             {isOpen && (
                 <div
+                    id="job-filter-panel"
                     className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
                     role="dialog"
                     aria-modal="true"
@@ -157,151 +229,100 @@ export function JobFilterSortPanel({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.18 }}
-                        className="job-filter-backdrop absolute inset-0 bg-black/70 backdrop-blur-md"
+                        className="job-filter-backdrop absolute inset-0"
                         onClick={onClose}
                         aria-hidden="true"
                     />
 
-                    {/* Panel — flat dark surface, no gradient fill */}
+                    {/* Panel — existing compact layout, aligned with the app surfaces */}
                     <motion.div
                         ref={panelRef}
                         {...panelMotion}
-                        className="job-filter-panel relative flex max-h-[90vh] w-full max-w-sm flex-col overflow-hidden rounded-t-3xl border-t border-white/[0.08] bg-[#1a1a20] shadow-[0_24px_64px_-8px_rgba(0,0,0,0.6)] sm:rounded-3xl sm:border"
+                        tabIndex={-1}
+                        className="job-filter-panel relative flex max-h-[94dvh] w-full max-w-sm flex-col overflow-hidden rounded-t-3xl border-t outline-none sm:max-h-[calc(100dvh-2rem)] sm:rounded-3xl sm:border"
                     >
-                        {/* Hairline top accent */}
-                        <div className="job-filter-accent-line absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
-
-                        {/* Drag handle (mobile only) */}
-                        <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/15 rounded-full sm:hidden" aria-hidden="true" />
-
                         {/* Header */}
-                        <div className="flex items-center justify-between px-6 pt-7 pb-4 shrink-0">
-                            <div className="flex items-center gap-2.5">
-                                <div className="job-filter-title-icon flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.06] text-slate-300" aria-hidden="true">
-                                    <SlidersHorizontal size={15} />
-                                </div>
-                                <span
-                                    id="filter-panel-title"
-                                    className="job-filter-title text-[15px] font-semibold tracking-tight text-white"
-                                >
-                                    Filter &amp; Sortierung
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <AnimatePresence>
-                                    {hasChanges && (
-                                        <motion.button
-                                            initial={{ opacity: 0, scale: prefersReduced ? 1 : 0.85 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: prefersReduced ? 1 : 0.85 }}
-                                            transition={{ duration: 0.15 }}
-                                            whileTap={tapScale(0.95)}
-                                            onClick={onReset}
-                                            className="text-[11px] text-indigo-400 hover:text-white bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 px-2.5 py-1 rounded-lg font-semibold transition-colors"
-                                        >
-                                            Zurücksetzen
-                                        </motion.button>
-                                    )}
-                                </AnimatePresence>
-                                <motion.button
-                                    onClick={onClose}
-                                    aria-label="Schließen"
-                                    whileTap={tapScale(0.88)}
-                                    transition={CHIP_SPRING}
-                                    className="w-11 h-11 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-                                >
-                                    <X size={18} />
-                                </motion.button>
-                            </div>
+                        <div className="flex shrink-0 items-center justify-between px-6 pb-4 pt-5">
+                            <h2
+                                id="filter-panel-title"
+                                className="job-filter-title text-[16px] font-semibold tracking-tight"
+                            >
+                                Jobs filtern<span className="sr-only"> und sortieren</span>
+                            </h2>
+                            <motion.button
+                                ref={closeButtonRef}
+                                onClick={onClose}
+                                aria-label="Schließen"
+                                whileTap={tapScale}
+                                transition={CHIP_SPRING}
+                                type="button"
+                                className="job-filter-close-button flex h-11 w-11 items-center justify-center rounded-xl"
+                            >
+                                <X size={18} />
+                            </motion.button>
                         </div>
 
                         {/* Divider */}
-                        <div className="job-filter-divider mx-6 h-px bg-white/[0.05]" />
+                        <div className="job-filter-divider mx-6 h-px" />
 
                         {/* Scrollable body */}
                         <motion.div
-                            className="overflow-y-auto flex-1 px-6 py-5 space-y-7"
+                            className="job-filter-body flex-1 space-y-7 overflow-y-auto px-6 py-5"
                             variants={CONTAINER_VARIANTS}
                             initial="hidden"
                             animate="visible"
                         >
                             {/* ── Sort ─────────────────────────────────────── */}
-                            <motion.section variants={sectionVariants}>
-                                <SectionLabel icon={ArrowUpDown} label="Sortierung" />
-                                <div className="grid grid-cols-3 gap-2 mt-3">
+                            <motion.fieldset variants={sectionVariants}>
+                                <legend className="job-filter-section-label text-sm font-medium">
+                                    Sortieren nach
+                                </legend>
+                                <div className="job-filter-segmented mt-3 grid grid-cols-3 gap-1 rounded-2xl p-1">
                                     {SORT_OPTIONS.map((opt) => {
                                         const isSelected = sortOption === opt.value;
-                                        const Icon = opt.icon;
                                         return (
-                                            <motion.button
-                                                key={opt.value}
-                                                onClick={() => onSortChange(opt.value)}
-                                                aria-pressed={isSelected}
-                                                whileTap={tapScale(0.96)}
-                                                transition={CHIP_SPRING}
-                                                className={cn(
-                                                    "relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-2xl border text-center transition-colors duration-150",
-                                                    isSelected
-                                                        ? "bg-indigo-500/10 border-indigo-500/35 text-indigo-300"
-                                                        : "bg-white/[0.04] border-white/[0.07] text-slate-400 hover:bg-white/[0.07] hover:text-slate-200 hover:border-white/15"
-                                                )}
-                                            >
-                                                {isSelected && (
-                                                    <motion.div
-                                                        layoutId="sort-selected-bg"
-                                                        className="absolute inset-0 rounded-2xl bg-indigo-500/[0.08]"
-                                                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                                    />
-                                                )}
-                                                <Icon
-                                                    size={16}
-                                                    className={cn(
-                                                        "relative z-10",
-                                                        isSelected ? "text-indigo-400" : "text-slate-500"
-                                                    )}
+                                            <div key={opt.value} className="min-w-0">
+                                                <input
+                                                    id={`job-filter-sort-${opt.value}`}
+                                                    className="job-filter-segment-input sr-only"
+                                                    type="radio"
+                                                    name="job-filter-sort"
+                                                    value={opt.value}
+                                                    checked={isSelected}
+                                                    onChange={() => onSortChange(opt.value)}
                                                 />
-                                                <span className="relative z-10 text-[12px] font-semibold leading-tight">
-                                                    {opt.label}
-                                                </span>
-                                                <span
-                                                    className={cn(
-                                                        "relative z-10 text-[11px] leading-tight",
-                                                        isSelected ? "text-indigo-400/70" : "text-slate-600"
-                                                    )}
+                                                <motion.label
+                                                    htmlFor={`job-filter-sort-${opt.value}`}
+                                                    whileTap={tapScale}
+                                                    transition={CHIP_SPRING}
+                                                    className="job-filter-segment flex min-h-11 cursor-pointer items-center justify-center rounded-xl px-2 text-center text-[12px] font-medium leading-tight"
                                                 >
-                                                    {opt.description}
-                                                </span>
-                                            </motion.button>
+                                                    {opt.label}
+                                                </motion.label>
+                                            </div>
                                         );
                                     })}
                                 </div>
-                            </motion.section>
+                            </motion.fieldset>
 
                             {/* ── Category ─────────────────────────────────── */}
                             <motion.section variants={sectionVariants}>
-                                <SectionLabel icon={Tag} label="Kategorie" />
-                                <div className="flex flex-wrap gap-1.5 mt-3">
+                                <h3 className="job-filter-section-label text-sm font-medium">
+                                    Welche Art von Job?
+                                </h3>
+                                <div className="mt-3 flex flex-wrap gap-2">
                                     {JOB_CATEGORIES.map((cat) => {
                                         const isActive = filterState.categories.includes(cat.id);
-                                        const CatIcon = cat.icon;
                                         return (
                                             <motion.button
                                                 key={cat.id}
                                                 onClick={() => toggleCategory(cat.id)}
                                                 aria-pressed={isActive}
-                                                whileTap={tapScale(0.96)}
+                                                whileTap={tapScale}
                                                 transition={CHIP_SPRING}
-                                                className={cn(
-                                                    "flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-semibold border transition-colors duration-150 h-11",
-                                                    isActive
-                                                        ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/35"
-                                                        : "bg-white/[0.04] text-slate-400 border-white/[0.07] hover:bg-white/[0.08] hover:text-slate-200 hover:border-white/15"
-                                                )}
+                                                type="button"
+                                                className="job-filter-chip flex min-h-11 items-center rounded-xl px-3.5 py-2 text-[12px] font-medium"
                                             >
-                                                <CatIcon
-                                                    size={12}
-                                                    className={isActive ? "text-indigo-400" : "text-slate-500"}
-                                                />
                                                 {cat.label}
                                             </motion.button>
                                         );
@@ -310,45 +331,83 @@ export function JobFilterSortPanel({
                             </motion.section>
 
                             {/* ── Distance ─────────────────────────────────── */}
-                            <motion.section variants={sectionVariants}>
-                                <SectionLabel icon={MapPin} label="Maximale Entfernung" />
-                                <div className="flex items-center gap-2 flex-wrap mt-3">
-                                    {ALL_DISTANCE_OPTIONS.map((km) => {
-                                        const isActive = filterState.maxDistanceKm === km;
-                                        return (
-                                            <motion.button
-                                                key={km ?? "all"}
-                                                onClick={() => setMaxDistance(km)}
-                                                aria-pressed={isActive}
-                                                whileTap={tapScale(0.95)}
-                                                transition={CHIP_SPRING}
-                                                className={cn(
-                                                    "px-3 py-2 rounded-xl text-[12px] font-semibold border transition-colors duration-150 h-11",
-                                                    isActive
-                                                        ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/35"
-                                                        : "bg-white/[0.04] text-slate-400 border-white/[0.07] hover:bg-white/[0.08] hover:text-slate-200 hover:border-white/15"
-                                                )}
-                                            >
-                                                {km === null ? "Alle" : `${km} km`}
-                                            </motion.button>
-                                        );
-                                    })}
+                            <motion.fieldset
+                                variants={sectionVariants}
+                                aria-describedby={filterState.maxDistanceKm !== null
+                                    ? "job-filter-distance-hint"
+                                    : undefined}
+                            >
+                                <legend className="sr-only">
+                                    Maximale Entfernung
+                                </legend>
+                                <div className="flex items-baseline justify-between gap-4">
+                                    <span
+                                        className="job-filter-section-label text-sm font-medium"
+                                        aria-hidden="true"
+                                    >
+                                        Maximale Entfernung
+                                    </span>
+                                    <span className="job-filter-distance-value shrink-0 text-[11px] font-semibold tabular-nums">
+                                        {distanceSummary}
+                                    </span>
+                                </div>
+                                <div
+                                    className="job-filter-distance-scale relative mt-3"
+                                    style={{ "--job-filter-distance-progress": `${distanceProgress}%` } as React.CSSProperties}
+                                >
+                                    <div className="job-filter-distance-rail" aria-hidden="true">
+                                        <span className="job-filter-distance-fill" />
+                                    </div>
+                                    <div className="grid grid-cols-5">
+                                        {DISTANCE_OPTIONS.map((option, index) => {
+                                            const isActive = filterState.maxDistanceKm === option.value;
+                                            return (
+                                                <div
+                                                    key={option.value ?? "all"}
+                                                    className="job-filter-distance-choice min-w-0"
+                                                    data-in-range={index <= selectedDistanceIndex}
+                                                    data-selected={isActive}
+                                                >
+                                                    <input
+                                                        id={`job-filter-distance-${option.value ?? "all"}`}
+                                                        className="job-filter-distance-input sr-only"
+                                                        type="radio"
+                                                        name="job-filter-distance"
+                                                        value={option.value ?? "all"}
+                                                        checked={isActive}
+                                                        aria-label={option.accessibleLabel}
+                                                        onChange={() => setMaxDistance(option.value)}
+                                                    />
+                                                    <motion.label
+                                                        htmlFor={`job-filter-distance-${option.value ?? "all"}`}
+                                                        whileTap={tapScale}
+                                                        transition={CHIP_SPRING}
+                                                        className="job-filter-distance-option relative flex min-h-11 cursor-pointer flex-col items-center gap-2 rounded-xl px-0.5 pt-1 text-center text-[11px] font-medium leading-none"
+                                                    >
+                                                        <span className="job-filter-distance-dot" aria-hidden="true" />
+                                                        <span className="tabular-nums">{option.label}</span>
+                                                    </motion.label>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                                 <AnimatePresence>
                                     {filterState.maxDistanceKm !== null && (
                                         <motion.p
                                             key="distance-hint"
+                                            id="job-filter-distance-hint"
                                             initial={{ opacity: 0, height: 0, marginTop: 0 }}
                                             animate={{ opacity: 1, height: "auto", marginTop: 8 }}
                                             exit={{ opacity: 0, height: 0, marginTop: 0 }}
                                             transition={{ duration: 0.2, ease: "easeInOut" }}
-                                            className="text-[11px] text-slate-500 leading-relaxed overflow-hidden"
+                                            className="job-filter-distance-hint overflow-hidden text-[11px] leading-relaxed"
                                         >
-                                            Jobs ohne Entfernungsangabe werden ausgeblendet.
+                                            Jobs ohne Entfernungsangabe sind dann nicht dabei.
                                         </motion.p>
                                     )}
                                 </AnimatePresence>
-                            </motion.section>
+                            </motion.fieldset>
                         </motion.div>
 
                         {/* Footer — includes safe-area inset for mobile home indicator */}
@@ -356,34 +415,29 @@ export function JobFilterSortPanel({
                             className="px-6 pt-4 shrink-0"
                             style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom))" }}
                         >
-                            <div className="job-filter-divider mb-4 h-px bg-white/[0.05]" />
-                            <motion.button
-                                onClick={isZeroResults ? undefined : onClose}
-                                disabled={isZeroResults}
-                                aria-disabled={isZeroResults}
-                                whileTap={isZeroResults ? {} : tapScale(0.98)}
-                                transition={{ type: "spring" as const, stiffness: 400, damping: 28 }}
-                                className={cn(
-                                    "w-full py-3.5 rounded-2xl font-semibold text-sm overflow-hidden",
-                                    isZeroResults
-                                        ? "bg-white/[0.05] text-slate-500 border border-white/[0.07] cursor-not-allowed"
-                                        : "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white transition-colors duration-150"
-                                )}
-                            >
-                                {/* Animated label swap on count change */}
-                                <AnimatePresence mode="popLayout" initial={false}>
-                                    <motion.span
-                                        key={ctaLabel}
-                                        initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
-                                        transition={{ duration: 0.14, ease: "easeInOut" }}
-                                        className="inline-block"
+                            <div className="job-filter-divider mb-4 h-px" />
+                            <div className={hasChanges ? "grid grid-cols-2 gap-2" : "grid grid-cols-1"}>
+                                {hasChanges && (
+                                    <motion.button
+                                        onClick={handleReset}
+                                        whileTap={tapScale}
+                                        transition={CHIP_SPRING}
+                                        type="button"
+                                        className="job-filter-secondary min-h-12 min-w-0 rounded-2xl px-3 py-3.5 text-[12px] font-semibold"
                                     >
-                                        {ctaLabel}
-                                    </motion.span>
-                                </AnimatePresence>
-                            </motion.button>
+                                        Filter zurücksetzen
+                                    </motion.button>
+                                )}
+                                <motion.button
+                                    onClick={onClose}
+                                    whileTap={tapScale}
+                                    transition={CHIP_SPRING}
+                                    type="button"
+                                    className="job-filter-cta min-h-12 min-w-0 rounded-2xl px-4 py-3.5 text-sm font-semibold"
+                                >
+                                    {hasChanges ? "Anwenden" : "Schließen"}
+                                </motion.button>
+                            </div>
                         </div>
                     </motion.div>
                 </div>
@@ -392,15 +446,3 @@ export function JobFilterSortPanel({
         document.body
     );
 }
-
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
-function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
-    return (
-        <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
-            <Icon size={11} aria-hidden="true" />
-            {label}
-        </h4>
-    );
-}
-

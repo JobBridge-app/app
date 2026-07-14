@@ -87,11 +87,11 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
     if (!profile) {
         return (
             <div className={cn("relative", className)}>
-                <div className="flex h-[52px] items-center gap-2 rounded-full border border-white/10 bg-slate-900/40 px-[6px] md:pr-3 shadow-xl backdrop-blur-md">
-                    <div className="h-10 w-10 rounded-full bg-white/10 animate-pulse" />
+                <div className="app-profile-chip flex h-[52px] items-center gap-2 rounded-full border border-transparent px-[6px] md:pr-3">
+                    <div className="app-profile-skeleton-avatar h-10 w-10 animate-pulse rounded-full" />
                     <div className="hidden md:flex flex-col gap-1.5">
-                        <div className="h-3 w-20 rounded bg-white/10 animate-pulse" />
-                        <div className="h-2 w-14 rounded bg-white/10 animate-pulse" />
+                        <div className="app-profile-skeleton-line h-3 w-20 animate-pulse rounded" />
+                        <div className="app-profile-skeleton-line h-2 w-14 animate-pulse rounded" />
                     </div>
                 </div>
             </div>
@@ -190,7 +190,7 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             id="app-profile-menu"
                             role="dialog"
                             aria-label="Kontomenü"
-                            className="app-profile-menu absolute right-0 top-full z-50 mt-2 flex w-[min(20rem,calc(100vw-1.5rem))] origin-top-right flex-col gap-1 rounded-[1.125rem] border border-transparent p-2"
+                            className="app-profile-menu absolute right-0 top-full z-50 mt-2 flex w-[min(19rem,calc(100vw-1.5rem))] origin-top-right flex-col gap-0.5 rounded-2xl border border-transparent p-1.5"
                             initial={{ opacity: 0, y: -6, scale: 0.985 }}
                             animate={{
                                 opacity: 1,
@@ -205,22 +205,23 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                                 transition: { duration: 0.13, ease: "easeIn" },
                             }}
                         >
-                            <div className="app-profile-menu-account px-3 py-3 text-left">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold text-slate-100">
-                                            {profile.full_name || "Gast"}
-                                        </p>
-                                        <span className="app-profile-menu-role mt-1 inline-flex items-center gap-1.5 text-xs text-slate-400">
-                                            <RoleIcon size={12} strokeWidth={2.1} />
-                                            {label}
-                                        </span>
-                                    </div>
-                                    {isStaff ? <StaffBadge /> : null}
+                            <div className="app-profile-menu-account px-3 py-2.5 text-left">
+                                <div className="flex items-center justify-between gap-3">
+                                    <p className="min-w-0 truncate text-sm font-semibold text-slate-100">
+                                        {profile.full_name || "Gast"}
+                                    </p>
+                                    {isStaff ? <StaffBadge className="app-profile-staff-badge" /> : null}
                                 </div>
-                                <p className="mt-2 max-w-full truncate text-xs text-slate-400">
-                                    {accountEmail || "Keine E-Mail hinterlegt"}
-                                </p>
+                                <div className="mt-1.5 flex min-w-0 items-center gap-2 text-xs">
+                                    <span className="app-profile-menu-role inline-flex shrink-0 items-center gap-1.5 text-slate-400">
+                                        <RoleIcon size={12} strokeWidth={2.1} />
+                                        {label}
+                                    </span>
+                                    <span className="app-profile-account-separator h-1 w-1 shrink-0 rounded-full" aria-hidden="true" />
+                                    <span className="min-w-0 truncate text-slate-400">
+                                        {accountEmail || "Keine E-Mail hinterlegt"}
+                                    </span>
+                                </div>
                             </div>
 
                             <Link
@@ -263,7 +264,6 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                                 </>
                             ) : null}
 
-                            <div className="app-profile-menu-divider my-1 h-px bg-white/5" />
                             <Link
                                 href="/legal"
                                 prefetch

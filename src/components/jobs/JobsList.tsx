@@ -10,6 +10,7 @@ import {
     deriveVisibleJobs,
     sortJobs,
     isValidSortOption,
+    isValidMaxDistanceKm,
     DEFAULT_SORT_OPTION,
     DEFAULT_FILTER_STATE,
     SORT_META,
@@ -62,8 +63,8 @@ function loadPersistedState(): { sortOption: SortOption; filterState: FilterStat
                     ? fs.categories.filter((c): c is string => typeof c === "string")
                     : [],
                 maxDistanceKm:
-                    fs?.maxDistanceKm === null || typeof fs?.maxDistanceKm === "number"
-                        ? (fs.maxDistanceKm ?? null)
+                    isValidMaxDistanceKm(fs?.maxDistanceKm)
+                        ? fs.maxDistanceKm
                         : null,
             },
         };
@@ -170,13 +171,6 @@ export function JobsList({
 
     const totalVisibleActiveJobs = filteredLocalJobs.length + filteredExtendedJobs.length;
 
-    const panelResultCount =
-        activeTab === "active"
-            ? totalVisibleActiveJobs
-            : activeTab === "waitlist"
-                ? sortedWaitlistedJobs.length
-                : sortedAppliedJobs.length;
-
     useEffect(() => {
         const frameId = requestAnimationFrame(() => {
             endPerfMark("jobs-tab-switch");
@@ -252,7 +246,8 @@ export function JobsList({
                         onClick={() => setShowFilterPanel(true)}
                         badgeCount={totalBadgeCount}
                         isActive={hasChanges}
-                        className="h-9 w-9 rounded-xl"
+                        isOpen={showFilterPanel}
+                        className="h-11 w-11 rounded-xl"
                     />
                 </div>
             </div>
@@ -292,19 +287,22 @@ export function JobsList({
                 <button
                     onClick={() => setShowFilterPanel(true)}
                     data-active={showFilterPanel || hasChanges}
-                    className={cn(
-                        "jobs-filter-trigger relative ml-4 flex items-center gap-2.5 whitespace-nowrap rounded-full border border-transparent px-3.5 py-2.5 text-slate-400 transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out active:scale-[0.96] sm:px-4",
-                        showFilterPanel && "bg-white/10 text-indigo-300 border-indigo-500/20",
-                        hasChanges && !showFilterPanel && "text-indigo-300 border-indigo-500/20 bg-indigo-500/10"
-                    )}
+                    type="button"
+                    aria-haspopup="dialog"
+                    aria-expanded={showFilterPanel}
+                    aria-controls={showFilterPanel ? "job-filter-panel" : undefined}
+                    aria-label={totalBadgeCount > 0
+                        ? `Filter und Sortierung öffnen, ${totalBadgeCount} ${totalBadgeCount === 1 ? "Bereich" : "Bereiche"} angepasst`
+                        : "Filter und Sortierung öffnen"}
+                    className="jobs-filter-trigger relative ml-4 flex h-[3.3125rem] min-w-[6.625rem] items-center justify-center gap-2.5 whitespace-nowrap rounded-full border border-transparent px-4 py-0 text-sm font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out active:scale-[0.96]"
                     title="Filter & Sortierung"
                 >
                     <ListFilter size={17} />
-                    <span className="hidden sm:inline text-sm font-semibold">
+                    <span className="hidden sm:inline">
                         {isNonDefaultSort && !activeFilterCount ? currentSortLabel : "Filter"}
                     </span>
                     {totalBadgeCount > 0 && (
-                        <span className="w-5 h-5 rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center">
+                        <span aria-hidden="true" className="w-5 h-5 rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center">
                             {totalBadgeCount}
                         </span>
                     )}
@@ -406,7 +404,6 @@ export function JobsList({
                     onClose={() => setShowFilterPanel(false)}
                     onReset={handleReset}
                     hasChanges={hasChanges}
-                    resultCount={panelResultCount}
                 />
             )}
         </>
@@ -479,26 +476,34 @@ function FilterButton({
     onClick,
     badgeCount,
     isActive,
+    isOpen,
     className,
 }: {
     onClick: () => void;
     badgeCount: number;
     isActive: boolean;
+    isOpen: boolean;
     className?: string;
 }) {
     return (
         <button
             onClick={onClick}
-            aria-label="Filter & Sortierung"
+            type="button"
+            data-active={isOpen || isActive}
+            aria-haspopup="dialog"
+            aria-expanded={isOpen}
+            aria-controls={isOpen ? "job-filter-panel" : undefined}
+            aria-label={badgeCount > 0
+                ? `Filter und Sortierung öffnen, ${badgeCount} ${badgeCount === 1 ? "Bereich" : "Bereiche"} angepasst`
+                : "Filter und Sortierung öffnen"}
             className={cn(
                 "jobs-filter-icon-button relative flex shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-white/5 hover:text-white",
-                isActive && "text-indigo-400 bg-white/5",
                 className
             )}
         >
             <ListFilter size={17} />
             {badgeCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center">
+                <span aria-hidden="true" className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center">
                     {badgeCount}
                 </span>
             )}

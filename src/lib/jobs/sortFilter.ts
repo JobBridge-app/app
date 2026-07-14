@@ -22,6 +22,9 @@ export const DEFAULT_FILTER_STATE: FilterState = {
     maxDistanceKm: null,
 };
 
+export const MAX_DISTANCE_KM_OPTIONS = [5, 10, 20, 50] as const;
+export type MaxDistanceKm = (typeof MAX_DISTANCE_KM_OPTIONS)[number] | null;
+
 /** Label + description for each sort mode (icons live in the UI layer). */
 export const SORT_META: Record<SortOption, { label: string; description: string }> = {
     distance:  { label: "Entfernung", description: "Nächstgelegene zuerst" },
@@ -33,6 +36,13 @@ const VALID_SORT_OPTIONS: readonly SortOption[] = ["distance", "newest", "wage_d
 
 export function isValidSortOption(v: unknown): v is SortOption {
     return typeof v === "string" && (VALID_SORT_OPTIONS as string[]).includes(v);
+}
+
+export function isValidMaxDistanceKm(v: unknown): v is MaxDistanceKm {
+    return v === null || (
+        typeof v === "number" &&
+        (MAX_DISTANCE_KM_OPTIONS as readonly number[]).includes(v)
+    );
 }
 
 // ─── Sort ─────────────────────────────────────────────────────────────────────

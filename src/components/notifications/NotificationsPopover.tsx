@@ -185,7 +185,8 @@ export function NotificationsPopover({
                 aria-controls="app-notifications-panel"
                 className={cn(
                     "notifications-trigger relative flex h-[52px] w-[52px] items-center justify-center rounded-full border border-transparent text-slate-300 outline-none",
-                    "transition-[box-shadow,color,scale] duration-150 ease-out active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none motion-reduce:active:scale-100"
+                    "transition-[box-shadow,color,scale] duration-150 ease-out active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none motion-reduce:active:scale-100",
+                    open && "is-open"
                 )}
             >
                 <Bell size={18} />
@@ -213,7 +214,7 @@ export function NotificationsPopover({
                             role="dialog"
                             aria-label="Benachrichtigungen"
                             className={cn(
-                                "notifications-panel fixed left-4 right-4 z-50 origin-top-right rounded-[1.25rem] border border-transparent p-2",
+                                "notifications-panel fixed left-4 right-4 z-50 flex origin-top-right flex-col rounded-2xl border border-transparent p-1.5",
                                 "md:absolute md:left-auto md:right-0 md:top-[calc(100%+0.5rem)] md:w-[22rem]"
                             )}
                             initial={{ opacity: 0, y: -6, scale: 0.985 }}
@@ -230,14 +231,16 @@ export function NotificationsPopover({
                                 transition: { duration: 0.13, ease: "easeIn" },
                             }}
                         >
-                        <div className="notifications-panel-header mb-2 flex items-center justify-between border-b px-2 pb-3 pt-2">
+                        <div className="notifications-panel-header flex items-center justify-between border-b px-3 pb-2.5 pt-2.5">
                             <h4 className="notifications-panel-title font-semibold text-white">Benachrichtigungen</h4>
-                            <span className="notifications-panel-count text-xs tabular-nums text-slate-400">{unreadCount} neu</span>
+                            <span aria-live="polite" className="notifications-panel-count text-xs tabular-nums text-slate-400">
+                                {unreadCount > 0 ? `${unreadCount} ungelesen` : "Alles gelesen"}
+                            </span>
                         </div>
 
-                        <div className="notifications-list max-h-[300px] space-y-1.5 overflow-y-auto">
+                        <div className="notifications-list min-h-0 max-h-[320px] flex-1 overflow-y-auto py-1">
                             {notifications.length === 0 ? (
-                                <div className="notifications-empty rounded-xl py-8 text-center text-sm text-slate-500">
+                                <div className="notifications-empty py-8 text-center text-sm text-slate-500">
                                     Keine Benachrichtigungen.
                                 </div>
                             ) : (
@@ -245,28 +248,30 @@ export function NotificationsPopover({
                                     <button
                                         key={notification.id}
                                         type="button"
+                                        disabled={Boolean(notification.read_at)}
+                                        aria-label={`${notification.read_at ? "Gelesen" : "Ungelesen"}: ${notification.title || "Benachrichtigung"}. ${notification.body || "Kein Inhalt."}`}
                                         onClick={() => !notification.read_at && markAsRead(notification.id)}
                                         className={cn(
-                                            "notification-card w-full rounded-xl border p-3 text-left transition-[background-color,border-color,opacity,transform] duration-150 ease-out",
+                                            "notification-card relative w-full rounded-[0.625rem] px-3 py-2.5 text-left outline-none transition-[background-color,color] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600",
                                             notification.read_at
-                                                ? "is-read cursor-default border-transparent bg-slate-950/40 opacity-70"
-                                                : "is-unread border-white/10 bg-slate-900/70 hover:border-indigo-400/35 hover:bg-slate-900/90"
+                                                ? "is-read cursor-default"
+                                                : "is-unread"
                                         )}
                                     >
                                         <p className="notification-title text-sm font-medium text-slate-100">{notification.title || "Benachrichtigung"}</p>
                                         <p className="notification-body mt-1 line-clamp-2 text-xs text-slate-400">{notification.body || "Kein Inhalt."}</p>
-                                        <div className="mt-2 flex items-center justify-between">
-                                            <span className="notification-date text-[10px] tabular-nums text-slate-500">
+                                        <div className="mt-1.5 flex items-center justify-between">
+                                            <span className="notification-date text-[11px] tabular-nums text-slate-500">
                                                 {new Date(notification.created_at || Date.now()).toLocaleDateString("de-DE")}
                                             </span>
-                                            {!notification.read_at && <span className="notification-card-dot h-1.5 w-1.5 rounded-full bg-indigo-400" />}
+                                            {!notification.read_at ? <span aria-hidden="true" className="notification-card-dot h-1.5 w-1.5 rounded-full bg-indigo-400" /> : null}
                                         </div>
                                     </button>
                                 ))
                             )}
                         </div>
 
-                        <div className="notifications-panel-footer mt-2 border-t px-1 pt-2 text-center">
+                        <div className="notifications-panel-footer border-t px-1 pt-1 text-center">
                             <Link
                                 href="/app-home/notifications"
                                 prefetch
@@ -274,7 +279,7 @@ export function NotificationsPopover({
                                 onPointerDown={warmNotificationsRoute}
                                 onMouseEnter={warmNotificationsRoute}
                                 onFocus={warmNotificationsRoute}
-                                className="notifications-view-all flex min-h-10 items-center justify-center rounded-lg px-3 text-xs font-semibold outline-none transition-[background-color,color] duration-150 ease-out hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600"
+                                className="notifications-view-all flex min-h-11 items-center justify-center rounded-[0.625rem] px-3 text-xs font-semibold outline-none transition-[background-color,color] duration-150 ease-out hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600"
                             >
                                 Alle anzeigen
                             </Link>

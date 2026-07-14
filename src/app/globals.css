@@ -53,25 +53,54 @@
   --glass-border: rgba(15, 23, 42, 0.1);
   --glass-bg: rgba(255, 255, 255, 0.78);
 
-  --chrome-surface: rgba(255, 255, 255, 0.94);
-  --chrome-surface-hover: #ffffff;
-  --chrome-ring: rgba(0, 0, 0, 0.06);
-  --chrome-ring-hover: rgba(0, 0, 0, 0.09);
+  --chrome-surface: rgba(243, 245, 248, 0.96);
+  --chrome-surface-hover: rgba(248, 249, 251, 0.99);
+  --chrome-surface-open: #e9edf2;
+  --chrome-control-hover: rgba(15, 23, 42, 0.055);
+  --chrome-control-active: #dfe4ea;
+  --chrome-inset-surface: rgba(15, 23, 42, 0.045);
+  --chrome-item-surface: rgba(255, 255, 255, 0.52);
+  --chrome-item-unread: rgba(255, 255, 255, 0.84);
+  --chrome-text-strong: #17202c;
+  --chrome-text-muted: #5d6673;
+  --chrome-status: #d69218;
+  --chrome-ring: rgba(15, 23, 42, 0.085);
+  --chrome-ring-hover: rgba(15, 23, 42, 0.13);
+  --chrome-divider: rgba(15, 23, 42, 0.085);
   --chrome-shadow:
     0 0 0 1px var(--chrome-ring),
-    0 1px 2px -1px rgba(0, 0, 0, 0.06),
-    0 2px 4px rgba(0, 0, 0, 0.04);
+    0 1px 2px -1px rgba(15, 23, 42, 0.05),
+    0 6px 18px rgba(15, 23, 42, 0.055);
   --chrome-shadow-hover:
     0 0 0 1px var(--chrome-ring-hover),
+    0 2px 4px -1px rgba(15, 23, 42, 0.065),
+    0 8px 22px rgba(15, 23, 42, 0.07);
+  --chrome-shadow-open:
+    0 0 0 1px var(--chrome-ring-hover),
+    0 3px 9px rgba(15, 23, 42, 0.08);
+  --chrome-control-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.055),
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --chrome-popover: rgba(246, 247, 249, 0.99);
+  --chrome-popover-shadow:
+    0 0 0 1px var(--chrome-nav-ring-hover),
+    0 14px 32px rgba(15, 23, 42, 0.12),
+    0 3px 8px rgba(15, 23, 42, 0.05);
+  --chrome-nav-surface: rgba(255, 255, 255, 0.94);
+  --chrome-nav-surface-hover: #ffffff;
+  --chrome-nav-ring: rgba(0, 0, 0, 0.06);
+  --chrome-nav-ring-hover: rgba(0, 0, 0, 0.09);
+  --chrome-nav-shadow:
+    0 0 0 1px var(--chrome-nav-ring),
+    0 1px 2px -1px rgba(0, 0, 0, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.04);
+  --chrome-nav-shadow-hover:
+    0 0 0 1px var(--chrome-nav-ring-hover),
     0 2px 4px -1px rgba(0, 0, 0, 0.08),
     0 5px 12px rgba(0, 0, 0, 0.055);
-  --chrome-popover: rgba(255, 255, 255, 0.985);
-  --chrome-popover-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.075),
-    0 12px 32px rgba(31, 45, 74, 0.14),
-    0 3px 8px rgba(31, 45, 74, 0.07);
-  --chrome-active: color-mix(in srgb, #0062ff 94%, #000000);
-  --chrome-active-strong: color-mix(in srgb, #0062ff 80%, #000000);
+  --chrome-nav-active: color-mix(in srgb, #0062ff 94%, #000000);
+  --chrome-nav-active-strong: color-mix(in srgb, #0062ff 80%, #000000);
 
   --app-mobile-dock-edge-gap: 0.125rem;
   --app-mobile-dock-panel-height: 3.76rem;
@@ -147,25 +176,54 @@ html.light {
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-bg: rgba(2, 6, 23, 0.7);
 
-  --chrome-surface: rgba(10, 14, 22, 0.94);
-  --chrome-surface-hover: rgba(14, 19, 29, 0.98);
-  --chrome-ring: rgba(255, 255, 255, 0.08);
-  --chrome-ring-hover: rgba(255, 255, 255, 0.13);
+  --chrome-surface: rgba(23, 25, 30, 0.96);
+  --chrome-surface-hover: rgba(29, 32, 38, 0.98);
+  --chrome-surface-open: #22262d;
+  --chrome-control-hover: rgba(255, 255, 255, 0.055);
+  --chrome-control-active: #343941;
+  --chrome-inset-surface: rgba(255, 255, 255, 0.045);
+  --chrome-item-surface: rgba(255, 255, 255, 0.035);
+  --chrome-item-unread: rgba(255, 255, 255, 0.07);
+  --chrome-text-strong: #f2f4f6;
+  --chrome-text-muted: #a2a8b1;
+  --chrome-status: #e4ad32;
+  --chrome-ring: rgba(255, 255, 255, 0.09);
+  --chrome-ring-hover: rgba(255, 255, 255, 0.14);
+  --chrome-divider: rgba(255, 255, 255, 0.085);
   --chrome-shadow:
     0 0 0 1px var(--chrome-ring),
-    0 10px 24px rgba(0, 0, 0, 0.2),
+    0 8px 22px rgba(0, 0, 0, 0.24),
     0 2px 5px rgba(0, 0, 0, 0.18);
   --chrome-shadow-hover:
     0 0 0 1px var(--chrome-ring-hover),
+    0 10px 26px rgba(0, 0, 0, 0.28),
+    0 3px 7px rgba(0, 0, 0, 0.2);
+  --chrome-shadow-open:
+    0 0 0 1px var(--chrome-ring-hover),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  --chrome-control-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.075),
+    0 1px 2px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --chrome-popover: rgba(24, 27, 32, 0.99);
+  --chrome-popover-shadow:
+    0 0 0 1px var(--chrome-nav-ring-hover),
+    0 16px 36px rgba(0, 0, 0, 0.36),
+    0 4px 10px rgba(0, 0, 0, 0.2);
+  --chrome-nav-surface: rgba(10, 14, 22, 0.94);
+  --chrome-nav-surface-hover: rgba(14, 19, 29, 0.98);
+  --chrome-nav-ring: rgba(255, 255, 255, 0.08);
+  --chrome-nav-ring-hover: rgba(255, 255, 255, 0.13);
+  --chrome-nav-shadow:
+    0 0 0 1px var(--chrome-nav-ring),
+    0 10px 24px rgba(0, 0, 0, 0.2),
+    0 2px 5px rgba(0, 0, 0, 0.18);
+  --chrome-nav-shadow-hover:
+    0 0 0 1px var(--chrome-nav-ring-hover),
     0 12px 28px rgba(0, 0, 0, 0.25),
     0 3px 7px rgba(0, 0, 0, 0.2);
-  --chrome-popover: rgba(13, 19, 29, 0.985);
-  --chrome-popover-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 18px 42px rgba(0, 0, 0, 0.42),
-    0 5px 12px rgba(0, 0, 0, 0.24);
-  --chrome-active: color-mix(in srgb, #0062ff 92%, #000000);
-  --chrome-active-strong: color-mix(in srgb, #0062ff 78%, #000000);
+  --chrome-nav-active: color-mix(in srgb, #0062ff 92%, #000000);
+  --chrome-nav-active-strong: color-mix(in srgb, #0062ff 78%, #000000);
 
   --map-background: #121217;
   --map-muted: #71717a;
@@ -753,33 +811,51 @@ button,
 .app-brand-chip,
 .app-profile-chip,
 .app-center-nav-pill,
-.notifications-trigger {
+.notifications-trigger,
+.dark .notifications-trigger {
   border-color: transparent !important;
-  background: var(--chrome-surface) !important;
-  box-shadow: var(--chrome-shadow) !important;
+  background: var(--chrome-nav-surface) !important;
+  box-shadow: var(--chrome-nav-shadow) !important;
   -webkit-backdrop-filter: blur(10px) saturate(115%);
   backdrop-filter: blur(10px) saturate(115%);
 }
 
 .app-brand-chip:hover,
 .app-profile-chip:hover,
-.app-profile-chip.is-open,
 .notifications-trigger:hover,
-.notifications-popover-root:has(.notifications-panel) .notifications-trigger {
+.dark .notifications-trigger:hover {
   border-color: transparent !important;
-  background: var(--chrome-surface-hover) !important;
-  box-shadow: var(--chrome-shadow-hover) !important;
+  background: var(--chrome-nav-surface) !important;
+  box-shadow: var(--chrome-nav-shadow) !important;
+}
+
+/* Keep the established blue navigation pill distinct from the neutral account chrome. */
+.app-center-nav-pill,
+.dark .app-center-nav-pill {
+  background: var(--chrome-nav-surface) !important;
+  box-shadow: var(--chrome-nav-shadow) !important;
+}
+
+.app-profile-chip.is-open,
+.notifications-trigger.is-open,
+.notifications-popover-root:has(.notifications-panel) .notifications-trigger,
+.dark .notifications-trigger.is-open,
+.dark .notifications-popover-root:has(.notifications-panel) .notifications-trigger {
+  border-color: transparent !important;
+  background: var(--chrome-nav-surface) !important;
+  box-shadow: var(--chrome-nav-shadow) !important;
 }
 
 .app-brand-logo-ring,
 .app-profile-avatar-frame {
   border-color: transparent !important;
   background: transparent;
-  box-shadow: 0 0 0 1px var(--chrome-ring);
+  box-shadow: 0 0 0 1px var(--chrome-nav-ring);
 }
 
-.app-brand-logo-badge {
-  background: color-mix(in srgb, var(--chrome-surface-hover) 88%, var(--brand-soft) 12%);
+.app-brand-logo-badge,
+.dark .app-brand-logo-badge {
+  background: var(--chrome-inset-surface);
 }
 
 .app-brand-logo-image {
@@ -791,14 +867,10 @@ button,
   outline-color: rgba(255, 255, 255, 0.1);
 }
 
-.app-profile-avatar {
-  background: color-mix(in srgb, var(--chrome-surface-hover) 72%, #dbe7ff 28%);
-  color: var(--chrome-active);
-}
-
+.app-profile-avatar,
 .dark .app-profile-avatar {
-  background: color-mix(in srgb, var(--chrome-surface-hover) 84%, #2f66d5 16%);
-  color: #a9c5ff;
+  background: var(--chrome-inset-surface);
+  color: var(--chrome-text-strong);
 }
 
 .app-profile-photo {
@@ -821,6 +893,22 @@ button,
   background: rgba(15, 23, 42, 0.045);
 }
 
+.dark .app-center-nav-pill a:hover .app-center-nav-hover {
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.app-center-nav-pill > a {
+  color: var(--text-muted) !important;
+}
+
+.app-center-nav-pill > a:hover {
+  color: var(--text-strong) !important;
+}
+
+.app-center-nav-pill > a[data-active="true"] {
+  color: #ffffff !important;
+}
+
 .app-nav-pending-indicator {
   position: absolute;
   left: 50%;
@@ -828,7 +916,7 @@ button,
   width: 1rem;
   height: 0.125rem;
   border-radius: 9999px;
-  background: var(--chrome-active);
+  background: var(--chrome-nav-active);
   opacity: 0;
   visibility: hidden;
   transform: translateX(-50%) scaleX(0.25);
@@ -862,13 +950,9 @@ button,
   }
 }
 
-.dark .app-center-nav-pill a:hover .app-center-nav-hover {
-  background: rgba(255, 255, 255, 0.055);
-}
-
 .app-center-nav-active,
 .dark .app-center-nav-active {
-  background: linear-gradient(180deg, var(--chrome-active), var(--chrome-active-strong));
+  background: linear-gradient(180deg, var(--chrome-nav-active), var(--chrome-nav-active-strong));
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.13),
     0 1px 2px rgba(13, 34, 82, 0.24),
@@ -877,14 +961,29 @@ button,
 
 .app-profile-chip-title,
 .dark .app-profile-chip-title {
-  color: var(--text-strong);
+  color: var(--chrome-text-strong);
 }
 
 .app-profile-chip-subtitle,
 .app-profile-chip-chevron,
 .dark .app-profile-chip-subtitle,
 .dark .app-profile-chip-chevron {
-  color: var(--text-muted);
+  color: var(--chrome-text-muted);
+}
+
+.app-brand-chip-title,
+.dark .app-brand-chip-title {
+  color: var(--chrome-text-strong);
+}
+
+.app-brand-chip-subtitle,
+.dark .app-brand-chip-subtitle {
+  color: var(--chrome-text-muted);
+}
+
+.app-profile-skeleton-avatar,
+.app-profile-skeleton-line {
+  background: var(--chrome-inset-surface);
 }
 
 .app-profile-menu,
@@ -892,41 +991,70 @@ button,
 .notifications-panel,
 .dark .notifications-panel {
   border-color: transparent !important;
-  background: var(--chrome-popover) !important;
-  color: var(--text-default);
+  background: var(--chrome-nav-surface) !important;
+  color: var(--chrome-text-strong);
   box-shadow: var(--chrome-popover-shadow) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(110%);
-  backdrop-filter: blur(12px) saturate(110%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+  backdrop-filter: blur(10px) saturate(115%);
 }
 
 .app-profile-menu-account {
   border: 0 !important;
-  border-radius: 0.625rem;
-  background: color-mix(in srgb, var(--surface-muted) 64%, transparent);
+  border-radius: 0;
+  margin-bottom: 0.25rem;
+  background: transparent;
+  box-shadow: inset 0 -1px 0 var(--chrome-divider);
+}
+
+.app-profile-staff-badge {
+  gap: 0.25rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: var(--chrome-text-muted) !important;
+  font-size: 0.625rem !important;
+  font-weight: 600 !important;
+}
+
+.app-profile-account-separator {
+  background: var(--chrome-divider);
 }
 
 .app-profile-menu-role {
-  color: var(--text-muted) !important;
+  color: var(--chrome-text-muted) !important;
+}
+
+.app-profile-menu-account :where(.text-slate-100) {
+  color: var(--chrome-text-strong) !important;
+}
+
+.app-profile-menu-account :where(.text-slate-400, .text-slate-500) {
+  color: var(--chrome-text-muted) !important;
 }
 
 .app-profile-menu-item,
 .dark .app-profile-menu-item {
   min-height: 2.75rem;
-  color: var(--text-default) !important;
-  font-weight: 620;
+  color: var(--chrome-text-strong) !important;
+  font-weight: 550 !important;
 }
 
 .app-profile-menu-item:hover,
 .dark .app-profile-menu-item:hover {
-  background: color-mix(in srgb, var(--text-strong) 5.5%, transparent) !important;
-  color: var(--text-strong) !important;
+  background: var(--chrome-control-hover) !important;
+  color: var(--chrome-text-strong) !important;
+}
+
+.app-profile-menu-item:active,
+.dark .app-profile-menu-item:active {
+  background: var(--chrome-control-active) !important;
 }
 
 .app-profile-menu-item-icon,
 .app-profile-menu-item svg,
 .dark .app-profile-menu-item svg {
   flex: none;
-  color: var(--text-muted) !important;
+  color: var(--chrome-text-muted) !important;
   transition-property: color;
   transition-duration: 150ms;
   transition-timing-function: ease-out;
@@ -935,26 +1063,22 @@ button,
 .app-profile-menu-item:hover .app-profile-menu-item-icon,
 .app-profile-menu-item:hover svg,
 .dark .app-profile-menu-item:hover svg {
-  color: var(--chrome-active) !important;
+  color: var(--chrome-text-strong) !important;
 }
 
 .app-profile-menu-divider,
 .dark .app-profile-menu-divider {
-  background: var(--border-subtle) !important;
+  background: var(--chrome-divider) !important;
 }
 
 .app-profile-menu-item-accent,
 .dark .app-profile-menu-item-accent {
-  color: var(--chrome-active) !important;
+  color: var(--chrome-text-strong) !important;
 }
 
 .app-profile-menu-item-warn,
 .dark .app-profile-menu-item-warn {
-  color: #b36b00 !important;
-}
-
-.dark .app-profile-menu-item-warn {
-  color: #f2ae45 !important;
+  color: var(--chrome-text-strong) !important;
 }
 
 .app-profile-menu-item-danger,
@@ -969,30 +1093,37 @@ button,
 
 .app-profile-verification-dot {
   background: #d97706;
-  box-shadow: 0 0 0 2px var(--chrome-popover);
+  box-shadow: 0 0 0 2px var(--chrome-nav-surface);
 }
 
 .notifications-trigger,
 .dark .notifications-trigger {
-  color: var(--text-muted) !important;
+  color: var(--chrome-text-muted) !important;
 }
 
 .notifications-trigger:hover,
 .notifications-popover-root:has(.notifications-panel) .notifications-trigger,
 .dark .notifications-trigger:hover,
 .dark .notifications-popover-root:has(.notifications-panel) .notifications-trigger {
-  color: var(--text-strong) !important;
+  color: var(--chrome-text-strong) !important;
 }
 
 .notification-unread-dot,
 .dark .notification-unread-dot {
   border: 0 !important;
-  background: #e9a918 !important;
-  box-shadow: 0 0 0 2px var(--chrome-surface) !important;
+  background: var(--chrome-status) !important;
+  box-shadow: 0 0 0 2px var(--chrome-nav-surface) !important;
 }
 
 .notifications-panel {
   top: calc(max(0.75rem, env(safe-area-inset-top)) + 3.875rem);
+  max-height: calc(100dvh - max(5rem, env(safe-area-inset-top)) - max(0.75rem, env(safe-area-inset-bottom)));
+}
+
+.app-profile-menu {
+  max-height: calc(100dvh - max(5rem, env(safe-area-inset-top)) - max(0.75rem, env(safe-area-inset-bottom)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .app-header-popover-backdrop {
@@ -1001,37 +1132,93 @@ button,
 
 .notifications-panel-header,
 .notifications-panel-footer {
-  border-color: var(--border-subtle) !important;
+  border-color: var(--chrome-divider) !important;
+}
+
+.notifications-panel-title,
+.notification-title {
+  color: var(--chrome-text-strong) !important;
+}
+
+.notifications-panel-count,
+.notification-body,
+.notification-date,
+.notifications-empty {
+  color: var(--chrome-text-muted) !important;
 }
 
 .notifications-empty {
-  background: color-mix(in srgb, var(--surface-muted) 52%, transparent);
+  background: transparent;
 }
 
 .notification-card,
 .dark .notification-card {
-  border-color: transparent !important;
-  background: color-mix(in srgb, var(--surface-muted) 62%, transparent) !important;
-  box-shadow: 0 0 0 1px var(--chrome-ring) !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
 }
 
 .notification-card.is-unread,
 .dark .notification-card.is-unread {
-  border-color: transparent !important;
-  background: color-mix(in srgb, var(--chrome-active) 7%, var(--surface-raised) 93%) !important;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--chrome-active) 24%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.notification-card:hover,
-.dark .notification-card:hover {
-  border-color: transparent !important;
-  background: color-mix(in srgb, var(--text-strong) 6%, var(--surface-raised) 94%) !important;
-  box-shadow: 0 0 0 1px var(--chrome-ring-hover) !important;
+.notification-card:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0.75rem;
+  left: 0.75rem;
+  height: 1px;
+  background: var(--chrome-divider);
+  pointer-events: none;
+}
+
+.notification-card.is-unread .notification-title {
+  font-weight: 650;
+}
+
+.notification-card.is-read .notification-title {
+  font-weight: 500;
+}
+
+.notification-card:disabled {
+  cursor: default;
+  opacity: 1 !important;
+}
+
+.notification-card:not(:disabled):hover,
+.dark .notification-card:not(:disabled):hover {
+  background: var(--chrome-control-hover) !important;
+  box-shadow: none !important;
   transform: none;
 }
 
+.notification-card:not(:disabled):active,
+.dark .notification-card:not(:disabled):active {
+  background: var(--chrome-control-active) !important;
+}
+
+.notifications-list {
+  overscroll-behavior: contain;
+  scrollbar-color: var(--chrome-divider) transparent;
+}
+
+.notification-card-dot,
+.dark .notification-card-dot {
+  background: var(--chrome-status) !important;
+  box-shadow: none;
+}
+
 .notifications-view-all {
-  color: var(--chrome-active) !important;
+  color: var(--chrome-text-strong) !important;
+}
+
+.notifications-view-all:hover {
+  background: var(--chrome-control-hover) !important;
+  color: var(--chrome-text-strong) !important;
 }
 
 @media (min-width: 768px) {
@@ -6419,8 +6606,7 @@ textarea.profile-field-control {
 }
 
 .light .job-card-category svg,
-.light .job-card-icon,
-.light .job-filter-panel :where(.text-indigo-300, .text-indigo-400, .text-indigo-500) {
+.light .job-card-icon {
   color: var(--job-accent) !important;
 }
 
@@ -6435,77 +6621,6 @@ textarea.profile-field-control {
 .light .job-card-avatar {
   background: var(--job-accent-soft);
   color: var(--job-accent);
-}
-
-.light .job-filter-backdrop {
-  background: rgba(15, 23, 42, 0.18);
-  backdrop-filter: blur(14px);
-}
-
-.light .job-filter-panel {
-  border-color: var(--border-subtle);
-  background: #ffffff;
-  box-shadow: 0 28px 90px rgba(31, 45, 74, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.94);
-}
-
-.light .job-filter-accent-line {
-  background: linear-gradient(to right, transparent, rgba(36, 87, 214, 0.5), transparent);
-}
-
-.light .job-filter-title-icon {
-  border-color: var(--brand-border);
-  background: var(--brand-soft);
-  color: var(--brand);
-}
-
-.light .job-filter-title {
-  color: var(--text-strong);
-}
-
-.light .job-filter-panel :where(.text-white, .text-slate-100, .text-slate-200, .text-slate-300) {
-  color: var(--text-strong) !important;
-}
-
-.light .job-filter-panel :where(.text-slate-400, .text-slate-500, .text-slate-600) {
-  color: var(--text-muted) !important;
-}
-
-.light .job-filter-panel :where([class*="bg-white/"], [class*="border-white/"]) {
-  border-color: var(--border-subtle) !important;
-}
-
-.light .job-filter-panel :where([class*="bg-white/"]) {
-  background: color-mix(in srgb, var(--surface-muted) 76%, #ffffff 24%) !important;
-}
-
-.light .job-filter-divider {
-  background: var(--border-subtle);
-}
-
-.light .job-filter-panel :where([class~="bg-indigo-500/10"], [class~="bg-indigo-500/15"], [class~="bg-indigo-500/[0.08]"]) {
-  background-color: var(--brand-soft);
-}
-
-.light .job-filter-panel :where([class~="border-indigo-500/20"], [class~="border-indigo-500/35"]) {
-  border-color: var(--brand-border);
-}
-
-.light .job-filter-panel :where([class~="bg-indigo-600"]) {
-  background-color: var(--brand);
-}
-
-.light .job-filter-panel :where([class~="hover:bg-indigo-500"]):hover {
-  background-color: #2d63df;
-}
-
-.light .job-filter-panel :where([class~="active:bg-indigo-700"]):active {
-  background-color: var(--brand-strong);
-}
-
-.light .job-filter-panel [aria-pressed="true"] {
-  border-color: var(--brand-border);
-  background-color: var(--brand-soft);
-  color: var(--brand);
 }
 
 @media (max-width: 640px) {
