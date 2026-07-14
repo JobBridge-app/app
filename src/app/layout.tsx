@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { TestModeBanner } from "@/components/admin/TestModeBanner";
 import { getCurrentSessionAndProfile } from "@/lib/auth";
@@ -19,6 +18,29 @@ export const metadata: Metadata = {
   title: "JobBridge",
   description:
     "JobBridge – Plattform für sichere Taschengeldjobs und Alltagshilfe.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      {
+        url: "/jobbridge-favicon-32.png?v=20260713",
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        url: "/jobbridge-icon-192.png?v=20260713",
+        sizes: "192x192",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/jobbridge-favicon-32.png?v=20260713",
+    apple: [
+      {
+        url: "/jobbridge-apple-touch-icon.png?v=20260713",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -82,7 +104,6 @@ export default async function RootLayout({
           <TestModeBanner />
           {children}
         </ThemeProvider>
-        <SpeedInsights />
       </body>
     </html>
   );

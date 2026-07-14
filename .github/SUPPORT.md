@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0ea5e9,100:020617&height=200&section=header&text=Support%20Center&fontSize=50&fontAlignY=35&animation=twinkling&fontColor=ffffff" width="100%" alt="Support Header" />
+  <img src="../public/logo-jobbridge.png" width="96" alt="JobBridge Logo" />
 </div>
 
 # 🤝 Support Center

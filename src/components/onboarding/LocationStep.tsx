@@ -12,7 +12,7 @@ interface LocationStepProps {
     onBack: () => void;
 }
 
-const SUPPORT_EMAIL = "support@jobbridge.app";
+const SUPPORT_EMAIL = "kontakt@jobbridge.team";
 const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Hilfe bei der Stadtangabe")}&body=${encodeURIComponent("Hallo JobBridge Support,\n\nich bin mir nicht sicher, welche Stadt ich bei meiner Anmeldung angeben soll.\n\nBitte helft mir weiter.")}`;
 
 export function LocationStep({ onComplete, onBack }: LocationStepProps) {

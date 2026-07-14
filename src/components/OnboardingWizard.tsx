@@ -955,7 +955,7 @@ export function OnboardingWizard({
                               Passwort-Link anfordern
                             </ButtonPrimary>
                             <a
-                              href={`mailto:support@jobbridge.app?subject=Hilfe bei Passwort (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Amein Passwort für ${email} wird nicht akzeptiert.%0D%0A%0D%0ABitte helft mir weiter.`}
+                              href={`mailto:kontakt@jobbridge.team?subject=Hilfe bei Passwort (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Amein Passwort für ${email} wird nicht akzeptiert.%0D%0A%0D%0ABitte helft mir weiter.`}
                               className="onboarding-feedback-action onboarding-feedback-action-secondary flex h-12 w-full items-center justify-center text-sm font-semibold transition-[background-color,color,scale,border-color,box-shadow] duration-200 ease-out active:scale-[0.98]"
                             >
                               Support kontaktieren
@@ -992,7 +992,7 @@ export function OnboardingWizard({
                               Jetzt registrieren
                             </ButtonPrimary>
                             <a
-                              href={`mailto:support@jobbridge.app?subject=Account nicht gefunden (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Aich versuche mich mit ${email} anzumelden, aber der Account existiert angeblich nicht.%0D%0A%0D%0ABitte helft mir weiter.`}
+                              href={`mailto:kontakt@jobbridge.team?subject=Account nicht gefunden (JobBridge)&body=Hallo Support-Team,%0D%0A%0D%0Aich versuche mich mit ${email} anzumelden, aber der Account existiert angeblich nicht.%0D%0A%0D%0ABitte helft mir weiter.`}
                               className="onboarding-feedback-action onboarding-feedback-action-secondary flex h-12 w-full items-center justify-center text-sm font-semibold transition-[background-color,color,scale,border-color,box-shadow] duration-200 ease-out active:scale-[0.98]"
                             >
                               Support kontaktieren

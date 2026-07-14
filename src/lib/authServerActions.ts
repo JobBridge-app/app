@@ -32,7 +32,7 @@ const DEFAULT_BRANDED_CONFIRMATION_TEMPLATE = `<!DOCTYPE html>
       <tr>
         <td style="padding:22px 28px;background:#070300;color:#f4f2ed;">
           <div style="font-size:20px;font-weight:700;">Brauchst du Hilfe?</div>
-          <div style="margin-top:10px;font-size:14px;line-height:1.6;">Schreib uns unter <a href="mailto:support@jobbridge.app" style="color:#f4f2ed;font-weight:700;text-decoration:none;">support@jobbridge.app</a></div>
+          <div style="margin-top:10px;font-size:14px;line-height:1.6;">Schreib uns unter <a href="mailto:kontakt@jobbridge.team" style="color:#f4f2ed;font-weight:700;text-decoration:none;">kontakt@jobbridge.team</a></div>
         </td>
       </tr>
     </table>
