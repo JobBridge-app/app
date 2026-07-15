@@ -7,13 +7,11 @@ import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
 import { warmRouteAdjacentUI } from "@/lib/ui-warmup";
-import { usePhoneDevice } from "@/hooks/use-phone-device";
 import { useAppNavigation } from "../AppNavigationProvider";
 import { AppNavPendingIndicator } from "./AppNavPendingIndicator";
 import { getAppNavItems } from "./navItems";
 
 export function MobileBottomDock({ profile, enabled }: { profile: Profile | null; enabled: boolean }) {
-    const isPhoneDevice = usePhoneDevice();
     const pathname = usePathname();
     const router = useRouter();
     const { pendingHref, beginNavigation } = useAppNavigation();
@@ -26,7 +24,7 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
         endPerfMark("app-mobile-dock-route");
     }, [pathname]);
 
-    if (!enabled || !isPhoneDevice) {
+    if (!enabled) {
         return null;
     }
 
@@ -40,7 +38,7 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
     return (
         <nav
             aria-label="Hauptnavigation"
-            className="app-mobile-dock-shell fixed inset-x-0 z-50 md:hidden"
+            className="app-mobile-dock-shell fixed inset-x-0 z-50"
         >
             <div className="app-mobile-dock-panel mx-auto grid grid-cols-3">
                 {navItems.map((item) => {
@@ -72,24 +70,23 @@ export function MobileBottomDock({ profile, enabled }: { profile: Profile | null
                             onMouseEnter={() => warmRoute(item.href)}
                             onFocus={() => warmRoute(item.href)}
                             className={cn(
-                                "app-mobile-dock-item group relative flex min-w-0 items-center justify-center outline-none",
+                                "app-mobile-dock-item group relative flex min-w-0 items-center justify-center outline-none transition-[color,scale] duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none motion-reduce:active:scale-100",
                                 isActive && "is-active"
                             )}
                         >
-                            {isActive && (
-                                <div className="app-mobile-dock-active absolute" />
-                            )}
+                            <span aria-hidden="true" className="app-mobile-dock-active absolute" />
                             <span className="app-mobile-dock-content relative z-10 flex min-w-0 flex-col items-center justify-center">
                                 <item.icon
+                                    aria-hidden="true"
                                     size={19}
-                                    strokeWidth={2.4}
-                                    className="app-mobile-dock-icon transition-colors duration-150"
+                                    strokeWidth={2.25}
+                                    className="app-mobile-dock-icon"
                                 />
                                 <span className="app-mobile-dock-label max-w-full truncate">
                                     {item.label}
                                 </span>
                             </span>
-                            <AppNavPendingIndicator className="bottom-1.5" />
+                            <AppNavPendingIndicator className="bottom-[0.2rem]" />
                         </Link>
                     );
                 })}

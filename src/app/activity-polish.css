@@ -20,9 +20,9 @@
   --activity-shadow: 0 18px 54px rgba(0, 0, 0, 0.3);
 
   display: flex;
-  height: auto;
-  min-height: inherit;
-  overflow: visible;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   flex-direction: column;
   gap: 1rem;
   color: var(--activity-text);
@@ -47,12 +47,39 @@
 }
 
 .activities-page {
-  min-height: calc(100dvh - 6rem);
+  --activity-viewport-height: 100vh;
+  --activity-page-bottom-gap: clamp(0.625rem, 1.35vh, 1rem);
+
+  height: calc(var(--activity-viewport-height) - 6rem);
+  min-height: 0;
+  max-height: calc(var(--activity-viewport-height) - 6rem);
+  overflow: hidden;
+  padding-bottom: var(--activity-page-bottom-gap) !important;
+}
+
+@supports (height: 100svh) {
+  .activities-page {
+    --activity-viewport-height: 100svh;
+    --activity-page-bottom-gap: clamp(0.625rem, 1.35svh, 1rem);
+  }
+}
+
+@supports (height: 100dvh) {
+  .activities-page {
+    --activity-viewport-height: 100dvh;
+    --activity-page-bottom-gap: clamp(0.625rem, 1.35dvh, 1rem);
+  }
+}
+
+.activities-page > .mx-auto {
+  height: 100%;
+  min-height: 0;
 }
 
 .activity-home-heading {
   display: flex;
   min-height: 4.25rem;
+  flex: 0 0 auto;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
@@ -180,12 +207,12 @@
 
 .activity-workspace {
   display: grid !important;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   grid-template-columns: 20.75rem minmax(0, 1fr) !important;
   gap: 0 !important;
   height: auto !important;
-  min-height: 31rem !important;
-  max-height: 49rem;
+  min-height: 0 !important;
+  max-height: none;
   overflow: hidden;
   border: 1px solid var(--activity-line);
   border-radius: 1.25rem;
@@ -2145,15 +2172,16 @@
 
   .activity-workspace {
     display: block !important;
+    flex: 1 1 0;
     height: auto !important;
-    min-height: 32rem !important;
+    min-height: 0 !important;
     max-height: none;
     border-radius: 1rem;
   }
 
   .activities-command-center[data-chat-open="true"] .activity-workspace {
     height: auto !important;
-    min-height: 32rem !important;
+    min-height: 0 !important;
   }
 
   .activity-inbox-panel {
@@ -2268,6 +2296,26 @@
     border-radius: 1.15rem 1.15rem 0 0;
     padding: 1.1rem 1rem max(1rem, env(safe-area-inset-bottom));
   }
+}
+
+html[data-mobile-nav-preference="bottom"] body:has(.app-mobile-dock-shell) .activities-page {
+  height: calc(
+    var(--activity-viewport-height) -
+    6rem -
+    var(--app-mobile-dock-panel-height) -
+    var(--app-mobile-dock-edge-gap) -
+    var(--app-mobile-dock-content-clearance) -
+    env(safe-area-inset-bottom, 0px)
+  );
+  max-height: calc(
+    var(--activity-viewport-height) -
+    6rem -
+    var(--app-mobile-dock-panel-height) -
+    var(--app-mobile-dock-edge-gap) -
+    var(--app-mobile-dock-content-clearance) -
+    env(safe-area-inset-bottom, 0px)
+  );
+  padding-bottom: 0 !important;
 }
 
 @media (max-width: 560px) {
