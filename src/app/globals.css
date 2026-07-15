@@ -166,6 +166,8 @@ html.light {
   --border-subtle: rgba(255, 255, 255, 0.08);
   --shadow-surface: 0 24px 80px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-popover: 0 28px 90px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 18px 46px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  --shadow-card-hover: 0 24px 64px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   --brand: #6366f1;
   --brand-strong: #4f46e5;
   --brand-soft: rgba(99, 102, 241, 0.13);
@@ -323,15 +325,6 @@ a,
 button,
 [role="button"] {
   -webkit-tap-highlight-color: transparent;
-}
-
-.glass-surface {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(16px) saturate(180%);
 }
 
 .glass-card {
@@ -1841,7 +1834,7 @@ button,
   border-color: var(--onboarding-control-border) !important;
 }
 
-.light .onboarding-shell :where([class*="bg-white/5"], [class*="bg-white/10"], [class*="bg-white/[0.025]"], [class*="bg-white/[0.03]"], [class*="bg-white/[0.04]"], [class*="bg-white/[0.045]"], [class*="bg-white/[0.055]"], [class*="bg-black/15"], [class*="bg-[#0F0F12]"], [class*="bg-[#111318]"], [class*="bg-[#151923]"], .glass-card, .glass-surface) {
+.light .onboarding-shell :where([class*="bg-white/5"], [class*="bg-white/10"], [class*="bg-white/[0.025]"], [class*="bg-white/[0.03]"], [class*="bg-white/[0.04]"], [class*="bg-white/[0.045]"], [class*="bg-white/[0.055]"], [class*="bg-black/15"], [class*="bg-[#0F0F12]"], [class*="bg-[#111318]"], [class*="bg-[#151923]"], .glass-card) {
   background: var(--onboarding-control-bg) !important;
 }
 
@@ -1860,7 +1853,7 @@ button,
   border-color: var(--onboarding-selected-border) !important;
 }
 
-.light .onboarding-shell :where(input, textarea, select, .glass-card, .glass-surface) {
+.light .onboarding-shell :where(input, textarea, select, .glass-card) {
   border-color: var(--onboarding-control-border) !important;
 }
 
@@ -2815,8 +2808,7 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) 
 }
 
 .activities-page h1,
-.light .activities-page :where(h1, h2, h3, h4).text-white,
-.light .activity-item :where(h3, .text-white) {
+.light .activities-page :where(h1, h2, h3, h4).text-white {
   color: var(--text-strong) !important;
 }
 
@@ -2843,22 +2835,6 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) 
 .light .activity-shell,
 .light .activity-stat-card {
   box-shadow: var(--shadow-card);
-}
-
-.light .activity-item {
-  border-color: var(--border-subtle) !important;
-  background:
-    linear-gradient(180deg, #ffffff, #f9fbff) !important;
-  box-shadow: 0 12px 30px rgba(31, 45, 74, 0.075);
-}
-
-.light .activity-item:hover,
-.light .activity-item[class*="bg-indigo-500"] {
-  border-color: rgba(33, 79, 208, 0.24) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(33, 79, 208, 0.075), transparent 12rem),
-    linear-gradient(180deg, #ffffff, #f6f9ff) !important;
-  box-shadow: 0 18px 44px rgba(31, 45, 74, 0.12);
 }
 
 .light .activity-empty-icon,
@@ -5100,14 +5076,12 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) 
 }
 
 .guardian-consent-backdrop,
-.provider-verification-backdrop,
-.guardian-manage-backdrop {
+.provider-verification-backdrop {
   background: rgba(247, 249, 253, 0.84) !important;
 }
 
 .guardian-consent-panel,
-.provider-verification-modal,
-.guardian-manage-panel {
+.provider-verification-modal {
   border-color: var(--border-subtle) !important;
   background:
     radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--brand) 8%, transparent), transparent 18rem),
@@ -5117,16 +5091,14 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) 
 }
 
 .guardian-consent-title,
-.provider-verification-modal :where(h3, .text-white),
-.guardian-manage-panel :where(h1, h2, h3, .text-white) {
+.provider-verification-modal :where(h3, .text-white) {
   color: var(--text-strong) !important;
 }
 
 .guardian-consent-copy,
 .guardian-consent-helper,
 .guardian-consent-expiry,
-.provider-verification-modal :where(.text-slate-400, .text-slate-500, .text-slate-600),
-.guardian-manage-panel :where(.text-slate-400, .text-slate-500, .text-slate-600) {
+.provider-verification-modal :where(.text-slate-400, .text-slate-500, .text-slate-600) {
   color: var(--text-muted) !important;
 }
 
@@ -5161,8 +5133,7 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) 
 }
 
 .guardian-consent-panel :where(.text-indigo-300, .text-indigo-400),
-.provider-verification-modal :where(.text-indigo-200, .text-indigo-300, .text-indigo-400),
-.guardian-manage-panel :where(.text-indigo-400, .text-indigo-500) {
+.provider-verification-modal :where(.text-indigo-200, .text-indigo-300, .text-indigo-400) {
   color: var(--brand) !important;
 }
 
@@ -5231,36 +5202,6 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) 
   color: var(--text-muted) !important;
 }
 
-.guardian-manage-overlay {
-  background: color-mix(in srgb, var(--surface-overlay) 62%, transparent) !important;
-}
-
-.guardian-manage-alert-card {
-  border-color: var(--brand-border) !important;
-  background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--brand) 9%, transparent), transparent 16rem),
-    var(--surface-solid) !important;
-  color: var(--text-default) !important;
-}
-
-.light .guardian-manage-action {
-  background: linear-gradient(180deg, #2d63df, var(--brand)) !important;
-  color: #ffffff !important;
-  box-shadow: 0 14px 34px rgba(33, 79, 208, 0.22);
-}
-
-.light .guardian-manage-action:hover {
-  background: var(--brand-strong) !important;
-}
-
-.guardian-manage-panel :where([class*="border-white/"]) {
-  border-color: var(--border-subtle) !important;
-}
-
-.guardian-manage-panel :where([class*="bg-[#0A0A0C]"], [class*="bg-[#0F0F12]"], [class*="bg-[#15151A]"], [class*="bg-slate-900"], [class*="bg-slate-800"]) {
-  background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface-solid) 28%) !important;
-}
-
 .dark .guardian-banner {
   background:
     radial-gradient(circle at 92% 0%, rgb(var(--guardian-rgb) / 0.08), transparent 24rem),
@@ -5302,37 +5243,32 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main:has(.activities-page) 
 }
 
 .dark .guardian-consent-backdrop,
-.dark .provider-verification-backdrop,
-.dark .guardian-manage-backdrop {
+.dark .provider-verification-backdrop {
   background: rgba(0, 0, 0, 0.82) !important;
 }
 
 .dark .guardian-consent-panel,
-.dark .provider-verification-modal,
-.dark .guardian-manage-panel {
+.dark .provider-verification-modal {
   border-color: rgba(255, 255, 255, 0.1) !important;
   background: #09090b !important;
   box-shadow: 0 36px 110px rgba(0, 0, 0, 0.66) !important;
 }
 
 .dark .guardian-consent-title,
-.dark .provider-verification-modal :where(h3, .text-white),
-.dark .guardian-manage-panel :where(h1, h2, h3, .text-white) {
+.dark .provider-verification-modal :where(h3, .text-white) {
   color: #ffffff !important;
 }
 
 .dark .guardian-consent-copy,
 .dark .guardian-consent-helper,
 .dark .guardian-consent-expiry,
-.dark .provider-verification-modal :where(.text-slate-400, .text-slate-500, .text-slate-600),
-.dark .guardian-manage-panel :where(.text-slate-400, .text-slate-500, .text-slate-600) {
+.dark .provider-verification-modal :where(.text-slate-400, .text-slate-500, .text-slate-600) {
   color: #94a3b8 !important;
 }
 
 .dark .guardian-consent-icon-shell,
 .dark .guardian-consent-status-badge,
-.dark .guardian-consent-link-card,
-.dark .guardian-manage-alert-card {
+.dark .guardian-consent-link-card {
   border-color: rgba(255, 255, 255, 0.1) !important;
   background: #15151a !important;
 }
@@ -5617,32 +5553,32 @@ textarea.profile-field-control {
 .job-create-location-search .location-search-control {
   height: 3rem !important;
   border-radius: 0.75rem !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  background: rgba(2, 6, 23, 0.5) !important;
-  color: #ffffff !important;
+  border-color: var(--border-subtle) !important;
+  background: var(--surface-solid) !important;
+  color: var(--text-strong) !important;
   font-size: 0.875rem !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+  box-shadow: none !important;
 }
 
 .job-create-location-search .location-search-control:focus {
-  border-color: rgba(165, 180, 252, 0.45) !important;
-  background: rgba(2, 6, 23, 0.7) !important;
-  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.15) !important;
+  border-color: var(--brand-border) !important;
+  background: var(--surface-solid) !important;
+  box-shadow: 0 0 0 2px var(--focus-halo) !important;
 }
 
 .job-create-location-search .location-search-menu {
   border-radius: 0.75rem !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  background: rgba(2, 6, 23, 0.98) !important;
+  border-color: var(--border-subtle) !important;
+  background: var(--surface-overlay) !important;
 }
 
 .job-create-location-search .location-search-result-title {
-  color: #ffffff;
+  color: var(--text-strong);
 }
 
 .job-create-location-search .location-search-result:hover,
 .job-create-location-search .location-search-result:focus {
-  background: rgba(99, 102, 241, 0.14);
+  background: var(--brand-soft);
 }
 
 .jobbridge-map-frame,
@@ -7820,4 +7756,156 @@ html[data-mobile-nav-preference="bottom"] .app-shell-main {
 
 .light .profile-page .profile-id-code {
   color: rgba(24, 36, 64, 0.72) !important;
+}
+
+/* Seeker waitlist: privacy-first, calm and consistent in both themes. */
+.job-card[data-card-state="waitlist"],
+.light .job-card[data-card-state="waitlist"],
+.dark .job-card[data-card-state="waitlist"] {
+  border-color: var(--border-subtle) !important;
+}
+
+.job-card[data-card-state="waitlist"] .job-card-category,
+.light .job-card[data-card-state="waitlist"] .job-card-category,
+.dark .job-card[data-card-state="waitlist"] .job-card-category {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-muted) 82%, transparent) !important;
+  color: var(--text-muted) !important;
+}
+
+.job-card[data-card-state="waitlist"] .job-card-category svg,
+.light .job-card[data-card-state="waitlist"] .job-card-category svg,
+.dark .job-card[data-card-state="waitlist"] .job-card-category svg {
+  color: var(--brand) !important;
+}
+
+.job-card-waitlist-summary {
+  border-color: var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-muted) 82%, transparent);
+  color: var(--text-default);
+  box-shadow: none;
+}
+
+.job-card-waitlist-icon {
+  color: var(--brand);
+}
+
+.job-card-waitlist-title {
+  color: var(--text-strong);
+}
+
+.job-card-waitlist-meta {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.job-detail-waitlist-callout,
+.light .job-detail-waitlist-callout,
+.dark .job-detail-waitlist-callout {
+  border-color: var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--surface-muted) 82%, transparent) !important;
+  color: var(--text-default) !important;
+  box-shadow: none !important;
+}
+
+.job-detail-waitlist-title,
+.job-detail-waitlist-icon,
+.light .job-detail-waitlist-title,
+.light .job-detail-waitlist-icon,
+.dark .job-detail-waitlist-title,
+.dark .job-detail-waitlist-icon {
+  color: var(--text-strong) !important;
+}
+
+.job-detail-waitlist-icon,
+.light .job-detail-waitlist-icon,
+.dark .job-detail-waitlist-icon {
+  color: var(--brand) !important;
+}
+
+.job-detail-waitlist-count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.job-detail-waitlist-badge {
+  border-color: var(--border-subtle);
+  background: var(--surface-muted);
+  color: var(--text-default);
+  font-variant-numeric: tabular-nums;
+}
+
+.job-detail-waitlist-footer-card,
+.job-detail-dashboard-link {
+  border-color: var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-raised) 88%, transparent);
+  box-shadow: none;
+}
+
+.job-detail-waitlist-footer-title,
+.job-detail-dashboard-title {
+  color: var(--text-strong);
+}
+
+.job-detail-waitlist-footer-copy,
+.job-detail-dashboard-copy {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.job-detail-dashboard-link:hover,
+.job-detail-dashboard-link:focus-visible {
+  border-color: var(--brand-border);
+  background: var(--surface-raised);
+}
+
+.job-detail-dashboard-icon {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.job-detail-secondary-action {
+  border-color: var(--border-subtle);
+  background: var(--surface-solid);
+  color: var(--text-default);
+}
+
+.job-detail-secondary-action:hover,
+.job-detail-secondary-action:focus-visible {
+  border-color: var(--brand-border);
+  color: var(--brand);
+}
+
+.job-application-waitlist-note {
+  border-color: var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-muted) 82%, transparent);
+}
+
+.job-application-waitlist-note-icon {
+  color: var(--brand);
+}
+
+.job-application-waitlist-note-title {
+  color: var(--text-strong);
+}
+
+.job-application-waitlist-note-copy {
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.job-application-success-mark {
+  background: var(--brand-soft);
+  color: var(--brand);
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .job-card-waitlist-summary {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .job-detail-waitlist-footer-card .job-detail-secondary-action {
+    width: 100%;
+  }
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, { startTransition, useState, useCallback, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { JobsListSection } from "@/components/jobs/JobsListSection";
 import { Briefcase, CheckCircle2, Clock, ListFilter } from "lucide-react";
 import type { JobsListItem } from "@/lib/types/jobbridge";
@@ -19,6 +20,7 @@ import {
 } from "@/lib/jobs/sortFilter";
 import { warmJobsUI } from "@/lib/ui-warmup";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
+import { supabaseBrowser } from "@/lib/supabaseClient";
 
 const JobDetailModal = dynamic(
     () => import("@/components/jobs/JobDetailModal").then((mod) => mod.JobDetailModal),
@@ -33,11 +35,11 @@ const JobFilterSortPanel = dynamic(
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface JobsListProps {
+    currentUserId: string;
     localActiveJobs: JobsListItem[];
     extendedActiveJobs: JobsListItem[];
     waitlistedJobs: JobsListItem[];
     appliedJobs: JobsListItem[];
-    isDemo: boolean;
     canApply: boolean;
     guardianStatus: string;
 }
@@ -82,14 +84,15 @@ function persistState(sortOption: SortOption, filterState: FilterState): void {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function JobsList({
+    currentUserId,
     localActiveJobs,
     extendedActiveJobs,
     waitlistedJobs,
     appliedJobs,
-    isDemo,
     canApply,
     guardianStatus,
 }: JobsListProps) {
+    const router = useRouter();
     const [selectedJob, setSelectedJob] = useState<JobsListItem | null>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>("active");
@@ -161,7 +164,18 @@ export function JobsList({
         [extendedActiveJobs, filterState, sortOption]
     );
     const sortedWaitlistedJobs = useMemo(
-        () => sortJobs(waitlistedJobs, sortOption),
+        () => sortJobs(waitlistedJobs, sortOption).sort((first, second) => {
+            const firstIsOwn = first.application_status === "waitlisted";
+            const secondIsOwn = second.application_status === "waitlisted";
+            if (firstIsOwn !== secondIsOwn) return firstIsOwn ? -1 : 1;
+
+            if (firstIsOwn && secondIsOwn) {
+                return (first.my_waitlist_position ?? Number.MAX_SAFE_INTEGER)
+                    - (second.my_waitlist_position ?? Number.MAX_SAFE_INTEGER);
+            }
+
+            return 0;
+        }),
         [waitlistedJobs, sortOption]
     );
     const sortedAppliedJobs = useMemo(
@@ -181,6 +195,59 @@ export function JobsList({
     useEffect(() => {
         if (showFilterPanel) setHasOpenedFilterPanel(true);
     }, [showFilterPanel]);
+
+    useEffect(() => {
+        let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+        const scheduleRefresh = () => {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(() => {
+                startTransition(() => router.refresh());
+            }, 120);
+        };
+
+        const channel = supabaseBrowser
+            .channel(`personal-job-feed:${currentUserId}`)
+            .on(
+                "postgres_changes",
+                { event: "INSERT", schema: "public", table: "jobs" },
+                scheduleRefresh,
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "jobs",
+                },
+                scheduleRefresh,
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "applications",
+                    filter: `user_id=eq.${currentUserId}`,
+                },
+                scheduleRefresh,
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "applications",
+                    filter: `user_id=eq.${currentUserId}`,
+                },
+                scheduleRefresh,
+            )
+            .subscribe();
+
+        return () => {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            void supabaseBrowser.removeChannel(channel);
+        };
+    }, [currentUserId, router]);
 
     const getPanelClassName = (tab: Tab) => {
         return cn(
@@ -264,12 +331,12 @@ export function JobsList({
                         Aktuell
                         {totalVisibleActiveJobs > 0 && <TabBadge>{totalVisibleActiveJobs}</TabBadge>}
                     </DesktopTab>
-                    <DesktopTab
-                        active={activeTab === "waitlist"}
-                        onClick={() => handleTabChange("waitlist")}
-                        activeClass="bg-amber-500/10 text-white ring-amber-400/20"
-                    >
-                        <Clock size={15} className={cn(activeTab === "waitlist" ? "text-amber-400" : "text-slate-500")} />
+                        <DesktopTab
+                            active={activeTab === "waitlist"}
+                            onClick={() => handleTabChange("waitlist")}
+                            activeClass="bg-white/[0.075] text-white ring-white/10"
+                        >
+                            <Clock size={15} className={cn(activeTab === "waitlist" ? "text-indigo-400" : "text-slate-500")} />
                         Warteliste
                         {sortedWaitlistedJobs.length > 0 && <TabBadge>{sortedWaitlistedJobs.length}</TabBadge>}
                     </DesktopTab>
@@ -312,7 +379,11 @@ export function JobsList({
             {/* ── Tab Content ──────────────────────────────────────────── */}
             <div className="relative pb-20" style={{ minHeight: 200 }}>
                 <div className="grid">
-                    <div className={getPanelClassName("active")}>
+                    <div
+                        className={getPanelClassName("active")}
+                        aria-hidden={activeTab !== "active"}
+                        inert={activeTab !== "active"}
+                    >
                         <div className="space-y-16">
                             <JobsListSection
                                 title="Lokale Angebote"
@@ -332,7 +403,6 @@ export function JobsList({
                                     />
                                 }
                                 isWhiteTitle={true}
-                                isDemo={isDemo}
                                 canApply={canApply}
                                 hideStatusLabel={true}
                                 onSelect={handleJobSelect}
@@ -345,7 +415,6 @@ export function JobsList({
                                     jobs={filteredExtendedJobs}
                                     emptyMsg="Keine überregionalen Jobs für deine aktuellen Filter."
                                     isWhiteTitle={false}
-                                    isDemo={isDemo}
                                     canApply={canApply}
                                     hideStatusLabel={true}
                                     isExtendedSection={true}
@@ -355,26 +424,32 @@ export function JobsList({
                         </div>
                     </div>
 
-                    <div className={getPanelClassName("waitlist")}>
+                    <div
+                        className={getPanelClassName("waitlist")}
+                        aria-hidden={activeTab !== "waitlist"}
+                        inert={activeTab !== "waitlist"}
+                    >
                         <JobsListSection
                             title="Warteliste"
-                            colorClass="text-amber-400"
+                            colorClass="text-slate-300"
                             jobs={sortedWaitlistedJobs}
                             emptyMsg="Aktuell sind keine Jobs für die Warteliste verfügbar."
-                            isDemo={isDemo}
                             canApply={canApply}
                             hideStatusLabel={true}
                             onSelect={handleJobSelect}
                         />
                     </div>
 
-                    <div className={getPanelClassName("applied")}>
+                    <div
+                        className={getPanelClassName("applied")}
+                        aria-hidden={activeTab !== "applied"}
+                        inert={activeTab !== "applied"}
+                    >
                         <JobsListSection
                             title="Bereits Beworben"
                             colorClass="text-emerald-400"
                             jobs={sortedAppliedJobs}
                             emptyMsg="Noch keine Bewerbungen versendet."
-                            isDemo={isDemo}
                             canApply={canApply}
                             hideStatusLabel={true}
                             onSelect={handleJobSelect}
@@ -427,6 +502,7 @@ function MobileTab({
         <button
             onClick={onClick}
             data-active={active}
+            aria-pressed={active}
             className={cn(
                 "jobs-mobile-tab relative flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-2 text-[11px] font-semibold transition-colors sm:gap-1.5 sm:rounded-xl sm:px-3 sm:text-xs",
                 active ? activeClass : "text-slate-400 hover:text-slate-200 hover:bg-white/5 border-transparent"
@@ -452,6 +528,7 @@ function DesktopTab({
         <button
             onClick={onClick}
             data-active={active}
+            aria-pressed={active}
             className={cn(
                 "jobs-desktop-tab relative flex items-center gap-2.5 whitespace-nowrap rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-semibold transition-colors duration-200 sm:px-4",
                 active

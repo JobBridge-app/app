@@ -11,7 +11,6 @@ interface SectionProps {
     emptyMsg: React.ReactNode;
     hiddenOnMobile?: boolean;
     isWhiteTitle?: boolean;
-    isDemo: boolean;
     canApply: boolean;
     hideStatusLabel?: boolean;
     isExtendedSection?: boolean;
@@ -26,7 +25,6 @@ export const JobsListSection = memo(function JobsListSection({
     emptyMsg,
     hiddenOnMobile,
     isWhiteTitle,
-    isDemo,
     canApply,
     hideStatusLabel,
     isExtendedSection,
@@ -61,7 +59,6 @@ export const JobsListSection = memo(function JobsListSection({
                         >
                             <JobCard
                                 job={job}
-                                isDemo={isDemo}
                                 isApplied={title === 'Bereits Beworben'}
                                 isLocked={!canApply}
                                 hideStatusLabel={hideStatusLabel}

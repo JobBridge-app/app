@@ -8,24 +8,23 @@ import { LocationAutocomplete, LocationDetails } from "@/components/ui/LocationA
 type ProviderVerificationModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    profileId: string;
-    onVerified: () => void;
+    onSubmitted: () => void;
 };
 
-export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerified }: ProviderVerificationModalProps) {
+export function ProviderVerificationModal({ isOpen, onClose, onSubmitted }: ProviderVerificationModalProps) {
     const [street, setStreet] = useState("");
     const [houseNumber, setHouseNumber] = useState("");
     const [city, setCity] = useState("");
     const [zip, setZip] = useState("");
+    const [latitude, setLatitude] = useState<number | null>(null);
+    const [longitude, setLongitude] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSuccess, setIsSuccess] = useState(false);
     const [isNoticeOpen, setIsNoticeOpen] = useState(false);
 
-    // New state for "Locked/Confirmed" address from API
     const [isAddressLocked, setIsAddressLocked] = useState(false);
 
-    // Reset state when modal opens/closes
     useEffect(() => {
         if (isOpen) {
             setIsSuccess(false);
@@ -33,6 +32,8 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
             setHouseNumber("");
             setCity("");
             setZip("");
+            setLatitude(null);
+            setLongitude(null);
             setIsAddressLocked(false);
             setError(null);
             setIsNoticeOpen(false);
@@ -40,18 +41,15 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
     }, [isOpen]);
 
     const handleLocationSelect = (loc: LocationDetails) => {
-        // Updated Logic (v12): We ALWAYS lock the interface after selection.
-        // If house number is extracted (either from API or smart query), it's set.
-        // If not, we might prompt user or just let them save (if valid).
-
-        const locAny = loc as any;
-        const foundHouseNumber = locAny.house_number;
+        const foundHouseNumber = loc.house_number;
 
         setStreet(loc.address_line1);
         setHouseNumber(foundHouseNumber || "");
         setCity(loc.city || "");
         setZip(loc.postal_code || "");
-        setIsAddressLocked(true); // Always lock to show the "Selected Address" view
+        setLatitude(loc.lat);
+        setLongitude(loc.lng);
+        setIsAddressLocked(true);
         setError(null);
     };
 
@@ -60,12 +58,19 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
         setHouseNumber("");
         setCity("");
         setZip("");
+        setLatitude(null);
+        setLongitude(null);
         setIsAddressLocked(false);
     };
 
+    const handleClose = () => {
+        if (isSuccess) onSubmitted();
+        onClose();
+    };
+
     const handleSubmit = async () => {
-        if (!street.trim() || !houseNumber.trim()) {
-            setError("Bitte gib Straße und Hausnummer an.");
+        if (!street.trim() || !houseNumber.trim() || !city.trim() || !zip.trim() || latitude === null || longitude === null) {
+            setError("Bitte wähle eine vollständige Adresse aus.");
             return;
         }
 
@@ -73,29 +78,28 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
         setError(null);
 
         try {
-            const { error: updateError } = await supabaseBrowser
-                .from("profiles")
-                .update({
-                    street: street.trim(),
-                    house_number: houseNumber.trim(),
-                    city: city.trim() || null,
-                    zip: zip.trim() || null,
-                    provider_verification_status: "verified",
-                    provider_verified_at: new Date().toISOString(),
-                })
-                .eq("id", profileId);
+            const { data: result, error: updateError } = await supabaseBrowser.rpc(
+                "request_provider_verification",
+                {
+                    p_street: street.trim(),
+                    p_house_number: houseNumber.trim(),
+                    p_city: city.trim(),
+                    p_zip: zip.trim(),
+                    p_lat: latitude,
+                    p_lng: longitude,
+                },
+            );
 
             if (updateError) throw updateError;
 
-            // Trigger Success Animation
+            const response = result && typeof result === "object" && !Array.isArray(result)
+                ? result as { ok?: boolean; error?: string }
+                : null;
+            if (!response?.ok) {
+                throw new Error(response?.error ?? "verification_request_failed");
+            }
+
             setIsSuccess(true);
-
-            // Wait for animation then close and notify
-            setTimeout(() => {
-                onVerified(); // This should trigger the banner removal in parent
-                onClose();
-            }, 2000);
-
         } catch (err) {
             console.error("Verification error:", err);
             setError("Fehler beim Speichern. Bitte versuche es erneut.");
@@ -105,7 +109,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
 
     return (
         <Transition appear show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={onClose}>
+            <Dialog as="div" className="relative z-50" onClose={handleClose}>
                 <Transition.Child
                     as={Fragment}
                     enter="ease-out duration-300"
@@ -131,17 +135,25 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                         >
                             <Dialog.Panel className="provider-verification-modal relative w-full max-w-xl transform overflow-visible rounded-[2rem] border p-0 text-left align-middle transition-all">
                                 {isSuccess ? (
-                                    <div className="provider-verification-success flex flex-col items-center justify-center py-16 px-6 space-y-8 relative z-10">
-                                        <div className="relative">
-                                            <div className="absolute inset-0 bg-emerald-500 blur-3xl opacity-20 animate-pulse" />
-                                            <div className="w-24 h-24 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center relative z-10">
-                                                <CheckCircle2 size={48} className="text-emerald-500 animate-[bounce_1s_infinite]" />
-                                            </div>
+                                    <div className="provider-verification-success relative z-10 flex flex-col items-center px-6 py-12 text-center">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
+                                            <CheckCircle2 size={28} className="text-emerald-500" />
                                         </div>
-                                        <div className="text-center space-y-3">
-                                            <h3 className="text-3xl font-black text-white tracking-tight">Verifiziert!</h3>
-                                            <p className="text-slate-400 font-medium">Vielen Dank. Deine Adresse wurde bestätigt.</p>
+                                        <div className="mt-5 max-w-sm space-y-2">
+                                            <Dialog.Title as="h3" className="text-xl font-semibold tracking-tight text-white">Zur Prüfung eingereicht</Dialog.Title>
+                                            <Dialog.Description className="text-sm leading-6 text-slate-400">
+                                                Wir prüfen die Angaben. Sobald die Adresse bestätigt ist, kannst du Jobs veröffentlichen.
+                                            </Dialog.Description>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                handleClose();
+                                            }}
+                                            className="mt-7 min-h-11 rounded-xl bg-[var(--brand)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--brand-strong)]"
+                                        >
+                                            Fertig
+                                        </button>
                                     </div>
                                 ) : (
                                     <>
@@ -152,11 +164,13 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                                         <ShieldCheck size={20} />
                                                     </span>
                                                     <Dialog.Title as="h3" className="text-2xl font-semibold tracking-tight text-white">
-                                                        Adresse verifizieren
+                                                        Adresse zur Prüfung senden
                                                     </Dialog.Title>
                                                 </div>
                                                 <button
-                                                    onClick={onClose}
+                                                    type="button"
+                                                    onClick={handleClose}
+                                                    aria-label="Dialog schließen"
                                                     className="provider-verification-close flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors"
                                                 >
                                                     <X size={16} />
@@ -262,7 +276,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                             </div>
 
                                             {error && (
-                                                <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs font-medium text-rose-300 animate-in fade-in slide-in-from-top-1">
+                                                <div role="alert" aria-live="polite" className="flex items-center gap-2 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger-soft)] p-3 text-xs font-medium text-[var(--danger)] animate-in fade-in slide-in-from-top-1">
                                                     <AlertTriangle size={14} />
                                                     {error}
                                                 </div>
@@ -272,7 +286,7 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                         <div className="provider-verification-footer flex flex-col-reverse gap-3 border-t px-6 py-5 sm:flex-row sm:justify-end">
                                             <button
                                                 type="button"
-                                                onClick={onClose}
+                                                onClick={handleClose}
                                                 className="provider-verification-cancel h-11 rounded-xl px-5 text-sm font-bold transition-colors"
                                             >
                                                 Abbrechen
@@ -280,11 +294,11 @@ export function ProviderVerificationModal({ isOpen, onClose, profileId, onVerifi
                                             <button
                                                 type="button"
                                                 onClick={handleSubmit}
-                                                disabled={isSubmitting || !street.trim() || !houseNumber.trim()}
-                                                className="flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-slate-950 shadow-lg shadow-white/10 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45"
+                                                disabled={isSubmitting || !street.trim() || !houseNumber.trim() || !city.trim() || !zip.trim() || latitude === null || longitude === null}
+                                                className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:opacity-45"
                                             >
                                                 {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                                                <span>Adresse bestätigen</span>
+                                                <span>Prüfung anfragen</span>
                                             </button>
                                         </div>
                                     </>

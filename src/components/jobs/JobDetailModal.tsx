@@ -1,8 +1,9 @@
 "use client";
 
 import { Fragment, useState, useEffect } from "react";
+import Link from "next/link";
 import { Dialog, Transition } from "@headlessui/react";
-import { X, MapPin, Euro, Calendar, ShieldCheck, Clock, Building2, Briefcase, ArrowRight, CheckCircle2, MessageSquare } from "lucide-react";
+import { X, MapPin, Euro, ShieldCheck, Clock, Briefcase, ArrowRight, CheckCircle2, Repeat2 } from "lucide-react";
 import type { Database } from "@/lib/types/supabase";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { VerificationRequiredModal } from "@/components/auth/VerificationRequiredModal";
@@ -11,12 +12,11 @@ import { WithdrawButton } from "@/components/jobs/WithdrawButton";
 import dynamic from "next/dynamic";
 import { JobsListItem } from "@/lib/types/jobbridge";
 import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
-import { UserProfileModal } from "@/components/profile/UserProfileModal";
+import { UserProfileModal, type VisibleProfile } from "@/components/profile/UserProfileModal";
 import { JobApplicationModal } from "@/components/jobs/JobApplicationModal";
 import { StaffBadge } from "@/components/ui/StaffBadge";
 import { cn } from "@/lib/utils";
-import { createSupabaseClient } from "@/lib/supabaseClient";
-import type { GuardianStatus, Profile } from "@/lib/types";
+import type { GuardianStatus } from "@/lib/types";
 import { endPerfMark, startPerfMark } from "@/lib/perf";
 
 const LeafletMap = dynamic(() => import("@/components/ui/LeafletMap"), {
@@ -42,59 +42,45 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
     const isUserWaitlisted = job?.application_status === "waitlisted";
     const isAppliedConversation = Boolean(job?.is_applied && job.application_status && !isUserWaitlisted);
     const isWaitlistMode = job?.status === 'reserved' && !isAppliedConversation;
+    const waitlistCount = Math.max(0, job?.waitlist_count ?? 0);
+    const ownWaitlistPosition = job?.my_waitlist_position && job.my_waitlist_position > 0
+        ? job.my_waitlist_position
+        : null;
+    const recurrenceLabel = job?.recurrence_rule === "weekly"
+        ? "Wöchentlich"
+        : job?.recurrence_rule === "biweekly"
+            ? "Alle zwei Wochen"
+            : job?.recurrence_rule === "monthly"
+                ? "Monatlich"
+                : "Nach Absprache";
     // ... component implementation ...
     const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
 
     // Profile Preview State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-    const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-    const [isProfileLoading, setIsProfileLoading] = useState(false);
-    const [isSelectedProfileStaff, setIsSelectedProfileStaff] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState<VisibleProfile | null>(null);
+    const isSelectedProfileStaff = Boolean(job?.creator?.is_staff);
 
-    // Fetch staff status immediately when modal opens so "Sicherheit" section is correct
-    useEffect(() => {
-        if (!isOpen || !job?.posted_by) return;
-        let active = true;
-        
-        fetch(`/api/user/roles?userId=${job.posted_by}`)
-            .then(res => res.json())
-            .then(data => {
-                if (active) setIsSelectedProfileStaff(data.isStaff);
-            })
-            .catch(() => {
-                if (active) setIsSelectedProfileStaff(false);
-            });
-            
-        return () => { active = false; };
-    }, [isOpen, job?.posted_by]);
-
-    const handleProfileClick = async (e: React.MouseEvent) => {
+    const handleProfileClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!job?.posted_by) return;
+        if (!job?.posted_by || !job.creator) return;
 
-        setIsProfileLoading(true);
-        try {
-            const supabase = createSupabaseClient();
-
-            // Fetch profile data
-            const profileResponse = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", job.posted_by)
-                .single();
-
-            if (profileResponse.data) {
-                // Cast to Profile to handle potential null vs undefined mismatches 
-                setSelectedProfile(profileResponse.data as unknown as Profile);
-                setIsProfileModalOpen(true);
-            }
-        } catch (error) {
-            console.error("Error fetching profile:", error);
-        } finally {
-            setIsProfileLoading(false);
-        }
+        setSelectedProfile({
+            id: job.creator.id || job.posted_by,
+            full_name: job.creator.full_name,
+            company_name: job.creator.company_name,
+            account_type: job.creator.account_type,
+            avatar_url: job.creator.avatar_url,
+            bio: job.creator.bio ?? null,
+            city: job.creator.city ?? null,
+            country: job.creator.country ?? null,
+            created_at: job.creator.created_at ?? null,
+            provider_verification_status: job.creator.provider_verification_status as VisibleProfile["provider_verification_status"],
+            is_staff: job.creator.is_staff,
+        });
+        setIsProfileModalOpen(true);
     };
 
     // Failsafe: Ensure overflow is cleaned up if Headless UI gets stuck
@@ -158,6 +144,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                 type="button"
                                                 className="job-detail-close rounded-full p-2 transition-colors backdrop-blur-md"
                                                 onClick={onClose}
+                                                aria-label="Jobdetails schließen"
                                             >
                                                 <X className="h-6 w-6" />
                                             </button>
@@ -165,8 +152,6 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
 
                                         {/* Background Decoration */}
                                         <div className="job-detail-grid absolute inset-0 bg-[url('/grid.svg')]" />
-                                        <div className="job-detail-glow absolute top-0 right-0 w-64 h-64 blur-[100px] rounded-full pointer-events-none" />
-
                                         <div className="relative z-10 flex flex-col gap-6">
                                             <div className="flex gap-3">
                                                 {job.is_applied && !isUserWaitlisted && (
@@ -175,8 +160,9 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                     </span>
                                                 )}
                                                 {isUserWaitlisted && (
-                                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300 border border-amber-500/20">
-                                                        <Clock size={12} /> Warteliste
+                                                    <span className="job-detail-waitlist-badge inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+                                                        <Clock size={12} />
+                                                        {ownWaitlistPosition ? `Wartelistenplatz ${ownWaitlistPosition}` : "Warteliste"}
                                                     </span>
                                                 )}
                                                 {(() => {
@@ -184,12 +170,12 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                     const CategoryIcon = categoryData?.icon;
                                                     const categoryLabel = categoryData?.label || job.category;
                                                     const categoryTone = isWaitlistMode
-                                                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]"
+                                                        ? "bg-slate-500/10 text-slate-300 border border-slate-500/20"
                                                         : job.is_applied
-                                                            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_15px_-3px_rgba(16,185,129,0.18)]"
-                                                            : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_0_15px_-3px_rgba(99,102,241,0.2)]";
+                                                            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                                                            : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20";
                                                     const iconTone = isWaitlistMode
-                                                        ? "text-amber-400"
+                                                        ? "text-indigo-400"
                                                         : job.is_applied
                                                             ? "text-emerald-400"
                                                             : "text-indigo-400";
@@ -220,11 +206,22 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                     </div>
                                                     <div className="job-detail-waitlist-copy text-sm leading-relaxed">
                                                         <strong className="job-detail-waitlist-title block mb-1">
-                                                            {isUserWaitlisted ? "Du stehst auf der Warteliste" : "Momentan reserviert"}
+                                                            {isUserWaitlisted
+                                                                ? ownWaitlistPosition
+                                                                    ? `Dein Wartelistenplatz: ${ownWaitlistPosition}${waitlistCount > 0 ? ` von ${waitlistCount}` : ""}`
+                                                                    : "Du bist auf der Warteliste"
+                                                                : "Gespräch läuft · Warteliste offen"}
                                                         </strong>
-                                                        {isUserWaitlisted
-                                                            ? "Du bist vorgemerkt und rückst nach, sobald der Platz wieder frei wird."
-                                                            : <>Dieses Angebot ist aktuell für {job.active_applicant ? `${job.active_applicant.full_name?.split(' ')[0]} ` : 'einen anderen Nutzer '}reserviert. Trage dich unverbindlich auf die Warteliste ein, um sofort nachzurücken, falls der Platz wieder frei wird.</>}
+                                                        <p>
+                                                            {isUserWaitlisted
+                                                                ? "Du rückst automatisch nach, sobald das laufende Gespräch ohne Einigung endet."
+                                                                : "Du kannst dich weiterhin bewerben. Deine Bewerbung wird sofort gespeichert; der Chat öffnet sich, sobald du nachrückst."}
+                                                        </p>
+                                                        {waitlistCount > 0 && (
+                                                            <p className="job-detail-waitlist-count mt-1.5 text-xs">
+                                                                {waitlistCount} {waitlistCount === 1 ? "Person wartet" : "Personen warten"} aktuell.
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
@@ -254,6 +251,18 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                     </span>
                                                 </div>
 
+                                                {job.job_kind === "recurring" ? (
+                                                    <>
+                                                        <div className="job-detail-meta-divider w-px h-8 hidden sm:block" />
+                                                        <div className="job-detail-meta-item flex items-center justify-center sm:justify-start gap-2 p-3 sm:p-0 rounded-xl sm:rounded-none">
+                                                            <div className="job-detail-meta-icon shrink-0">
+                                                                <Repeat2 size={18} />
+                                                            </div>
+                                                            <span className="job-detail-meta-value">{recurrenceLabel}</span>
+                                                        </div>
+                                                    </>
+                                                ) : null}
+
                                                 {job.distance_km != null && context !== 'activity' && (
                                                     <>
                                                         <div className="job-detail-meta-divider w-px h-8 hidden sm:block" />
@@ -269,8 +278,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                         <div className="job-detail-meta-divider w-px h-8 hidden sm:block" />
                                                         <button
                                                             onClick={handleProfileClick}
-                                                            disabled={isProfileLoading}
-                                                            className="job-detail-creator-button col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 group p-1 rounded-lg transition-colors mt-2 sm:mt-0 text-left disabled:opacity-50"
+                                                            className="job-detail-creator-button col-span-2 sm:col-span-1 flex items-center justify-center sm:justify-start gap-2 group p-1 rounded-lg transition-colors mt-2 sm:mt-0 text-left"
                                                         >
                                                             <div className="job-detail-creator-avatar w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-2 transition-all overflow-hidden">
                                                                 {job.creator.avatar_url ? (
@@ -328,13 +336,13 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                         </div>
                                                     ) : (
                                                         <div className="flex items-start gap-4">
-                                                            <div className="mt-1 p-2 bg-green-500/10 rounded-full text-green-400 shrink-0">
-                                                                <CheckCircle2 size={20} />
+                                                            <div className="mt-1 shrink-0 rounded-full bg-blue-500/10 p-2 text-blue-400">
+                                                                <ShieldCheck size={20} />
                                                             </div>
                                                             <div>
-                                                                <h5 className="font-semibold text-white text-lg">Geprüfter Job</h5>
+                                                                <h5 className="text-lg font-semibold text-white">Sicher über JobBridge</h5>
                                                                 <p className="text-slate-400 mt-1 leading-relaxed text-sm">
-                                                                    Dieser Job wurde vom JobBridge-Team geprüft und freigegeben.
+                                                                    Bewerbung, Nachrichten und Vereinbarungen bleiben in der Plattform nachvollziehbar. Teile sensible Angaben erst, wenn sie für den Auftrag erforderlich sind.
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -367,37 +375,57 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                     {/* Action Footer */}
                                     <div className="job-detail-footer px-8 py-6 border-t flex flex-col md:flex-row items-center justify-between gap-6">
                                         {job.is_applied ? (
-                                            ['submitted', 'waitlisted', 'negotiating', 'accepted'].includes(job.application_status || '') ? (
+                                            isUserWaitlisted ? (
                                                 <div className="w-full flex flex-col items-end gap-2">
-                                                    <div className="w-full">
-                                                        <a
-                                                            href="/app-home/activities"
-                                                            className="group relative w-full overflow-hidden rounded-2xl p-[1px] transition-all hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 block"
+                                                    <div className="job-detail-waitlist-footer-card flex w-full flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between">
+                                                        <div className="min-w-0">
+                                                            <p className="job-detail-waitlist-footer-title font-semibold">
+                                                                Warteliste aktiv
+                                                            </p>
+                                                            <p className="job-detail-waitlist-footer-copy mt-1 text-sm">
+                                                                {ownWaitlistPosition
+                                                                    ? `Du stehst auf Platz ${ownWaitlistPosition}${waitlistCount > 0 ? ` von ${waitlistCount}` : ""} und rückst automatisch nach.`
+                                                                    : "Du rückst automatisch nach, sobald der Platz wieder frei wird."}
+                                                            </p>
+                                                        </div>
+                                                        <Link
+                                                            href={job.application_id
+                                                                ? `/app-home/activities?conversation=${encodeURIComponent(job.application_id)}`
+                                                                : "/app-home/activities"}
+                                                            prefetch
+                                                            className="job-detail-secondary-action inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border px-5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
                                                         >
-                                                            {/* Gradient Border Animation */}
-                                                            <span className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#4f46e5_0%,#0f172a_50%,#4f46e5_100%)] opacity-70 group-hover:opacity-100 transition-opacity" />
-
-                                                            {/* Card Content */}
-                                                            <span className="relative flex h-full w-full flex-col justify-between rounded-2xl bg-[#0f1115] p-5">
-
-
-                                                                <div className="flex items-center justify-between gap-4 mt-2">
-                                                                    <div className="flex flex-col">
-                                                                        <span className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
-                                                                            Zum Dashboard
-                                                                        </span>
-                                                                        <span className="text-xs text-slate-400">
-                                                                            Chat, Details & Optionen
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 transition-transform duration-300 group-hover:translate-x-1 group-hover:bg-indigo-500">
-                                                                        <ArrowRight size={20} />
-                                                                    </div>
-                                                                </div>
-                                                            </span>
-                                                        </a>
+                                                            Warteliste ansehen <ArrowRight size={17} aria-hidden="true" />
+                                                        </Link>
                                                     </div>
-                                                    {context !== 'feed' && <div className="text-right w-full"><WithdrawButton applicationId={job.application_id!} /></div>}
+                                                    {context !== 'feed' && job.application_id && (
+                                                        <div className="text-right w-full">
+                                                            <WithdrawButton applicationId={job.application_id} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : ['submitted', 'negotiating', 'accepted'].includes(job.application_status || '') ? (
+                                                <div className="w-full flex flex-col items-end gap-2">
+                                                    <Link
+                                                        href={job.application_id
+                                                            ? `/app-home/activities?conversation=${encodeURIComponent(job.application_id)}`
+                                                            : "/app-home/activities"}
+                                                        prefetch
+                                                        className="job-detail-dashboard-link flex min-h-20 w-full items-center justify-between gap-4 rounded-2xl border p-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                                                    >
+                                                        <span className="flex min-w-0 flex-col">
+                                                            <span className="job-detail-dashboard-title text-lg font-bold">Zum Gespräch</span>
+                                                            <span className="job-detail-dashboard-copy text-xs">Chat, Status und Details öffnen</span>
+                                                        </span>
+                                                        <span className="job-detail-dashboard-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                                                            <ArrowRight size={20} aria-hidden="true" />
+                                                        </span>
+                                                    </Link>
+                                                    {context !== 'feed' && job.application_id && (
+                                                        <div className="text-right w-full">
+                                                            <WithdrawButton applicationId={job.application_id} />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <div className="w-full px-6 py-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 font-medium flex items-center justify-center gap-2">
@@ -419,7 +447,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                 {!canApply ? (
                                                     <ButtonPrimary
                                                         onClick={() => setIsVerificationModalOpen(true)}
-                                                        className="w-full md:w-auto px-10 py-4 text-lg shadow-xl shadow-slate-900/20 hover:shadow-slate-800/30 hover:scale-[1.02] transition-all bg-slate-800 hover:bg-slate-700 text-slate-200 border-white/10"
+                                                        className="w-full px-10 py-4 text-lg !shadow-none hover:!shadow-none hover:!scale-100 md:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 border-white/10"
                                                     >
                                                         <span className="flex items-center gap-3 font-bold">
                                                             <Lock size={20} /> Freischalten
@@ -431,7 +459,7 @@ export function JobDetailModal({ job, isOpen, onClose, onClosed, canApply, guard
                                                             startPerfMark("job-apply-open");
                                                             setIsApplicationModalOpen(true);
                                                         }}
-                                                        className={`w-full md:w-auto px-10 py-4 text-lg shadow-xl hover:scale-[1.02] transition-all ${isWaitlistMode ? 'shadow-amber-500/20 hover:shadow-amber-500/30 bg-amber-600 hover:bg-amber-500' : 'shadow-indigo-500/20 hover:shadow-indigo-500/30'}`}
+                                                        className="w-full px-10 py-4 text-lg !shadow-none hover:!shadow-none hover:!scale-100 md:w-auto"
                                                     >
                                                         <span className="flex items-center gap-3 font-bold">
                                                             {isWaitlistMode ? "Auf Warteliste" : "Jetzt bewerben"} <ArrowRight size={20} />

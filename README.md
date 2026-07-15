@@ -162,6 +162,15 @@ Our PostgreSQL Database (managed via Supabase) operates under strict Row Level S
 
 ---
 
+## 📚 Engineering Documentation
+
+- **[Major platform foundation release](./docs/releases/2026-07-15-platform-foundation.md):** Complete, human-readable change record from `c9aa5b0`, including product impact, breaking changes, validation and deployment requirements.
+- **[Activities domain architecture](./docs/architecture/activities-domain.md):** Job, application, queue, conversation, appointment, Realtime and authorization contracts.
+- **[Database rollout runbook](./docs/operations/database-rollout.md):** Migration-ledger verification, deployment gates, smoke tests and rollback strategy.
+- **[Canonical database migrations](./infrastructure/database/README.md):** Ordered migration list, checksums and protected-data rules.
+
+---
+
 ## 💻 Elite Technology Stack
 
 JobBridge leverages the absolute pinnacle of modern web development frameworks to ensure enterprise-level scalability and a flawless user experience.

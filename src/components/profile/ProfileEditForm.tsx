@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Profile } from "@/lib/types";
-import { LockKeyhole, User, MapPin, Briefcase, Sparkles, Clock, ShieldCheck, ShieldAlert, ArrowRight, Plus, Users, Calendar, Search, Fingerprint } from "lucide-react";
+import { LockKeyhole, User, MapPin, Briefcase, Sparkles, Clock, ShieldCheck, ShieldAlert, Plus, Users, Calendar, Search, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { LocationAutocomplete, LocationDetails } from "@/components/ui/LocationAutocomplete";
@@ -13,7 +13,6 @@ import { ProviderVerificationModal } from "@/components/profile/ProviderVerifica
 import { GuardianBanner } from "./GuardianBanner";
 import { GuardianConsentModal } from "@/components/GuardianConsentModal";
 import { getGuardians, getWards } from "@/app/actions/guardian";
-import { GuardianManageModal } from "@/components/profile/GuardianManageModal";
 
 type GuardianDisplay = {
     id: string;
@@ -38,8 +37,7 @@ const profileTextareaClass = "profile-field-control w-full resize-none rounded-2
 export function ProfileEditForm({ profile, className, isStaff = false, guardians = [], lastLogin = null }: ProfileEditFormProps) {
     const isProvider = profile.account_type === "job_provider";
     const isVerified = profile.provider_verification_status === 'verified' || Boolean(profile.provider_verified_at);
-
-    const isProfileIncomplete = !isVerified && (!profile.full_name || !profile.city || !profile.street || !profile.house_number || !profile.zip);
+    const isVerificationPending = profile.provider_verification_status === "pending";
 
     const [bio, setBio] = useState(profile.bio?.trim() || "");
     const [availabilityNote, setAvailabilityNote] = useState((profile.availability_note ?? "").trim());
@@ -80,8 +78,6 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
 
     const searchParams = useSearchParams();
     const focusTarget = searchParams.get("focus");
-    const shouldReturnToJobCreator = searchParams.get("from") === "create-job";
-
     useEffect(() => {
         if (focusTarget === "provider-verification" && isProvider && !isVerified) {
             const focusTimer = window.setTimeout(() => {
@@ -235,6 +231,8 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                 {saveState && (
                     <div className="fixed top-24 right-8 z-[100]">
                         <div
+                            role={saveState.type === "error" ? "alert" : "status"}
+                            aria-live="polite"
                             className={cn(
                                 "flex items-center gap-4 px-6 py-4 rounded-2xl border shadow-2xl backdrop-blur-2xl animate-in fade-in slide-in-from-right-8 duration-500",
                                 saveState.type === "ok"
@@ -252,7 +250,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
 
                 {toastMessage && (
                     <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100]">
-                        <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-[#1A1A20]/90 border border-indigo-500/30 text-indigo-100 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 zoom-in-95 duration-300">
+                        <div role="status" aria-live="polite" className="flex items-center gap-3 px-6 py-3 rounded-full bg-[#1A1A20]/90 border border-indigo-500/30 text-indigo-100 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 zoom-in-95 duration-300">
                             <Sparkles size={16} className="text-indigo-400" />
                             <span className="text-xs font-bold tracking-wide">{toastMessage}</span>
                         </div>
@@ -267,61 +265,43 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                 id="provider-verification-section"
                                 tabIndex={-1}
                                 className={cn(
-                                    "profile-verification-card relative isolate overflow-hidden rounded-[2rem] border bg-[#0B0B10] p-6 shadow-2xl outline-none transition-all duration-700 group md:p-8",
+                                    "rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-5 outline-none transition-[border-color,box-shadow] duration-200 md:p-6",
                                     verificationFocusActive
-                                        ? "border-indigo-300/55 shadow-[0_22px_72px_rgba(79,70,229,0.2),0_0_0_1px_rgba(129,140,248,0.2)]"
-                                        : "border-indigo-500/30 shadow-black/30"
+                                        ? "border-[var(--brand-border)] ring-2 ring-[var(--focus-halo)]"
+                                        : "shadow-[var(--shadow-card)]"
                                 )}
                             >
-                                <div className="profile-verification-glow absolute inset-0 pointer-events-none" />
-                                <div className="profile-verification-hairline absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-40" />
-
-                                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8">
-                                    <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
-                                        <div
-                                            className={cn(
-                                                "absolute inset-0 rounded-full border border-indigo-300/15 transition-all duration-700",
-                                                verificationFocusActive && "border-indigo-200/30 shadow-[0_0_32px_rgba(99,102,241,0.16)]"
-                                            )}
-                                        />
-                                        <div
-                                            className={cn(
-                                                "absolute inset-2 rounded-full border border-white/10 transition-all duration-700",
-                                                verificationFocusActive && "border-indigo-100/25"
-                                            )}
-                                        />
-                                        <div className="profile-verification-icon-shell relative flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-[#15151A]/90 shadow-2xl transition-transform duration-500 group-hover:scale-105">
-                                            <div className="absolute inset-0 rounded-full border border-indigo-300/10 opacity-70" />
-                                            <ShieldCheck size={36} className={cn("relative z-10 transition-colors duration-500", verificationFocusActive ? "text-indigo-200" : "text-indigo-400")} />
-                                        </div>
+                                <div className="flex flex-col gap-5 md:flex-row md:items-center">
+                                    <div className={cn(
+                                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border",
+                                        isVerificationPending
+                                            ? "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                                            : "border-[var(--brand-border)] bg-[var(--brand-soft)] text-[var(--brand)]",
+                                    )}>
+                                        {isVerificationPending ? <Clock size={20} /> : <ShieldCheck size={20} />}
                                     </div>
 
-                                    <div className="flex-1 space-y-2">
-                                        <div className="flex items-center gap-3">
-                                            <h3 className="text-2xl font-bold text-white tracking-tight">
-                                                Basisverifizierung abschließen
-                                            </h3>
-                                        </div>
-                                        <p className="text-slate-400 text-base font-medium leading-relaxed max-w-2xl">
-                                            Um Jobs auszuschreiben und vollen Zugriff auf die Plattform zu erhalten, bestätigst du einmalig deine Wohnadresse.
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-base font-semibold text-[var(--text-strong)]">
+                                            {isVerificationPending ? "Adresse wird geprüft" : "Adresse einmalig prüfen lassen"}
+                                        </h3>
+                                        <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
+                                            {isVerificationPending
+                                                ? "Deine Angaben sind eingegangen. Nach der Freigabe kannst du Jobs veröffentlichen."
+                                                : "Für sichere Ausschreibungen prüfen wir die Wohnadresse. Sie wird nicht öffentlich angezeigt."}
                                         </p>
                                     </div>
 
-                                    <div className="relative w-full md:w-auto">
+                                    {!isVerificationPending ? (
                                         <button
+                                            type="button"
                                             onClick={() => setShowVerificationModal(true)}
-                                            className={cn(
-                                                "profile-verification-action relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl px-8 py-4 text-sm font-bold tracking-wide text-white shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] md:w-auto group/btn",
-                                                verificationFocusActive
-                                                    ? "bg-[#5853F2] shadow-[0_16px_46px_rgba(79,70,229,0.32)]"
-                                                    : "bg-[#4F46E5] hover:bg-[#4338CA] shadow-indigo-900/20 hover:shadow-indigo-900/30"
-                                            )}
+                                            className="flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] px-5 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[var(--brand-strong)] active:scale-[0.98] md:w-auto"
                                         >
-                                            <MapPin size={18} className="relative z-10 text-indigo-100 transition-colors" />
-                                            <span className="relative z-10">Wohnadresse eingeben</span>
-                                            <ArrowRight size={16} className="relative z-10 text-indigo-100 transition-transform group-hover/btn:translate-x-1" />
+                                            <MapPin size={17} />
+                                            Adresse angeben
                                         </button>
-                                    </div>
+                                    ) : null}
                                 </div>
                             </div>
                         )
@@ -549,11 +529,12 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
 
                                 <div className="profile-form-grid space-y-6">
                                     <div className="profile-field-block profile-field-block-large space-y-3 group">
-                                        <label className={`${profileFieldLabelClass} group-focus-within:text-indigo-400`}>
+                                        <label htmlFor="bio" className={`${profileFieldLabelClass} group-focus-within:text-indigo-400`}>
                                             {isProvider ? "Über uns" : "Über mich"}
                                         </label>
                                         <div className="relative">
                                             <textarea
+                                                id="bio"
                                                 rows={6}
                                                 value={bio}
                                                 onChange={(e) => setBio(e.target.value)}
@@ -569,7 +550,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                     {!isProvider && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="profile-field-block space-y-3 group">
-                                                <label className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
+                                                <label htmlFor="skills" className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
                                                     <Briefcase size={12} /> Fähigkeiten
                                                 </label>
                                                 <div className="relative">
@@ -586,7 +567,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                             </div>
 
                                             <div className="profile-field-block space-y-3 group">
-                                                <label className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
+                                                <label htmlFor="interests" className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
                                                     <Sparkles size={12} /> Interessen
                                                 </label>
                                                 <div className="relative">
@@ -605,7 +586,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                     )}
 
                                     <div className="profile-field-block space-y-3 group">
-                                        <label className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
+                                        <label htmlFor="availabilityNote" className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
                                             <Clock size={12} /> Zeitliche Verfügbarkeit
                                         </label>
                                         <div className="relative">
@@ -620,37 +601,6 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                             />
                                         </div>
                                     </div>
-
-                                    {isProvider && !isProfileIncomplete && !isVerified && (
-                                        <div className="mt-8 pt-8 border-t border-white/[0.03]">
-                                            <div
-                                                onClick={showDevToast}
-                                                className="group/plus p-6 rounded-[2rem] bg-gradient-to-br from-[#0F0F12] to-[#0A0A0C] border border-blue-500/20 hover:border-blue-500/40 transition-all cursor-pointer relative overflow-hidden shadow-lg hover:shadow-blue-900/10"
-                                            >
-                                                <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-[60px] group-hover/plus:opacity-100 transition-opacity" />
-
-                                                <div className="relative z-10 flex items-center justify-between gap-4">
-                                                    <div className="flex items-center gap-5">
-                                                        <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner border border-blue-500/20">
-                                                            <ShieldCheck size={28} />
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                                                                JobBridge Plus <span className="text-[10px] uppercase tracking-wider bg-blue-500 text-white px-2 py-0.5 rounded-full font-black">NEU</span>
-                                                            </h4>
-                                                            <p className="text-sm text-slate-400 font-medium leading-relaxed max-w-sm mt-1">
-                                                                Verdiene dir den <span className="text-blue-400 font-bold">blauen Haken</span> und mache JobBridge zu einem sicheren Ort.
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-500 group-hover/plus:bg-blue-500 group-hover/plus:text-white transition-all transform group-hover/plus:rotate-90">
-                                                        <ArrowRight size={20} />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
 
                                 </div>
                             </div>
@@ -670,11 +620,12 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
 
                                     <div className="space-y-8">
                                         <div className="profile-field-block space-y-3 group">
-                                            <label className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
+                                            <label htmlFor="profile-location-search" className={`${profileFieldLabelWithIconClass} group-focus-within:text-indigo-400`}>
                                                 <Search size={12} /> Adresse suchen
                                             </label>
                                             <div className="relative group/search z-20">
                                                 <LocationAutocomplete
+                                                    inputId="profile-location-search"
                                                     onSelect={handleLocationSelect}
                                                     placeholder="Straße und Ort eingeben..."
                                                     className="w-full"
@@ -684,12 +635,11 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
 
                                         <div className="profile-location-fields grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/[0.03]">
                                             <div className="profile-field-block space-y-3 group">
-                                                <label className={profileFieldLabelClass}>
-                                                    Straße & Hausnummer
-                                                </label>
+                                                <div className={profileFieldLabelClass}>Straße & Hausnummer</div>
                                                 <div className="flex gap-2">
                                                     <input
                                                         id="street"
+                                                        aria-label="Straße"
                                                         name="street"
                                                         autoComplete="address-line1"
                                                         value={street}
@@ -699,6 +649,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                     />
                                                     <input
                                                         id="houseNumber"
+                                                        aria-label="Hausnummer"
                                                         name="houseNumber"
                                                         autoComplete="address-line2"
                                                         value={houseNumber}
@@ -710,9 +661,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                             </div>
 
                                             <div className="profile-field-block space-y-3 group">
-                                                <label className={profileFieldLabelClass}>
-                                                    PLZ & Ort
-                                                </label>
+                                                <div className={profileFieldLabelClass}>PLZ & Ort</div>
                                                 <div className="flex gap-2">
                                                     <div className="relative w-[130px] sm:w-[150px] group/zip flex-shrink-0">
                                                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600">
@@ -720,6 +669,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                         </div>
                                                         <input
                                                             id="zipDisplay"
+                                                            aria-label="Postleitzahl"
                                                             name="zipDisplay"
                                                             autoComplete="postal-code"
                                                             value={zip}
@@ -734,6 +684,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
                                                         </div>
                                                         <input
                                                             id="cityDisplay"
+                                                            aria-label="Ort"
                                                             name="cityDisplay"
                                                             autoComplete="address-level2"
                                                             value={city}
@@ -783,13 +734,7 @@ export function ProfileEditForm({ profile, className, isStaff = false, guardians
             <ProviderVerificationModal
                 isOpen={showVerificationModal}
                 onClose={() => setShowVerificationModal(false)}
-                profileId={profile.id}
-                onVerified={() => {
-                    if (shouldReturnToJobCreator) {
-                        window.location.assign("/app-home/offers/new");
-                        return;
-                    }
-
+                onSubmitted={() => {
                     window.location.reload();
                 }}
             />

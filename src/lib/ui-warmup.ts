@@ -15,10 +15,7 @@ export function warmJobsUI() {
 
 export function warmActivityUI() {
   if (!activityWarmPromise) {
-    activityWarmPromise = Promise.all([
-      import("@/components/activity/ApplicationChatModal"),
-      import("@/components/activity/ApplicationChat"),
-    ]);
+    activityWarmPromise = import("@/components/activity/ApplicationChat");
   }
 
   return activityWarmPromise;

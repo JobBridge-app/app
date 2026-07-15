@@ -1,267 +1,218 @@
 "use server";
 
-import { supabaseServer } from "@/lib/supabaseServer";
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { supabaseServer } from "@/lib/supabaseServer";
 
-export async function updateApplicationStatus(applicationId: string, newStatus: 'accepted' | 'rejected') {
-    const supabase = await supabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
+type RpcPayload = {
+    ok?: boolean;
+    error?: string;
+    unchanged?: boolean;
+    message?: Record<string, unknown>;
+    request?: Record<string, unknown>;
+    engagement?: Record<string, unknown>;
+    appointment?: Record<string, unknown>;
+    agreement?: Record<string, unknown>;
+    report_id?: string;
+    status?: string;
+    is_primary?: boolean;
+    scheduled_for?: string;
+    agreed_at?: string;
+    updated_count?: number;
+    accepted?: boolean;
+    [key: string]: unknown;
+};
 
-    if (!user) return { error: "Nicht authentifiziert" };
+function readPayload(value: unknown): RpcPayload {
+    return value && typeof value === "object" ? value as RpcPayload : {};
+}
 
-    // Verify ownership of the job related to this application (implied by policy or explicit check)
-    // We'll rely on RLS update policy policy "Provider update application status" or do explicit check
+function resultError(payload: RpcPayload, rpcError: { message?: string } | null, fallback: string) {
+    if (rpcError) return fallback;
+    if (payload.ok === false) return payload.error || fallback;
+    return null;
+}
 
-    const { data: app } = await supabase
-        .from("applications")
-        .select("user_id, status, job:jobs(posted_by, title)")
-        .eq("id", applicationId)
-        .single<any>();
-
-    if (!app || app.job.posted_by !== user.id) {
-        return { error: "Nicht berechtigt." };
-    }
-
-    const { error } = await supabase
-        .from("applications")
-        .update({ status: newStatus })
-        .eq("id", applicationId);
-
-    if (error) {
-        console.error("Update Status Error", error);
-        return { error: "Fehler beim Aktualisieren." };
-    }
-
-    // Notify Seeker
-    const title = newStatus === 'accepted' ? "Glückwunsch! Zusage erhalten." : "Bewerbungsstatus aktualisiert";
-    const body = newStatus === 'accepted'
-        ? `Du hast eine Zusage für '${app.job.title}' erhalten!`
-        : `Deine Bewerbung für '${app.job.title}' wurde abgelehnt.`;
-
-    await (supabase.from("notifications") as any).insert({
-        user_id: app.user_id,
-        type: "application_status",
-        title: title,
-        body: body,
-        data: { route: "/app-home/activities" }
-    });
-
+function revalidateActivityPaths() {
     revalidatePath("/app-home/activities");
-    return { success: true };
+    revalidatePath("/app-home/offers");
+    revalidatePath("/app-home/jobs");
+}
+
+async function callActivityRpc(
+    name: string,
+    args: Record<string, unknown>,
+    fallback: string,
+) {
+    const supabase = await supabaseServer();
+    const { data, error } = await (supabase.rpc as any)(name, args);
+    const payload = readPayload(data);
+    const failure = resultError(payload, error, fallback);
+    if (failure) return { error: failure } as const;
+    return { success: true, ...payload } as const;
 }
 
 export async function rejectApplication(applicationId: string, reason: string) {
-    const supabase = await supabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
+    const normalizedReason = reason.trim();
+    if (normalizedReason.length < 3) return { error: "Bitte gib einen kurzen Grund an." };
+    if (normalizedReason.length > 500) return { error: "Der Grund darf höchstens 500 Zeichen lang sein." };
 
-    if (!user) return { error: "Nicht authentifiziert" };
-
-    // Get app info
-    const { data: app } = await supabase
-        .from("applications")
-        .select("user_id, status, job_id, job:jobs(posted_by, title, status)")
-        .eq("id", applicationId)
-        .single<any>();
-
-    if (!app || app.job.posted_by !== user.id) {
-        return { error: "Nicht berechtigt." };
-    }
-
-    const wasActive = ['negotiating', 'accepted'].includes(app.status);
-
-    // Update status to rejected
-    const { error } = await supabase
-        .from("applications")
-        .update({ status: 'rejected', rejection_reason: reason })
-        .eq("id", applicationId);
-
-    if (error) {
-        console.error("Reject Error", error);
-        return { error: "Fehler beim Ablehnen." };
-    }
-
-    // Check for Waitlist
-    // If the application was active (negotiating/reserved), we check waitlist before re-opening
-    if (wasActive) {
-        const { data: waitlisted } = await supabase
-            .from("applications")
-            .select("id, user_id")
-            .eq("job_id", app.job_id)
-            .eq("status", "waitlisted")
-            .order("created_at", { ascending: true }) // First come, first served
-            .limit(1)
-            .maybeSingle();
-
-        if (waitlisted) {
-            // Promote to NEGOTIATING (Job stays RESERVED or becomes RESERVED)
-            await supabase
-                .from("applications")
-                .update({ status: "negotiating" })
-                .eq("id", waitlisted.id);
-
-            // Notify Candidate
-            await (supabase as any).from("notifications").insert({
-                user_id: waitlisted.user_id,
-                type: "application_update",
-                title: "Gute Neuigkeiten!",
-                body: `Ein Platz wurde frei! Deine Bewerbung für den Job wurde aktiviert.`,
-                data: { route: "/app-home/activities" }
-            });
-
-            if (app.job?.status !== 'reserved') {
-                await supabase.from("jobs").update({ status: 'reserved' }).eq("id", app.job_id);
-            }
-        } else {
-            // NO Waitlist -> Check if job was reserved/filled -> Set to OPEN
-            if (['reserved', 'filled'].includes(app.job?.status)) {
-                await supabase.from("jobs").update({ status: 'open' }).eq("id", app.job_id);
-            }
-        }
-    }
-
-    // Notify Seeker
-    await (supabase.from("notifications") as any).insert({
-        user_id: app.user_id,
-        type: "application_status",
-        title: "Bewerbung abgelehnt",
-        body: `Deine Bewerbung für '${app.job.title}' wurde abgelehnt. Grund: ${reason}`,
-        data: { route: "/app-home/activities" }
-    });
-
-    revalidatePath("/app-home/activities");
-    return { success: true };
+    const result = await callActivityRpc("reject_application", {
+        p_application_id: applicationId,
+        p_reason: normalizedReason,
+    }, "Die Bewerbung konnte nicht abgelehnt werden.");
+    if ("error" in result) return result;
+    revalidateActivityPaths();
+    return result;
 }
 
-export async function withdrawApplication(applicationId: string, reason: string = "Kein Interesse mehr") {
-    const supabase = await supabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
+export async function withdrawApplication(applicationId: string, reason = "Kein Interesse mehr") {
+    const normalizedReason = reason.trim() || "Kein Interesse mehr";
+    if (normalizedReason.length > 500) return { error: "Der Grund darf höchstens 500 Zeichen lang sein." };
 
-    if (!user) return { error: "Nicht authentifiziert" };
+    const result = await callActivityRpc("withdraw_application", {
+        p_application_id: applicationId,
+        p_reason: normalizedReason,
+    }, "Die Bewerbung konnte nicht zurückgezogen werden.");
+    if ("error" in result) return result;
+    revalidateActivityPaths();
+    return result;
+}
 
-    // Get current status to see if we need to re-open the job
-    const { data: app } = await supabase
-        .from("applications")
-        .select("status, job_id, job:jobs(status)")
-        .eq("id", applicationId)
-        .single<any>();
+export async function reopenApplication(applicationId: string) {
+    const result = await callActivityRpc("reopen_application", {
+        p_application_id: applicationId,
+    }, "Das Gespräch konnte nicht wieder geöffnet werden.");
+    if ("error" in result) return result;
+    revalidateActivityPaths();
+    return result;
+}
 
-    if (!app) return { error: "Bewerbung nicht gefunden." };
+export async function requestConversationReopen(applicationId: string, message: string) {
+    const normalizedMessage = message.trim();
+    if (normalizedMessage.length < 10) return { error: "Bitte beschreibe deine Anfrage in mindestens 10 Zeichen." };
+    if (normalizedMessage.length > 500) return { error: "Die Anfrage darf höchstens 500 Zeichen lang sein." };
 
-    const wasActive = ['negotiating', 'accepted'].includes(app.status);
-
-    const { error } = await supabase
-        .from("applications")
-        .update({ status: "withdrawn", rejection_reason: reason })
-        .eq("id", applicationId)
-        .eq("user_id", user.id);
-
-    if (error) {
-        console.error("Withdraw Error", error);
-        return { error: "Fehler beim Zurückziehen." };
-    }
-
-    // Check for Waitlist
-    // If the application was active (negotiating/reserved), we check waitlist before re-opening
-    if (wasActive) {
-        const { data: waitlisted } = await supabase
-            .from("applications")
-            .select("id, user_id")
-            .eq("job_id", app.job_id)
-            .eq("status", "waitlisted")
-            .order("created_at", { ascending: true })
-            .limit(1)
-            .maybeSingle();
-
-        if (waitlisted) {
-            // Promote to NEGOTIATING (Job stays RESERVED)
-            await supabase
-                .from("applications")
-                .update({ status: "negotiating" })
-                .eq("id", waitlisted.id);
-
-            // Notify Candidate
-            await (supabase as any).from("notifications").insert({
-                user_id: waitlisted.user_id,
-                type: "application_update",
-                title: "Gute Neuigkeiten!",
-                body: `Ein Platz wurde frei! Deine Bewerbung für den Job wurde aktiviert.`,
-                data: { route: "/app-home/activities" }
-            });
-
-            // Notify Provider
-            // Since candidate withdrew, provider needs to know new person is there
-            // (We need to fetch provider ID, which is app.job.posted_by, but we didnt fetch it. 
-            // We can fetch job separately or update select above).
-            // Let's assume we maintain job reserved status.
-            if (app.job?.status !== 'reserved') {
-                await supabase.from("jobs").update({ status: 'reserved' }).eq("id", app.job_id);
-            }
-        } else {
-            // NO Waitlist -> Check if job was reserved/filled -> Set to OPEN
-            if (['reserved', 'filled'].includes(app.job?.status)) {
-                await supabase.from("jobs").update({ status: 'open' }).eq("id", app.job_id);
-            }
-        }
-    }
-
+    const result = await callActivityRpc("request_conversation_reopen", {
+        p_application_id: applicationId,
+        p_message: normalizedMessage,
+    }, "Die Öffnungsanfrage konnte nicht gesendet werden.");
+    if ("error" in result) return result;
     revalidatePath("/app-home/activities");
-    revalidatePath("/app-home/jobs");
-    return { success: true };
+    return result;
+}
+
+export async function respondToConversationReopenRequest(
+    requestId: string,
+    accept: boolean,
+    reason = "",
+) {
+    const normalizedReason = reason.trim();
+    if (normalizedReason.length > 500) return { error: "Die Antwort darf höchstens 500 Zeichen lang sein." };
+
+    const result = await callActivityRpc("respond_to_conversation_reopen_request", {
+        p_request_id: requestId,
+        p_accept: accept,
+        p_reason: normalizedReason || null,
+    }, "Die Anfrage konnte nicht beantwortet werden.");
+    if ("error" in result) return result;
+    revalidateActivityPaths();
+    return result;
+}
+
+export async function promoteWaitlistedApplication(applicationId: string, reason: string) {
+    const normalizedReason = reason.trim();
+    if (normalizedReason.length < 20) return { error: "Bitte begründe die Ausnahme in mindestens 20 Zeichen." };
+    if (normalizedReason.length > 500) return { error: "Der Grund darf höchstens 500 Zeichen lang sein." };
+
+    const result = await callActivityRpc("promote_waitlisted_application", {
+        p_application_id: applicationId,
+        p_reason: normalizedReason,
+    }, "Die Bewerbung konnte nicht vorgezogen werden.");
+    if ("error" in result) return result;
+    revalidateActivityPaths();
+    return result;
 }
 
 export async function sendMessage(applicationId: string, content: string) {
-    const supabase = await supabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
+    const normalizedContent = content.trim();
+    if (!normalizedContent) return { error: "Nachricht darf nicht leer sein." };
+    if (normalizedContent.length > 1200) return { error: "Die Nachricht darf höchstens 1.200 Zeichen lang sein." };
 
-    if (!user) return { error: "Nicht authentifiziert" };
-
-    if (!content.trim()) return { error: "Nachricht darf nicht leer sein." };
-
-    // Verify access (applicant or job owner)
-    // For now, we assume if you can see the application, you can chat. 
-    // Ideally we check if user.id === app.user_id OR user.id === app.job.posted_by
-    const { data: app } = await supabase
-        .from("applications")
-        .select("user_id, job:jobs(posted_by, title)")
-        .eq("id", applicationId)
-        .single<any>();
-
-    if (!app) return { error: "Bewerbung nicht gefunden." };
-
-    const isApplicant = app.user_id === user.id;
-    const isProvider = app.job?.posted_by === user.id;
-
-    if (!isApplicant && !isProvider) {
-        return { error: "Nicht berechtigt." };
-    }
-
-    // Insert Message
-    const { error } = await supabase
-        .from("messages")
-        .insert({
-            application_id: applicationId,
-            sender_id: user.id,
-            content: content.trim()
-        });
-
-    if (error) {
-        console.error("Send Message Error", error);
-        return { error: "Fehler beim Senden." };
-    }
-
-    // Notify the OTHER party
-    const recipientId = isApplicant ? app.job.posted_by : app.user_id;
-    const senderName = isApplicant ? "Bewerber" : "Arbeitgeber"; // Could fetch name but this is faster
-
-    await (supabase as any).from("notifications").insert({
-        user_id: recipientId,
-        type: "chat_message",
-        title: `Neue Nachricht zu '${app.job.title}'`,
-        body: isApplicant ? "Du hast eine neue Nachricht vom Bewerber erhalten." : "Du hast eine neue Nachricht vom Arbeitgeber erhalten.",
-        data: { route: "/app-home/activities" }
-    });
-
+    const result = await callActivityRpc("send_application_message", {
+        p_application_id: applicationId,
+        p_content: normalizedContent,
+        p_client_nonce: randomUUID(),
+    }, "Die Nachricht konnte nicht gesendet werden.");
+    if ("error" in result) return result;
+    if (!result.message) return { error: "Die Nachricht wurde nicht bestätigt." };
     revalidatePath("/app-home/activities");
-    revalidatePath("/app-home/offers"); // Revalidate both sides just in case
-    return { success: true };
+    return result;
+}
+
+export async function markApplicationMessagesRead(applicationId: string) {
+    const result = await callActivityRpc("mark_application_messages_read", {
+        p_application_id: applicationId,
+    }, "Nachrichten konnten nicht als gelesen markiert werden.");
+    if ("error" in result) return result;
+    return { success: true, updatedCount: Number(result.updated_count ?? 0) };
+}
+
+export async function confirmJobAgreement(applicationId: string, scheduledFor: string, note = "") {
+    const scheduledDate = new Date(scheduledFor);
+    if (Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() < Date.now() - 60_000) {
+        return { error: "Der Termin muss in der Zukunft liegen." };
+    }
+
+    const result = await callActivityRpc("confirm_job_engagement", {
+        p_application_id: applicationId,
+        p_starts_at: scheduledDate.toISOString(),
+        p_ends_at: null,
+        p_timezone: "Europe/Berlin",
+        p_note: note.trim() || null,
+    }, "Der Termin konnte nicht gespeichert werden.");
+    if ("error" in result) return result;
+    revalidateActivityPaths();
+    return {
+        ...result,
+        scheduled_for: result.scheduled_for || scheduledDate.toISOString(),
+        agreed_at: result.agreed_at || new Date().toISOString(),
+    };
+}
+
+export async function completeJobEngagement(applicationId: string, reason = "") {
+    const normalizedReason = reason.trim();
+    if (normalizedReason.length > 500) return { error: "Der Abschlussgrund darf höchstens 500 Zeichen lang sein." };
+
+    const result = await callActivityRpc("complete_job_engagement", {
+        p_application_id: applicationId,
+        p_reason: normalizedReason || null,
+    }, "Die Zusammenarbeit konnte nicht abgeschlossen werden.");
+    if ("error" in result) return result;
+    revalidateActivityPaths();
+    return result;
+}
+
+export async function reportActivityItem(input: {
+    applicationId: string;
+    reasonCode: "harassment" | "fraud" | "safety" | "inappropriate" | "spam" | "other";
+    details?: string;
+    reportedUserId?: string | null;
+    messageId?: string | null;
+    reopenRequestId?: string | null;
+}) {
+    const details = input.details?.trim() ?? "";
+    if (details.length > 1500) return { error: "Die Beschreibung darf höchstens 1.500 Zeichen lang sein." };
+
+    const result = await callActivityRpc("report_activity_item", {
+        p_application_id: input.applicationId,
+        p_reason_code: input.reasonCode,
+        p_details: details || null,
+        p_reported_user_id: input.reportedUserId ?? null,
+        p_message_id: input.messageId ?? null,
+        p_reopen_request_id: input.reopenRequestId ?? null,
+    }, "Die Meldung konnte nicht gesendet werden.");
+    if ("error" in result) return result;
+    revalidatePath("/app-home/activities");
+    return result;
 }

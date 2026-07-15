@@ -2,11 +2,58 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { MyJobsView } from "./components/MyJobsView";
 import { fetchJobs } from "@/lib/dal/jobbridge";
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import type { ApplicationStatus, DataSource, JobsListItem } from "@/lib/types/jobbridge";
+import type { ApplicationStatus, JobsListItem } from "@/lib/types/jobbridge";
 import { getAppHomeSnapshot } from "@/lib/app-shell";
 import type { ProviderJobApplicationSummary } from "./components/MyJobsView";
 import { AppRouteReady } from "@/components/layout/AppNavigationProvider";
+import { CumulativeLoadMoreLink } from "@/components/ui/CumulativeLoadMoreLink";
+
+type OffersSearchParams = Record<string, string | string[] | undefined>;
+
+const OFFERS_PAGE_PARAM = "offersPage";
+const OFFERS_PAGE_SIZE = 24;
+const MAX_OFFERS_PAGE = 25;
+const JOB_FETCH_CHUNK_SIZE = 99;
+const SUMMARY_JOB_CHUNK_SIZE = 100;
+
+function parsePage(value: string | string[] | undefined) {
+    if (typeof value !== "string" || !/^\d{1,3}$/.test(value)) return 1;
+    const page = Number(value);
+    if (!Number.isSafeInteger(page) || page < 1) return 1;
+    return Math.min(page, MAX_OFFERS_PAGE);
+}
+
+async function fetchCumulativeOffers(
+    options: Omit<Parameters<typeof fetchJobs>[0], "limit" | "offset">,
+    visibleLimit: number,
+) {
+    const jobs: JobsListItem[] = [];
+
+    for (let offset = 0; offset < visibleLimit; offset += JOB_FETCH_CHUNK_SIZE) {
+        const chunkSize = Math.min(JOB_FETCH_CHUNK_SIZE, visibleLimit - offset);
+        const result = await fetchJobs({
+            ...options,
+            limit: chunkSize + 1,
+            offset,
+        });
+
+        if (!result.ok) return { result, hasMore: false };
+
+        jobs.push(...result.data.slice(0, chunkSize));
+        const hasMore = result.data.length > chunkSize;
+        if (!hasMore || offset + chunkSize >= visibleLimit) {
+            return {
+                result: { ok: true as const, data: jobs },
+                hasMore,
+            };
+        }
+    }
+
+    return {
+        result: { ok: true as const, data: jobs },
+        hasMore: false,
+    };
+}
 
 type ApplicationSummaryRow = {
     job_id: string;
@@ -21,26 +68,25 @@ const ACTIONABLE_APPLICATION_STATUSES = new Set<ApplicationStatus>([
     "waitlisted",
 ]);
 
-async function fetchApplicationSummaries(
-    jobIds: string[],
-    source: DataSource,
-): Promise<Record<string, ProviderJobApplicationSummary> | null> {
+async function fetchApplicationSummaries(jobIds: string[]): Promise<Record<string, ProviderJobApplicationSummary> | null> {
     if (jobIds.length === 0) return {};
 
     const supabase = await supabaseServer();
-    let client: typeof supabase | ReturnType<typeof getSupabaseAdminClient> = supabase;
-    try {
-        client = getSupabaseAdminClient();
-    } catch {
-        client = supabase;
+    const requests = [];
+    for (let offset = 0; offset < jobIds.length; offset += SUMMARY_JOB_CHUNK_SIZE) {
+        requests.push(
+            supabase
+                .from("applications")
+                .select("job_id, status, created_at")
+                .in("job_id", jobIds.slice(offset, offset + SUMMARY_JOB_CHUNK_SIZE)),
+        );
     }
 
-    const table = source === "demo" ? "demo_applications" : "applications";
-    const { data, error } = await (client.from(table) as any)
-        .select("job_id, status, created_at")
-        .in("job_id", jobIds);
+    const results = await Promise.all(requests);
+    const failedResult = results.find((result) => result.error);
+    if (failedResult?.error) return null;
 
-    if (error || !data) return null;
+    const data = results.flatMap((result) => result.data ?? []);
 
     const summaries: Record<string, ProviderJobApplicationSummary> = {};
 
@@ -68,7 +114,7 @@ async function fetchApplicationSummaries(
 export default async function OffersPage({
     searchParams,
 }: {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+    searchParams: Promise<OffersSearchParams>;
 }) {
     const snapshot = await getAppHomeSnapshot();
     const profile = snapshot.profile;
@@ -78,6 +124,8 @@ export default async function OffersPage({
     }
 
     const params = await searchParams;
+    const offersPage = parsePage(params[OFFERS_PAGE_PARAM]);
+    const visibleOfferLimit = offersPage * OFFERS_PAGE_SIZE;
     if (params.view === "region") {
         redirect("/app-home/offers");
     }
@@ -86,27 +134,23 @@ export default async function OffersPage({
     }
 
     let jobs: JobsListItem[] = [];
-    let regionName: string | null = snapshot.market?.display_name || snapshot.market?.brand_prefix || null;
-    const regionId = profile.market_id;
+    const regionName: string | null = snapshot.market?.display_name || snapshot.market?.brand_prefix || null;
     let jobsError: { code?: string; message: string } | null = null;
     let applicationSummaries: Record<string, ProviderJobApplicationSummary> | null = {};
 
-    const res = await fetchJobs({
+    const offersPageResult = await fetchCumulativeOffers({
         mode: "my_jobs",
-        view: effectiveView,
         userId: profile.id,
         userCoordinates: { lat: profile.lat ?? null, lng: profile.lng ?? null },
         includeApplicationState: false,
-        limit: 100,
-        offset: 0,
-    });
+    }, visibleOfferLimit);
+    const res = offersPageResult.result;
 
+    let canLoadMoreOffers = false;
     if (res.ok) {
+        canLoadMoreOffers = offersPage < MAX_OFFERS_PAGE && offersPageResult.hasMore;
         jobs = res.data;
-        applicationSummaries = await fetchApplicationSummaries(
-            jobs.map((job) => job.id),
-            effectiveView.source,
-        );
+        applicationSummaries = await fetchApplicationSummaries(jobs.map((job) => job.id));
     } else {
         jobsError = { code: res.error.code, message: res.error.message };
     }
@@ -118,25 +162,36 @@ export default async function OffersPage({
             <AppRouteReady href="/app-home/offers" />
             <div className="mb-7 md:mb-9">
                 <div className="max-w-2xl">
-                    <h1 className="text-4xl font-semibold tracking-tight text-white md:text-6xl">Jobs</h1>
+                    <h1 className="text-balance text-4xl font-semibold tracking-tight text-[var(--text-strong)] md:text-6xl">Jobs</h1>
                 </div>
             </div>
 
             <div className="min-h-[400px]">
                 {jobsError ? (
-                    <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-10 text-center">
-                        <p className="text-red-200 font-semibold">Jobs konnten nicht geladen werden.</p>
-                        <p className="mt-2 text-xs text-red-200/80 font-mono break-words">
+                    <div className="rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-10 text-center shadow-[var(--shadow-card)]">
+                        <p className="font-semibold text-[var(--danger)]">Jobs konnten nicht geladen werden.</p>
+                        <p className="mt-2 break-words font-mono text-xs text-[var(--text-muted)]">
                             {jobsError.code ? `${jobsError.code}: ` : ""}{jobsError.message}
                         </p>
                     </div>
                 ) : (
-                    <MyJobsView
-                        jobs={jobs}
-                        marketName={marketLabel}
-                        isVerified={snapshot.isVerified}
-                        applicationSummaries={applicationSummaries}
-                    />
+                    <div className="space-y-6">
+                        <MyJobsView
+                            jobs={jobs}
+                            marketName={marketLabel}
+                            isVerified={snapshot.isVerified}
+                            applicationSummaries={applicationSummaries}
+                        />
+                        {snapshot.isVerified && canLoadMoreOffers ? (
+                            <CumulativeLoadMoreLink
+                                pathname="/app-home/offers"
+                                searchParams={params}
+                                pageParam={OFFERS_PAGE_PARAM}
+                                nextPage={offersPage + 1}
+                                label="Weitere Angebote laden"
+                            />
+                        ) : null}
+                    </div>
                 )}
             </div>
         </div>

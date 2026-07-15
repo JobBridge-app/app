@@ -63,7 +63,6 @@ export function AppHeader({ snapshot }: { snapshot: AppHomeSnapshot }) {
                         <div className="flex items-center">
                             <RightActionGroup
                                 profile={snapshot.profile}
-                                isDemo={snapshot.isDemo}
                                 isStaff={snapshot.isStaff}
                                 accountEmail={snapshot.accountEmail}
                                 unreadCount={snapshot.unreadCount}

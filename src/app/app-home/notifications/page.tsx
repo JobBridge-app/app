@@ -1,52 +1,72 @@
+import { PersonalNotificationCenter, type PersonalNotificationItem } from "@/components/notifications/PersonalNotificationCenter";
 import { requireCompleteProfile } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabaseServer";
-import Link from "next/link";
-import { Bell, Settings } from "lucide-react";
 
-export default async function NotificationsPage() {
-    const { profile } = await requireCompleteProfile();
+type NotificationsSearchParams = Record<string, string | string[] | undefined>;
+
+const NOTIFICATIONS_PAGE_PARAM = "notificationsPage";
+const NOTIFICATIONS_PAGE_SIZE = 25;
+const MAX_NOTIFICATIONS_PAGE = 40;
+
+function parseNotificationsPage(value: string | string[] | undefined) {
+    if (typeof value !== "string" || !/^\d{1,3}$/.test(value)) return 1;
+    const page = Number(value);
+    if (!Number.isSafeInteger(page) || page < 1) return 1;
+    return Math.min(page, MAX_NOTIFICATIONS_PAGE);
+}
+
+export default async function NotificationsPage({
+    searchParams,
+}: {
+    searchParams?: Promise<NotificationsSearchParams>;
+}) {
+    const paramsPromise: Promise<NotificationsSearchParams> = searchParams ?? Promise.resolve({});
+    const [{ profile }, params] = await Promise.all([
+        requireCompleteProfile(),
+        paramsPromise,
+    ]);
+    const notificationsPage = parseNotificationsPage(params[NOTIFICATIONS_PAGE_PARAM]);
+    const visibleLimit = notificationsPage * NOTIFICATIONS_PAGE_SIZE;
     const supabase = await supabaseServer();
-
-    const { data: notifications } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false })
-        .returns<any[]>();
+    const [notificationsResult, unreadResult] = await Promise.all([
+        supabase
+            .from("notifications")
+            .select("id, type, title, body, data, created_at, read_at", { count: "exact" })
+            .eq("user_id", profile.id)
+            .order("created_at", { ascending: false })
+            .order("id", { ascending: false })
+            .range(0, visibleLimit - 1),
+        supabase
+            .from("notifications")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", profile.id)
+            .is("read_at", null),
+    ]);
+    const initialLoadError = Boolean(notificationsResult.error || unreadResult.error);
+    const notifications = notificationsResult.error
+        ? []
+        : (notificationsResult.data ?? []) as PersonalNotificationItem[];
 
     return (
-        <div className="notification-center-page container mx-auto py-12 px-4 md:px-6">
-            <div className="flex items-center justify-between mb-8">
-                <h1 className="notification-center-title text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-                    <Bell className="text-blue-400" />
-                    Benachrichtigungen
-                </h1>
-                <Link href="/app-home/notifications/settings">
-                    <button className="notification-center-action flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors bg-white/5 border border-white/10 px-4 py-2 rounded-lg">
-                        <Settings size={16} />
-                        Einstellungen
-                    </button>
-                </Link>
-            </div>
-
-            {(!notifications || notifications.length === 0) ? (
-                <div className="notification-center-empty rounded-2xl border border-white/10 bg-white/5 p-12 text-center backdrop-blur-sm">
-                    <div className="notification-center-empty-icon w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
-                        <Bell size={24} />
-                    </div>
-                    <p className="text-slate-300">Du hast keine neuen Benachrichtigungen.</p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {notifications.map((notif) => (
-                        <div key={notif.id} className={`notification-center-card rounded-xl border p-4 backdrop-blur-sm transition-colors ${notif.read_at ? 'is-read bg-white/5 border-white/5 opacity-70' : 'is-unread bg-white/10 border-blue-500/30'}`}>
-                            <h3 className="notification-center-card-title text-white font-medium mb-1">{notif.title}</h3>
-                            <p className="notification-center-card-body text-slate-300 text-sm">{notif.body}</p>
-                            <p className="notification-center-card-date text-slate-500 text-xs mt-2">{new Date(notif.created_at).toLocaleString()}</p>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+        <main className="notification-center-page min-h-full">
+            <PersonalNotificationCenter
+                key={`notifications-page-${notificationsPage}`}
+                currentUserId={profile.id}
+                initialNotifications={notifications}
+                initialUnreadCount={unreadResult.error ? 0 : unreadResult.count ?? 0}
+                initialTotalCount={notificationsResult.error
+                    ? 0
+                    : notificationsResult.count ?? notifications.length}
+                initialLoadError={initialLoadError}
+                visibleLimit={visibleLimit}
+                pagination={{
+                    pathname: "/app-home/notifications",
+                    searchParams: params,
+                    pageParam: NOTIFICATIONS_PAGE_PARAM,
+                    nextPage: notificationsPage + 1,
+                    canAdvance: notificationsPage < MAX_NOTIFICATIONS_PAGE,
+                }}
+            />
+        </main>
     );
 }

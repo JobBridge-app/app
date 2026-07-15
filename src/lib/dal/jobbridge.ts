@@ -1,9 +1,20 @@
 import { supabaseServer } from "@/lib/supabaseServer";
 import type { AccountType } from "@/lib/types";
 import type { Database } from "@/lib/types/supabase";
-import type { EffectiveViewSnapshot, ErrorInfo, JobsListItem, ApplicationRow, ApplicationStatus } from "@/lib/types/jobbridge";
+import {
+  mergeWaitlistJobSummaries,
+  type EffectiveViewSnapshot,
+  type ErrorInfo,
+  type JobsListItem,
+  type ApplicationRow,
+  type ApplicationStatus,
+  type WaitlistJobSummary,
+} from "@/lib/types/jobbridge";
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  fetchActivityPartnerProfiles,
+  fetchVisibleJobCreatorSummaries,
+} from "@/lib/dal/visible-profiles";
 
 // Haversine formula for calculating distance between two coordinates in km
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -59,7 +70,7 @@ export async function getSessionUser(): Promise<Result<{ userId: string }>> {
 }
 
 // ────────────────────────────────────────────────────────────────────
-// Effective view (demo / role-override / base account type)
+// Effective view (base account type + protected system roles)
 // ────────────────────────────────────────────────────────────────────
 
 export async function getEffectiveView(opts?: {
@@ -74,37 +85,14 @@ export async function getEffectiveView(opts?: {
   const userId = typeof userResult === "string" ? userResult : userResult.data.userId;
   if (!userId) return { ok: false, error: { message: "Missing userId" } };
 
-  const [profileResult, rolesResult, demoResult, overrideResult] = await Promise.all([
+  const [profileResult, rolesResult] = await Promise.all([
     supabase.from("profiles").select("account_type").eq("id", userId).maybeSingle(),
     supabase.from("user_system_roles").select("role:system_roles(name)").eq("user_id", userId),
-    supabase.from("demo_sessions" as any).select("enabled, demo_view").eq("user_id", userId).maybeSingle(),
-    supabase.from("role_overrides" as never).select("view_as, expires_at").eq("user_id", userId).gt("expires_at", new Date().toISOString()).maybeSingle()
   ]);
-
-  if (demoResult.error) return { ok: false, error: toErrorInfo(demoResult.error) };
 
   const systemRoles = rolesResult.data ? (rolesResult.data as any[]).map((r) => r.role?.name).filter(Boolean) : [];
 
-  if ((demoResult.data as any)?.enabled === true) {
-    const demoView = ((demoResult.data as any).demo_view as AccountType | null) ?? null;
-    return {
-      ok: true,
-      data: {
-        isDemoEnabled: true,
-        viewRole: demoView ?? "job_seeker",
-        source: "demo",
-        roles: systemRoles,
-        demoView,
-        overrideExpiresAt: null,
-      },
-    };
-  }
-
-  // 2) Role override (live mode only)
-  type RoleOverrideRow = { view_as: AccountType; expires_at: string };
-  const override = (overrideResult.data ?? null) as unknown as RoleOverrideRow | null;
-
-  // 3) Base account type
+  // Base account type remains the only product-facing view role.
   let baseAccountType = opts?.baseAccountType ?? null;
   if (baseAccountType === undefined || baseAccountType === null) {
     if (opts?.baseAccountType === undefined) {
@@ -117,11 +105,8 @@ export async function getEffectiveView(opts?: {
   return {
     ok: true,
     data: {
-      isDemoEnabled: false,
-      viewRole: override?.view_as ?? baseRole,
-      source: "live",
+      viewRole: baseRole,
       roles: systemRoles,
-      overrideExpiresAt: override?.expires_at ?? null,
     },
   };
 }
@@ -132,7 +117,6 @@ export async function getEffectiveView(opts?: {
 
 export type FetchJobsParams = {
   mode: "feed" | "my_jobs";
-  view: EffectiveViewSnapshot;
   userId: string;
   marketId?: string | null;
   userCoordinates?: UserCoordinates;
@@ -177,14 +161,7 @@ async function resolveUserCoordinates(
 async function fetchAppliedJobIds(userId: string): Promise<Map<string, { id: string; status: ApplicationStatus }>> {
   if (!userId) return new Map();
 
-  // Try admin client to bypass RLS; fall back to user client.
-  let client: SupabaseClient<Database>;
-  try {
-    const admin = getSupabaseAdminClient();
-    client = admin ?? (await supabaseServer());
-  } catch {
-    client = await supabaseServer();
-  }
+  const client = await supabaseServer();
 
   const { data, error } = await client
     .from("applications")
@@ -199,7 +176,7 @@ async function fetchAppliedJobIds(userId: string): Promise<Map<string, { id: str
 }
 
 /** Map a raw DB row to the normalized `JobsListItem` shape. */
-function toJobsListItem(row: Database["public"]["Tables"]["jobs"]["Row"] | Database["public"]["Tables"]["demo_jobs"]["Row"]): JobsListItem {
+function toJobsListItem(row: Database["public"]["Tables"]["jobs"]["Row"]): JobsListItem {
   return {
     id: row.id,
     title: row.title,
@@ -212,6 +189,12 @@ function toJobsListItem(row: Database["public"]["Tables"]["jobs"]["Row"] | Datab
     public_lat: row.public_lat ? Number(row.public_lat) : null,
     public_lng: row.public_lng ? Number(row.public_lng) : null,
     wage_hourly: row.wage_hourly != null ? Number(row.wage_hourly) : null,
+    payment_type: row.payment_type === "fixed" ? "fixed" : "hourly",
+    job_kind: row.job_kind === "recurring" ? "recurring" : "one_time",
+    recurrence_rule: ["weekly", "biweekly", "monthly", "flexible"].includes(row.recurrence_rule ?? "")
+      ? row.recurrence_rule as JobsListItem["recurrence_rule"]
+      : null,
+    continuity_preferred: Boolean(row.continuity_preferred),
     category: row.category ?? "",
     address_reveal_policy: row.address_reveal_policy ?? "after_apply",
     reach: (row as any).reach ?? 'internal_rheinbach',
@@ -246,78 +229,69 @@ async function enrichWithCreators(
   supabase: SupabaseClient<Database>,
   items: JobsListItem[],
 ): Promise<JobsListItem[]> {
-  const ids = [...new Set(items.map((i) => i.posted_by).filter(Boolean))];
-  if (ids.length === 0) return items;
+  const jobIds = [...new Set(items.map((item) => item.id).filter(Boolean))];
+  if (jobIds.length === 0) return items;
 
-  const { data: creators } = await supabase
-    .from("profiles")
-    .select("id, full_name, company_name, account_type, avatar_url")
-    .in("id", ids);
+  const { data, error } = await fetchVisibleJobCreatorSummaries(supabase, jobIds);
 
-  if (!creators) return items;
+  if (error || !data) {
+    if (error) console.warn("[DAL] get_visible_job_creator_summaries error", error.message);
+    return items;
+  }
 
-  const creatorMap = new Map(creators.map((c) => [c.id, c]));
+  const creatorMap = new Map(data.map((creator) => [creator.job_id, creator]));
   return items.map((i) => {
-    const c = creatorMap.get(i.posted_by);
+    const c = creatorMap.get(i.id);
     return {
       ...i,
-      creator: c ? { full_name: c.full_name, company_name: c.company_name, account_type: c.account_type as AccountType } : null,
+      creator: c ? {
+        id: c.creator_id,
+        full_name: c.full_name,
+        company_name: c.company_name,
+        account_type: (c.account_type ?? "job_provider") as AccountType,
+        avatar_url: c.avatar_url,
+        bio: c.bio,
+        city: c.city,
+        country: c.country,
+        created_at: c.created_at,
+        provider_verification_status: c.provider_verification_status,
+        is_staff: Boolean(c.is_staff),
+      } : null,
     };
   });
 }
 
-/** Enrich reserved jobs with the active applicant info. */
-async function enrichWithActiveApplicants(
+/**
+ * Enrich reserved jobs with aggregate queue information only.
+ * The RPC deliberately exposes no data about the active applicant.
+ */
+async function enrichWithWaitlistSummaries(
   supabase: SupabaseClient<Database>,
   items: JobsListItem[],
 ): Promise<JobsListItem[]> {
-  const reservedJobIds = items.filter(j => j.status === 'reserved').map(j => j.id);
+  const reservedJobIds = [...new Set(items.filter((job) => job.status === "reserved").map((job) => job.id))];
   if (reservedJobIds.length === 0) return items;
 
-  const { data: activeApps } = await supabase
-    .from("applications")
-    .select(`
-      job_id,
-      profiles (full_name, avatar_url)
-    `)
-    .in("job_id", reservedJobIds)
-    .in("status", ["negotiating", "accepted"]);
+  const { data, error } = await supabase.rpc("get_waitlist_job_summaries", {
+    p_job_ids: reservedJobIds,
+  });
 
-  if (!activeApps) return items;
-
-  const reserverMap = new Map();
-  for (const app of activeApps) {
-    const applicant = Array.isArray(app.profiles) ? app.profiles[0] : app.profiles;
-    if (applicant) {
-      reserverMap.set(app.job_id, applicant);
-    }
+  if (error) {
+    console.warn("[DAL] get_waitlist_job_summaries error", error.message);
+    return items;
   }
 
-  return items.map((i) => {
-    if (i.status === 'reserved') {
-      const reserver = reserverMap.get(i.id);
-      if (reserver) {
-        return {
-          ...i,
-          active_applicant: {
-            full_name: reserver.full_name,
-            avatar_url: reserver.avatar_url
-          }
-        };
-      }
-    }
-    return i;
-  });
+  return mergeWaitlistJobSummaries(items, (data ?? []) as WaitlistJobSummary[]);
 }
 
 async function enrichJobsInParallel(
   supabase: SupabaseClient<Database>,
   items: JobsListItem[],
 ): Promise<JobsListItem[]> {
-  const [withMarkets, withCreators, withActiveApplicants] = await Promise.all([
+  const [withMarkets, withCreators, withWaitlistSummaries] = await Promise.all([
     enrichWithMarketNames(supabase, items),
     enrichWithCreators(supabase, items),
-    enrichWithActiveApplicants(supabase, items),
+    enrichWithWaitlistSummaries(supabase, items),
   ]);
 
   return items.map((item, index) => ({
@@ -325,7 +299,10 @@ async function enrichJobsInParallel(
     market_name: withMarkets[index]?.market_name ?? item.market_name,
     brand_prefix: withMarkets[index]?.brand_prefix ?? item.brand_prefix,
     creator: withCreators[index]?.creator ?? item.creator,
-    active_applicant: withActiveApplicants[index]?.active_applicant ?? item.active_applicant,
+    waitlist_count: withWaitlistSummaries[index]?.waitlist_count ?? item.waitlist_count,
+    next_position: withWaitlistSummaries[index]?.next_position ?? item.next_position,
+    conversation_active: withWaitlistSummaries[index]?.conversation_active ?? item.conversation_active,
+    my_waitlist_position: withWaitlistSummaries[index]?.my_waitlist_position ?? item.my_waitlist_position,
   }));
 }
 
@@ -333,9 +310,10 @@ async function enrichCandidateJobsInParallel(
   supabase: SupabaseClient<Database>,
   items: JobsListItem[],
 ): Promise<JobsListItem[]> {
-  const [withMarkets, withCreators] = await Promise.all([
+  const [withMarkets, withCreators, withWaitlistSummaries] = await Promise.all([
     enrichWithMarketNames(supabase, items),
     enrichWithCreators(supabase, items),
+    enrichWithWaitlistSummaries(supabase, items),
   ]);
 
   return items.map((item, index) => ({
@@ -343,6 +321,10 @@ async function enrichCandidateJobsInParallel(
     market_name: withMarkets[index]?.market_name ?? item.market_name,
     brand_prefix: withMarkets[index]?.brand_prefix ?? item.brand_prefix,
     creator: withCreators[index]?.creator ?? item.creator,
+    waitlist_count: withWaitlistSummaries[index]?.waitlist_count ?? item.waitlist_count,
+    next_position: withWaitlistSummaries[index]?.next_position ?? item.next_position,
+    conversation_active: withWaitlistSummaries[index]?.conversation_active ?? item.conversation_active,
+    my_waitlist_position: withWaitlistSummaries[index]?.my_waitlist_position ?? item.my_waitlist_position,
   }));
 }
 
@@ -363,28 +345,6 @@ export async function fetchJobs(params: FetchJobsParams): Promise<Result<JobsLis
     params.userCoordinates,
   );
 
-  // ── DEMO ──────────────────────────────────────────────────────────
-  if (params.view.source === "demo") {
-    let q = supabase.from("demo_jobs").select("*");
-    if (params.mode === "feed") {
-      if (Array.isArray(status)) {
-        q = q.in("status", status);
-      } else {
-        q = q.eq("status", status);
-      }
-    }
-    if (params.mode === "my_jobs") q = q.eq("posted_by", params.userId);
-    q = q.order("created_at", { ascending: false });
-    q = applyRange(q) as typeof q;
-
-    const { data, error } = await q;
-    if (error) return { ok: false, error: toErrorInfo(error) };
-
-    const items = (data ?? []).map((row) => ({ ...toJobsListItem(row), is_applied: false }));
-    return { ok: true, data: items };
-  }
-
-  // ── LIVE ──────────────────────────────────────────────────────────
   const appliedJobIds = params.includeApplicationState === false
     ? new Map<string, { id: string; status: ApplicationStatus }>()
     : await fetchAppliedJobIds(params.userId);
@@ -450,6 +410,9 @@ export type CreateJobInput = {
   public_lat?: number | null;
   public_lng?: number | null;
   reach?: 'internal_rheinbach' | 'extended' | null;
+  job_kind: 'one_time' | 'recurring';
+  recurrence_rule?: 'weekly' | 'biweekly' | 'monthly' | 'flexible' | null;
+  continuity_preferred?: boolean;
 };
 
 export type JobRow = Database["public"]["Tables"]["jobs"]["Row"] & {
@@ -472,142 +435,50 @@ export type JobPrivateInput = {
   location_id?: string | null;
 };
 
-export type CreateJobOutcome =
-  | { outcome: "success"; jobId: string; privateDetails: "ok" | "skipped"; createdVia: "rpc" | "table" | "demo" }
-  | { outcome: "partial"; jobId: string; privateDetails: "failed"; createdVia: "table"; privateError: ErrorInfo };
-
-/** Upsert private details for a job. */
-async function upsertJobPrivateDetails(
-  supabase: SupabaseClient<Database>,
-  jobId: string,
-  params: JobPrivateInput,
-): Promise<{ ok: true } | { ok: false; error: ErrorInfo }> {
-  // Note: The generated Supabase types may be stale — the real DB columns are
-  // address_full, private_lat, private_lng, notes. Cast to bypass type mismatch.
-  const payload = {
-    job_id: jobId,
-    address_full: params.address_full ?? null,
-    private_lat: params.private_lat ?? null,
-    private_lng: params.private_lng ?? null,
-    notes: params.notes ?? null,
-  };
-
-  const res = await supabase.from("job_private_details" as any).upsert(payload, { onConflict: "job_id" });
-  if (res.error) return { ok: false, error: toErrorInfo(res.error) };
-  return { ok: true };
-}
+export type CreateJobOutcome = { jobId: string };
 
 export async function createJob(params: {
-  view: EffectiveViewSnapshot;
-  userId: string;
   job: CreateJobInput;
   privateDetails: JobPrivateInput | null;
 }): Promise<Result<CreateJobOutcome>> {
   const supabase = await supabaseServer();
 
-  // ── DEMO ──────────────────────────────────────────────────────────
-  if (params.view.source === "demo") {
-    const res = await supabase
-      .from("demo_jobs" as any)
-      .insert({
-        posted_by: params.userId,
-        market_id: params.job.market_id,
-        title: params.job.title,
-        description: params.job.description,
-        wage_hourly: params.job.wage_hourly ?? null,
-        status: params.job.status,
-        category: params.job.category,
-        address_reveal_policy: params.job.address_reveal_policy ?? "after_accept",
-        public_location_label: params.job.public_location_label ?? null,
-        public_lat: params.job.public_lat ?? null,
-        public_lng: params.job.public_lng ?? null,
-      })
-      .select("id")
-      .single();
-
-    if (res.error || !(res.data as any)?.id) {
-      return { ok: false, error: toErrorInfo(res.error ?? { message: "Demo job insert returned no row" }) };
-    }
-    return { ok: true, data: { outcome: "success", jobId: (res.data as any).id, privateDetails: "skipped", createdVia: "demo" } };
-  }
-
-  // ── LIVE: Try atomic RPC first ────────────────────────────────────
-  const rpcRes = await (supabase.rpc as any)("create_job_atomic", {
+  const rpcRes = await (supabase.rpc as any)("create_job_v2", {
     p_market_id: params.job.market_id,
     p_title: params.job.title,
     p_description: params.job.description,
-    p_wage_hourly: params.job.wage_hourly,
+    p_wage: params.job.wage_hourly,
     p_category: params.job.category,
+    p_payment_type: params.job.payment_type,
+    p_status: params.job.status,
     p_address_reveal_policy: params.job.address_reveal_policy ?? "after_accept",
     p_public_location_label: params.job.public_location_label ?? "",
     p_public_lat: params.job.public_lat ?? null,
     p_public_lng: params.job.public_lng ?? null,
+    p_reach: params.job.reach ?? "internal_rheinbach",
+    p_job_kind: params.job.job_kind,
+    p_recurrence_rule: params.job.recurrence_rule ?? null,
+    p_continuity_preferred: params.job.continuity_preferred ?? false,
     p_address_full: params.privateDetails?.address_full ?? null,
     p_private_lat: params.privateDetails?.private_lat ?? null,
     p_private_lng: params.privateDetails?.private_lng ?? null,
     p_notes: params.privateDetails?.notes ?? null,
-    p_location_id: params.privateDetails?.location_id ?? null,
   });
 
-  const rpcData = rpcRes.data as unknown;
-  if (!rpcRes.error && typeof rpcData === "object" && rpcData !== null && "id" in rpcData) {
-    return { ok: true, data: { outcome: "success", jobId: String((rpcData as { id: string }).id), privateDetails: "ok", createdVia: "rpc" } };
-  }
-
-  // Log RPC failure but continue to table fallback
   if (rpcRes.error) {
-    console.warn("[DAL] create_job_atomic RPC failed, falling back to table insert:", rpcRes.error.message);
+    return { ok: false, error: toErrorInfo(rpcRes.error) };
+  }
+  const payload = rpcRes.data as { ok?: boolean; error?: string; job_id?: string } | null;
+  if (!payload?.ok || !payload.job_id) {
+    return { ok: false, error: { message: payload?.error || "Der Job konnte nicht erstellt werden." } };
   }
 
-  // ── LIVE: Table fallback (non-atomic) ─────────────────────────────
-  const jobInsert = await supabase
-    .from("jobs")
-    .insert({
-      posted_by: params.userId,
-      market_id: params.job.market_id,
-      title: params.job.title,
-      description: params.job.description,
-      wage_hourly: params.job.wage_hourly,
-      status: params.job.status,
-      category: params.job.category,
-      address_reveal_policy: params.job.address_reveal_policy ?? "after_accept",
-      public_location_label: params.job.public_location_label ?? "",
-      public_lat: params.job.public_lat ?? null,
-      public_lng: params.job.public_lng ?? null,
-    } as any)
-    .select("id")
-    .single();
-
-  if (jobInsert.error || !jobInsert.data?.id) {
-    return { ok: false, error: toErrorInfo(jobInsert.error ?? { message: "jobs insert returned no row" }) };
-  }
-
-  const jobId = jobInsert.data.id;
-
-  if (!params.privateDetails) {
-    return { ok: true, data: { outcome: "success", jobId, privateDetails: "skipped", createdVia: "table" } };
-  }
-
-  const privRes = await upsertJobPrivateDetails(supabase, jobId, params.privateDetails);
-  if (privRes.ok) {
-    return { ok: true, data: { outcome: "success", jobId, privateDetails: "ok", createdVia: "table" } };
-  }
-
-  return { ok: true, data: { outcome: "partial", jobId, privateDetails: "failed", createdVia: "table", privateError: privRes.error } };
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Retry private details (used when initial save fails)
-// ────────────────────────────────────────────────────────────────────
-
-export async function retrySaveJobPrivateDetails(params: {
-  jobId: string;
-  privateDetails: JobPrivateInput;
-}): Promise<Result<{ ok: true }>> {
-  const supabase = await supabaseServer();
-  const res = await upsertJobPrivateDetails(supabase, params.jobId, params.privateDetails);
-  if (res.ok) return { ok: true, data: { ok: true } };
-  return { ok: false, error: res.error };
+  return {
+    ok: true,
+    data: {
+      jobId: payload.job_id,
+    },
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -627,17 +498,25 @@ export async function fetchJobApplications(jobId: string, _userId: string): Prom
 
   let items = (data as ApplicationRow[]) ?? [];
 
-  // Enrich with applicant profile
-  const applicantIds = [...new Set(items.map((i) => i.user_id).filter(Boolean))];
-  if (applicantIds.length > 0) {
-    const { data: applicants } = await supabase
-      .from("profiles")
-      .select("id, full_name, avatar_url")
-      .in("id", applicantIds);
+  // Participant-scoped profile summaries; no full profile-table access.
+  const applicationIds = items.map((item) => item.id);
+  if (applicationIds.length > 0) {
+    const { data: partners, error: partnerError } = await fetchActivityPartnerProfiles(supabase, applicationIds);
 
-    if (applicants) {
-      const map = new Map(applicants.map((a) => [a.id, a]));
-      items = items.map((i) => ({ ...i, applicant: map.get(i.user_id) ?? null }));
+    if (partnerError) {
+      console.warn("[DAL] get_activity_partner_profiles error", partnerError.message);
+    } else if (partners) {
+      const map = new Map(partners.map((partner) => [partner.application_id, partner]));
+      items = items.map((item) => {
+        const partner = map.get(item.id);
+        return {
+          ...item,
+          applicant: partner ? {
+            full_name: partner.full_name,
+            avatar_url: partner.avatar_url,
+          } : null,
+        };
+      });
     }
   }
 

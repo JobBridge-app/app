@@ -3,8 +3,11 @@
 import { useSearchParams } from "next/navigation";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { Suspense } from "react";
-import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useState } from "react";
+import { redeemGuardianInvitation } from "../access/actions";
+
+const GUARDIAN_CONFIRMATION_ERROR =
+    "Die Bestätigung konnte nicht abgeschlossen werden. Der Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Bitte fordere einen neuen Link an.";
 
 function GuardianAcceptContent() {
     const searchParams = useSearchParams();
@@ -25,17 +28,16 @@ function GuardianAcceptContent() {
         setState("loading");
         setError(null);
         try {
-            const { data, error } = await supabaseBrowser.rpc("redeem_guardian_invitation", { token_input: token });
-            if (error) throw error;
-            const res = data as unknown as { success?: boolean; error?: string } | null;
-            if (!res?.success) {
-                throw new Error(res?.error || "Bestätigung fehlgeschlagen.");
+            const result = await redeemGuardianInvitation(token);
+            if (!result.success) {
+                setState("error");
+                setError(result.message);
+                return;
             }
             setState("success");
-        } catch (e) {
+        } catch {
             setState("error");
-            const msg = e instanceof Error ? e.message : "Unbekannter Fehler";
-            setError(msg);
+            setError(GUARDIAN_CONFIRMATION_ERROR);
         }
     };
 

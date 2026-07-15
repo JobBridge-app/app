@@ -87,15 +87,6 @@ export type SecurityEvent = {
   created_at: string;
 };
 
-export type RoleOverride = {
-  user_id: string;
-  view_as: "job_seeker" | "job_provider";
-  expires_at: string;
-  reason: string | null;
-  created_by: string;
-  created_at: string;
-};
-
 export type Database = {
   public: {
     Tables: {
@@ -309,44 +300,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "security_events_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      demo_sessions: {
-        Row: {
-          user_id: string;
-          enabled: boolean;
-          demo_view: "job_seeker" | "job_provider";
-          updated_at: string;
-        };
-        Insert: {
-          user_id: string;
-          enabled?: boolean;
-          demo_view?: "job_seeker" | "job_provider";
-          updated_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["demo_sessions"]["Insert"]>;
-        Relationships: [];
-      };
-      demo_jobs: Database["public"]["Tables"]["jobs"]; // Reusing structure
-      demo_applications: Database["public"]["Tables"]["applications"];
-      role_overrides: {
-        Row: RoleOverride;
-        Insert: {
-          user_id: string;
-          view_as: "job_seeker" | "job_provider";
-          expires_at: string;
-          reason?: string | null;
-          created_by: string;
-          created_at?: string;
-        };
-        Update: Partial<Database["public"]["Tables"]["role_overrides"]["Insert"]>;
-        Relationships: [
-          {
-            foreignKeyName: "role_overrides_user_id_fkey";
             columns: ["user_id"];
             referencedRelation: "profiles";
             referencedColumns: ["id"];

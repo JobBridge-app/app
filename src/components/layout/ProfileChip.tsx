@@ -4,8 +4,7 @@ import { cn } from "@/lib/utils";
 import {
     Building2,
     ChevronDown,
-    FlaskConical,
-    LayoutDashboard,
+    ExternalLink,
     LogOut,
     Shield,
     User,
@@ -22,12 +21,11 @@ import { StaffBadge } from "@/components/ui/StaffBadge";
 type ProfileChipProps = {
     profile: AppHeaderProfile | null;
     className?: string;
-    isDemo?: boolean;
     isStaff: boolean;
     accountEmail: string | null;
 };
 
-export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail }: ProfileChipProps) {
+export function ProfileChip({ profile, className, isStaff, accountEmail }: ProfileChipProps) {
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
@@ -36,12 +34,8 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
         router.prefetch("/app-home/profile");
         if (mode === "full") {
             router.prefetch("/legal");
-            if (isStaff) {
-                router.prefetch("/admin");
-                router.prefetch("/admin/demo");
-            }
         }
-    }, [router, isStaff]);
+    }, [router]);
 
     useEffect(() => {
         const isCoarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
@@ -154,11 +148,6 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             <RoleIcon size={12} strokeWidth={2.1} />
                             {label}
                         </span>
-                        {isDemo && (
-                            <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-1.5 py-px text-[9px] font-bold tracking-[0.14em] text-amber-300">
-                                DEMO
-                            </span>
-                        )}
                     </div>
                 </div>
 
@@ -242,26 +231,16 @@ export function ProfileChip({ profile, className, isDemo, isStaff, accountEmail 
                             </Link>
 
                             {isStaff ? (
-                                <>
-                                    <Link
-                                        href="/admin"
-                                        prefetch
-                                        onClick={() => setIsOpen(false)}
-                                        className="app-profile-menu-item app-profile-menu-item-accent flex items-center gap-3 rounded-[0.625rem] px-3 py-2 text-left text-sm font-medium outline-none transition-[background-color,color] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600"
-                                    >
-                                        <LayoutDashboard size={16} className="app-profile-menu-item-icon" />
-                                        <span>Team Console</span>
-                                    </Link>
-                                    <Link
-                                        href="/admin/demo"
-                                        prefetch
-                                        onClick={() => setIsOpen(false)}
-                                        className="app-profile-menu-item app-profile-menu-item-warn flex w-full items-center gap-3 rounded-[0.625rem] px-3 py-2 text-left text-sm outline-none transition-[background-color,color] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600"
-                                    >
-                                        <FlaskConical size={16} className="app-profile-menu-item-icon" />
-                                        <span>Demo-Modus</span>
-                                    </Link>
-                                </>
+                                <a
+                                    href="https://admin.jobbridge.team"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => setIsOpen(false)}
+                                    className="app-profile-menu-item group flex items-center gap-3 rounded-[0.625rem] px-3 py-2 text-sm text-slate-300 outline-none transition-[background-color,color] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600"
+                                >
+                                    <ExternalLink size={16} className="app-profile-menu-item-icon" />
+                                    <span>Admin-Panel</span>
+                                </a>
                             ) : null}
 
                             <Link

@@ -1,17 +1,15 @@
 "use client";
 
 import { memo } from "react";
-import { MapPin, Euro, Clock, Lock, CheckCircle2 } from "lucide-react";
+import { MapPin, Euro, Clock, Lock, CheckCircle2, Repeat2 } from "lucide-react";
 import { cn, timeAgo } from "@/lib/utils";
 import type { JobsListItem } from "@/lib/types/jobbridge";
 import { JOB_CATEGORIES } from "@/lib/constants/jobCategories";
 import Link from "next/link";
 import { warmJobsUI } from "@/lib/ui-warmup";
-import { StaffBadge } from "@/components/ui/StaffBadge";
 
 interface JobCardProps {
     job: JobsListItem;
-    isDemo?: boolean;
     isApplied?: boolean;
     isLocked?: boolean;
     hideStatusLabel?: boolean;
@@ -21,10 +19,14 @@ interface JobCardProps {
     href?: string;
 }
 
-export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked, hideStatusLabel, providerStatus, isCrossRegionalBadge, onSelect, href }: JobCardProps) {
+export const JobCard = memo(function JobCard({ job, isApplied, isLocked, providerStatus, isCrossRegionalBadge, onSelect, href }: JobCardProps) {
     const isReservedJob = job.status === 'reserved' && !providerStatus;
     const isUserWaitlisted = job.application_status === 'waitlisted';
     const showWaitlistBadges = isReservedJob && !isApplied;
+    const waitlistCount = Math.max(0, job.waitlist_count ?? 0);
+    const ownWaitlistPosition = job.my_waitlist_position && job.my_waitlist_position > 0
+        ? job.my_waitlist_position
+        : null;
     const cardState = isLocked
         ? "locked"
         : isApplied
@@ -35,8 +37,8 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
     const categoryTone =
         cardState === "waitlist"
             ? {
-                chip: "bg-amber-500/10 text-amber-300 border border-amber-500/20",
-                icon: "text-amber-400",
+                chip: "bg-slate-500/10 text-slate-300 border border-slate-500/20",
+                icon: "text-indigo-400",
             }
             : cardState === "applied"
                 ? {
@@ -48,81 +50,6 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                     icon: "text-indigo-400",
                 };
 
-    const getStatusBadge = () => {
-        if (providerStatus) {
-            switch (providerStatus) {
-                case 'draft':
-                    return (
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 border border-slate-400/30 px-1.5 py-0.5 rounded bg-white/5 ml-2">
-                            Entwurf
-                        </span>
-                    );
-                case 'closed':
-                    return (
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 border border-slate-400/30 px-1.5 py-0.5 rounded bg-white/5 ml-2">
-                            Geschlossen
-                        </span>
-                    );
-                case 'filled':
-                    return (
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-blue-400 border border-blue-400/30 px-1.5 py-0.5 rounded bg-blue-400/10 ml-2">
-                            Vergeben
-                        </span>
-                    );
-                case 'reviewing':
-                    return (
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-purple-400 border border-purple-400/30 px-1.5 py-0.5 rounded bg-purple-400/10 ml-2">
-                            In Prüfung
-                        </span>
-                    );
-                case 'reserved':
-                    return (
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-amber-400 border border-amber-400/30 px-1.5 py-0.5 rounded bg-amber-400/10 ml-2">
-                            Reserviert
-                        </span>
-                    );
-                case 'open':
-                    return null; // Standard
-            }
-        }
-        if (isApplied && !hideStatusLabel) {
-            return (
-                <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-400 border border-emerald-400/30 px-1.5 py-0.5 rounded bg-emerald-400/10 ml-2 flex items-center gap-1">
-                    Bereits beworben
-                </span>
-            );
-        }
-        if (job.status === "draft") {
-            return (
-                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 border border-slate-400/30 px-1.5 py-0.5 rounded bg-white/5 ml-2">
-                    Entwurf
-                </span>
-            );
-        }
-        if (job.status === "closed") {
-            return (
-                <span className="text-[10px] uppercase tracking-wider font-bold text-red-400 border border-red-400/30 px-1.5 py-0.5 rounded bg-red-400/10 ml-2">
-                    Geschlossen
-                </span>
-            );
-        }
-        if (job.status === "open") {
-            return (
-                <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-400 border border-emerald-400/30 px-1.5 py-0.5 rounded bg-emerald-400/10 ml-2">
-                    Aktiv
-                </span>
-            );
-        }
-        if (job.status === "reserved") {
-            return (
-                <span className="text-[10px] uppercase tracking-wider font-bold text-amber-400 border border-amber-400/30 px-1.5 py-0.5 rounded bg-amber-400/10 ml-2">
-                    Warteliste verfügbar
-                </span>
-            );
-        }
-        return null;
-    };
-
     const handleSelect = () => {
         if (!href) {
             void warmJobsUI();
@@ -131,17 +58,34 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
     };
 
     const CardContent = (
-        <div
+        <article
             data-card-state={cardState}
-            onClick={handleSelect}
             onMouseEnter={() => void warmJobsUI()}
             onFocus={() => void warmJobsUI()}
             onPointerDown={() => void warmJobsUI()}
-            className="job-card group relative flex h-full min-h-[236px] cursor-pointer flex-col overflow-hidden rounded-[1.35rem] border p-6 transition-[border-color,box-shadow,background-color] duration-200 md:p-7"
+            className={cn(
+                "job-card group relative flex h-full min-h-[236px] flex-col overflow-hidden rounded-[1.35rem] border p-6 transition-[border-color,box-shadow,background-color] duration-200 md:p-7",
+                (href || onSelect) && "cursor-pointer",
+            )}
         >
+            {href ? (
+                <Link
+                    href={href}
+                    aria-label={`${job.title} ansehen`}
+                    className="absolute inset-0 z-10 rounded-[1.35rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400"
+                />
+            ) : onSelect ? (
+                <button
+                    type="button"
+                    aria-label={`${job.title} ansehen`}
+                    onClick={handleSelect}
+                    className="absolute inset-0 z-10 rounded-[1.35rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400"
+                />
+            ) : null}
+
             {/* Locked Overlay */}
             {isLocked && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[1.35rem] bg-slate-950/60 opacity-100 transition-opacity duration-300 pointer-events-none sm:opacity-0 sm:group-hover:opacity-100">
+                <div className="absolute inset-0 z-40 flex items-center justify-center rounded-[1.35rem] bg-slate-950/60 opacity-100 transition-opacity duration-300 pointer-events-none sm:opacity-0 sm:group-hover:opacity-100">
                     <div className="flex flex-col items-center gap-2 transform sm:translate-y-4 sm:group-hover:translate-y-0 transition-transform duration-300">
                         <div className="w-12 h-12 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-slate-400 shadow-xl">
                             <Lock size={20} />
@@ -153,23 +97,30 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                 </div>
             )}
 
-            <div className={`relative z-10 flex flex-col h-full ${isLocked ? 'md:opacity-55 md:transition-opacity md:duration-200' : ''}`}>
+            <div className={`pointer-events-none relative z-20 flex h-full flex-col ${isLocked ? 'md:opacity-55 md:transition-opacity md:duration-200' : ''}`}>
                 <div className="mb-5 flex flex-col gap-2.5">
-                    {/* Waitlist Badges - Keep in flow if they exist so title gets pushed down naturally */}
+                    {/* Privacy-preserving waitlist summary. */}
                     {showWaitlistBadges && (
-                        <div className="flex items-start mb-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                                {job.active_applicant && !isUserWaitlisted && (
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]">
-                                        <Clock size={10} className="text-amber-400" />
-                                        <span>Reserviert von {job.active_applicant.full_name?.split(' ')[0] || "Nutzer"}</span>
-                                    </div>
-                                )}
-                                {isUserWaitlisted && (
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)]">
-                                        <CheckCircle2 size={10} className="text-amber-400" />
-                                        <span>Du stehst auf der Warteliste</span>
-                                    </div>
+                        <div className="job-card-waitlist-summary mb-1 flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-sm">
+                            {isUserWaitlisted ? (
+                                <CheckCircle2 size={16} className="job-card-waitlist-icon mt-0.5 shrink-0" aria-hidden="true" />
+                            ) : (
+                                <Clock size={16} className="job-card-waitlist-icon mt-0.5 shrink-0" aria-hidden="true" />
+                            )}
+                            <div className="min-w-0 leading-snug">
+                                <span className="job-card-waitlist-title block font-semibold">
+                                    {isUserWaitlisted
+                                        ? ownWaitlistPosition
+                                            ? `Dein Wartelistenplatz: ${ownWaitlistPosition}${waitlistCount > 0 ? ` von ${waitlistCount}` : ""}`
+                                            : "Du bist auf der Warteliste"
+                                        : "Gespräch läuft · Warteliste offen"}
+                                </span>
+                                {waitlistCount > 0 && (
+                                    <span className="job-card-waitlist-meta mt-0.5 block text-xs">
+                                        {isUserWaitlisted
+                                            ? `${waitlistCount} ${waitlistCount === 1 ? "Person wartet" : "Personen warten"} insgesamt`
+                                            : `${waitlistCount} ${waitlistCount === 1 ? "Person wartet" : "Personen warten"} bereits`}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -213,13 +164,17 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                                 </span>
                             );
                         })()}
+                        {job.job_kind === "recurring" ? (
+                            <>
+                                <span className="job-card-separator text-slate-600">•</span>
+                                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                                    <Repeat2 size={13} aria-hidden="true" />
+                                    Regelmäßig
+                                </span>
+                            </>
+                        ) : null}
                         <span className="job-card-separator text-slate-600">•</span>
                         <span className="job-card-provider text-sm font-medium text-slate-400">{job.creator?.company_name || "Privater Auftraggeber"}</span>
-                        {isDemo && (
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-cyan-400 border border-cyan-400/30 px-1.5 py-0.5 rounded bg-cyan-400/10 ml-1">
-                                Demo
-                            </span>
-                        )}
                     </div>
                 </div>
 
@@ -253,17 +208,13 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                             ) : (
                                 <Link
                                     href="/app-home/profile?focus=location"
-                                    className="flex items-center gap-1.5 group/loc relative"
+                                    className="pointer-events-auto relative z-30 flex items-center gap-1.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
                                     title="Wohnort hinzufügen für exakte Entfernungsangaben"
                                 >
                                     <span className="text-slate-500 text-xs">Entfernung unbekannt</span>
-                                    {/* Pulse effect wrapper */}
-                                    <div className="relative flex items-center justify-center">
-                                        <div className="absolute inset-0 rounded-lg bg-indigo-500/20 blur-[3px] transition-all duration-300 group-hover/loc:bg-indigo-500/35" />
-                                        <span className="relative text-[10px] font-bold text-indigo-100 bg-indigo-600 hover:bg-indigo-500 px-2 py-0.5 rounded-lg transition-colors ring-1 ring-white/10 shadow-lg whitespace-nowrap">
-                                            Wohnort angeben
-                                        </span>
-                                    </div>
+                                    <span className="whitespace-nowrap text-xs font-semibold text-indigo-300 underline decoration-indigo-400/40 underline-offset-4 transition-colors hover:text-indigo-200">
+                                        Wohnort angeben
+                                    </span>
                                 </Link>
                             )}
                         </div>
@@ -291,16 +242,8 @@ export const JobCard = memo(function JobCard({ job, isDemo, isApplied, isLocked,
                     </div>
                 </div>
             </div>
-        </div>
+        </article>
     );
-
-    if (href) {
-        return (
-            <Link href={href}>
-                {CardContent}
-            </Link>
-        );
-    }
 
     return CardContent;
 });

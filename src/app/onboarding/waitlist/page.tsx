@@ -60,16 +60,23 @@ function WaitlistContent() {
         );
 
         try {
-            const { error: insertError } = await supabase.from("waitlist").insert({
-                email,
-                city,
-                federal_state: state,
-                country,
-                role,
+            const { data: result, error: insertError } = await supabase.rpc("join_launch_waitlist", {
+                p_email: email.trim().toLowerCase(),
+                p_city: city,
+                p_federal_state: state || null,
+                p_country: country,
+                p_role: role,
             });
 
             if (insertError) {
                 throw insertError;
+            }
+
+            const response = result && typeof result === "object" && !Array.isArray(result)
+                ? result as { ok?: boolean; error?: string }
+                : null;
+            if (!response?.ok) {
+                throw new Error(response?.error ?? "waitlist_join_failed");
             }
 
             setSuccess(true);

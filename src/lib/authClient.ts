@@ -21,7 +21,3 @@ export const signInWithEmail = async (email: string, password: string) => {
   });
   return { data, error };
 };
-
-export const signOut = async () => {
-  await supabaseBrowser.auth.signOut();
-};

@@ -54,30 +54,45 @@ export async function getGuardians() {
 
     if (!user) return { error: "Nicht authentifiziert" };
 
-    // Fetch redeemed invitations to find guardians
-    const { data: guardians } = await supabase
-        .from("guardian_invitations")
-        .select(`
-            redeemed_by,
-            updated_at,
-            guardian_profile:redeemed_by (
-                full_name,
-                email
-            )
-        `)
-        .eq("child_id", user.id)
-        .eq("status", "redeemed");
+    try {
+        // Cross-profile names stay behind the server-only service boundary.
+        // The child filter is always derived from the verified session above.
+        const adminClient = getSupabaseAdminClient();
+        const { data: guardians, error } = await adminClient
+            .from("guardian_invitations")
+            .select(`
+                redeemed_by,
+                updated_at,
+                guardian_profile:redeemed_by (
+                    full_name,
+                    email
+                )
+            `)
+            .eq("child_id", user.id)
+            .eq("status", "redeemed");
 
-    if (!guardians) return { guardians: [] };
+        if (error) {
+            console.error("Guardian lookup failed:", error.message);
+            return { guardians: [] };
+        }
 
-    return {
-        guardians: guardians.map((g: any) => ({
-            id: g.redeemed_by,
-            full_name: g.guardian_profile?.full_name || "Unbekannt",
-            email: g.guardian_profile?.email || "",
-            linked_at: g.updated_at
-        }))
-    };
+        return {
+            guardians: (guardians ?? []).map((guardian: any) => {
+                const profile = Array.isArray(guardian.guardian_profile)
+                    ? guardian.guardian_profile[0]
+                    : guardian.guardian_profile;
+                return {
+                    id: guardian.redeemed_by,
+                    full_name: profile?.full_name || "Unbekannt",
+                    email: profile?.email || "",
+                    linked_at: guardian.updated_at,
+                };
+            }),
+        };
+    } catch (error) {
+        console.error("Guardian lookup unavailable:", error);
+        return { guardians: [] };
+    }
 }
 
 export async function getWards() {

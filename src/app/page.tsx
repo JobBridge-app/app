@@ -3,6 +3,7 @@ import { getDefaultAppHomePath } from "@/lib/app-shell";
 import { redirect } from "next/navigation";
 import AuthBridge from "@/components/AuthBridge";
 import { MiniFooter } from "@/components/layout/MiniFooter";
+import { getSafeInternalRedirect } from "@/lib/safe-redirect";
 
 export default async function LandingPage({
   searchParams,
@@ -12,7 +13,7 @@ export default async function LandingPage({
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const resolvedParams: any = await searchParams;
   const authState = await getAuthState();
-  const redirectTo = typeof resolvedParams.redirectTo === "string" ? resolvedParams.redirectTo : undefined;
+  const redirectTo = getSafeInternalRedirect(resolvedParams.redirectTo) ?? undefined;
   const authMode = typeof resolvedParams.authMode === "string" && (resolvedParams.authMode === "signup" || resolvedParams.authMode === "signin")
     ? resolvedParams.authMode
     : undefined;

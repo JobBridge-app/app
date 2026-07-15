@@ -29,13 +29,14 @@ export function ThemedLogoImage({
   const imageClassName = cn("theme-logo-image", className);
 
   if (fill) {
+    const responsiveSizes = sizes ?? "64px";
     return (
       <>
         <Image
           src={darkLogoSrc}
           alt={alt}
           fill
-          sizes={sizes}
+          sizes={responsiveSizes}
           priority={priority}
           className={cn("theme-logo-dark", imageClassName)}
         />
@@ -43,7 +44,7 @@ export function ThemedLogoImage({
           src={lightLogoSrc}
           alt=""
           fill
-          sizes={sizes}
+          sizes={responsiveSizes}
           priority={priority}
           aria-hidden="true"
           className={cn("theme-logo-light", imageClassName)}

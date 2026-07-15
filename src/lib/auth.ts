@@ -26,39 +26,6 @@ export type AuthState =
   | { state: "incomplete-profile"; session: Session; profile: Profile | null; systemRoles: string[]; effectiveView: EffectiveViewSnapshot | null }
   | { state: "ready"; session: Session; profile: Profile | null; systemRoles: string[]; effectiveView: EffectiveViewSnapshot | null };
 
-/**
- * Helper to determine if we should look at Live Data or Demo Data
- */
-export async function getDataSource(userId: string) {
-  const supabase = await supabaseServer();
-  const { data: demoSession } = await supabase
-    .from("demo_sessions")
-    .select("enabled, demo_view")
-    .eq("user_id", userId)
-    .single();
-
-  if (demoSession?.enabled) {
-    return {
-      mode: 'demo' as const,
-      view: demoSession.demo_view as AccountType
-    };
-  }
-  return { mode: 'live' as const };
-}
-
-export async function getActiveOverride(userId: string) {
-  const supabase = await supabaseServer();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: override } = await supabase
-    .from("role_overrides" as any)
-    .select("view_as, expires_at")
-    .eq("user_id", userId)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle() as any;
-
-  return override;
-}
-
 const getCurrentSessionAndProfileCached = cache(async (): Promise<{
   session: Session | null;
   profile: Profile | null;
@@ -92,13 +59,9 @@ const getCurrentSessionAndProfileCached = cache(async (): Promise<{
     return { session: null, profile: null, systemRoles: [], effectiveView: null };
   }
 
-  // Parallel fetch: profile, roles, demo session, active override
-  // We do manual parallel queries to keep it clean
-  const [profileResult, rolesResult, demoResult, overrideResult] = await Promise.all([
+  const [profileResult, rolesResult] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
     supabase.from("user_system_roles").select("role:system_roles(name)").eq("user_id", session.user.id),
-    supabase.from("demo_sessions").select("enabled, demo_view").eq("user_id", session.user.id).maybeSingle(),
-    (supabase.from("role_overrides" as any).select("view_as, expires_at").eq("user_id", session.user.id).gt("expires_at", new Date().toISOString()).maybeSingle() as any)
   ]);
 
   const profile = profileResult.data as Profile | null;
@@ -114,29 +77,10 @@ const getCurrentSessionAndProfileCached = cache(async (): Promise<{
 
   if (profile) {
     const baseRole = (profile.account_type as AccountType | null) ?? "job_seeker";
-    const demoView = demoResult.data?.enabled
-      ? ((demoResult.data.demo_view as AccountType | null) ?? "job_seeker")
-      : null;
-    const overrideView = overrideResult.data
-      ? (overrideResult.data.view_as as AccountType)
-      : null;
-
-    effectiveView = demoView
-      ? {
-          isDemoEnabled: true,
-          viewRole: demoView,
-          source: "demo",
-          roles: systemRoles,
-          demoView,
-          overrideExpiresAt: null,
-        }
-      : {
-          isDemoEnabled: false,
-          viewRole: overrideView ?? baseRole,
-          source: "live",
-          roles: systemRoles,
-          overrideExpiresAt: overrideResult.data?.expires_at ?? null,
-        };
+    effectiveView = {
+      viewRole: baseRole,
+      roles: systemRoles,
+    };
 
     profile.account_type = effectiveView.viewRole;
   }

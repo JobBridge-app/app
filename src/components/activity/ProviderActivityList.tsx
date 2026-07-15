@@ -3,7 +3,17 @@
 import { startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ActivityCommandCenter } from "@/components/activity/ActivityCommandCenter";
-import { rejectApplication, sendMessage } from "@/app/app-home/applications/actions";
+import {
+    completeJobEngagement,
+    confirmJobAgreement,
+    promoteWaitlistedApplication,
+    rejectApplication,
+    reopenApplication,
+    reportActivityItem,
+    requestConversationReopen,
+    respondToConversationReopenRequest,
+    sendMessage,
+} from "@/app/app-home/applications/actions";
 import type { Database } from "@/lib/types/supabase";
 
 export type ProviderApplication = Database["public"]["Tables"]["applications"]["Row"] & {
@@ -20,32 +30,80 @@ export function ProviderActivityList({
     userId,
     selectedJobId,
     selectedJobTitle,
+    initialConversationId,
+    readOnly = false,
 }: {
     applications: ProviderApplication[];
     userId: string;
     selectedJobId?: string | null;
     selectedJobTitle?: string | null;
+    initialConversationId?: string | null;
+    readOnly?: boolean;
 }) {
     const router = useRouter();
-    void userId;
+
+    const refresh = () => {
+        startTransition(() => router.refresh());
+    };
 
     const handleReject = async (applicationId: string, reason: string) => {
         const result = await rejectApplication(applicationId, reason);
         if (result?.error) throw new Error(result.error);
 
-        startTransition(() => {
-            router.refresh();
-        });
+        refresh();
+    };
+
+    const handleSchedule = async (applicationId: string, scheduledFor: string, note?: string) => {
+        const result = await confirmJobAgreement(applicationId, scheduledFor, note);
+        if (result?.error) throw new Error(result.error);
+
+        refresh();
+        return result;
     };
 
     return (
         <ActivityCommandCenter
             applications={applications}
             role="provider"
+            currentUserId={userId}
+            initialConversationId={initialConversationId}
+            readOnly={readOnly}
             selectedJobId={selectedJobId}
             selectedJobTitle={selectedJobTitle}
             onSendMessage={sendMessage}
             onReject={handleReject}
+            onSchedule={handleSchedule}
+            onReopen={async (applicationId) => {
+                const result = await reopenApplication(applicationId);
+                if (result?.error) throw new Error(result.error);
+                refresh();
+                return result;
+            }}
+            onRequestReopen={async (applicationId, message) => {
+                const result = await requestConversationReopen(applicationId, message);
+                if (result?.error) throw new Error(result.error);
+                refresh();
+                return result;
+            }}
+            onRespondReopenRequest={async (requestId, accept, reason) => {
+                const result = await respondToConversationReopenRequest(requestId, accept, reason);
+                if (result?.error) throw new Error(result.error);
+                refresh();
+                return result;
+            }}
+            onPromote={async (applicationId, reason) => {
+                const result = await promoteWaitlistedApplication(applicationId, reason);
+                if (result?.error) throw new Error(result.error);
+                refresh();
+                return result;
+            }}
+            onComplete={async (applicationId, reason) => {
+                const result = await completeJobEngagement(applicationId, reason);
+                if (result?.error) throw new Error(result.error);
+                refresh();
+                return result;
+            }}
+            onReport={reportActivityItem}
         />
     );
 }

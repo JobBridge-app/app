@@ -52,49 +52,11 @@ export async function middleware(request: NextRequest) {
   // getUser() contacts the Supabase Auth server, validates the JWT, and
   // refreshes the session if the access token has expired.
   // Wrap in try/catch: stale/invalid refresh tokens should not crash the middleware.
-  let user = null;
   try {
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
+    await supabase.auth.getUser();
   } catch {
     // Invalid or missing refresh token — treat as unauthenticated.
     // The browser will get fresh tokens on next login.
-  }
-
-  const isProtectedPath =
-    path.startsWith("/admin") ||
-    path.startsWith("/staff") ||
-    path.startsWith("/analytics") ||
-    path.startsWith("/moderation");
-
-  if (isProtectedPath) {
-    if (!user) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
-    // Fetch user system roles
-    const { data: rolesData } = await supabase
-      .from("user_system_roles")
-      .select("role:system_roles(name)")
-      .eq("user_id", user.id);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userRoles = (rolesData || []).map((r: any) => r.role?.name).filter(Boolean);
-
-    let hasAccess = false;
-    const isStaff = userRoles.includes("admin") || userRoles.includes("moderator") || userRoles.includes("analyst");
-
-    if (path.startsWith("/admin") || path.startsWith("/staff")) {
-      hasAccess = isStaff;
-    } else if (path.startsWith("/analytics")) {
-      hasAccess = userRoles.includes("admin") || userRoles.includes("analyst");
-    } else if (path.startsWith("/moderation")) {
-      hasAccess = userRoles.includes("admin") || userRoles.includes("moderator");
-    }
-
-    if (!hasAccess) {
-      return NextResponse.redirect(new URL("/app-home", request.url));
-    }
   }
 
   return response;

@@ -19,6 +19,9 @@ export type JobDraftData = {
     };
     category?: string;
     paymentType?: string;
+    jobKind?: "one_time" | "recurring";
+    recurrenceRule?: "weekly" | "biweekly" | "monthly" | "flexible";
+    continuityPreferred?: boolean;
     isDefaultLocation?: boolean;
 };
 

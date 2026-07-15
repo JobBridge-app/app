@@ -4,14 +4,12 @@ import type { AppHeaderProfile, HeaderNotificationItem } from "@/lib/types/jobbr
 
 export function RightActionGroup({
     profile,
-    isDemo,
     isStaff,
     accountEmail,
     unreadCount,
     notificationsPreview,
 }: {
     profile: AppHeaderProfile | null;
-    isDemo?: boolean;
     isStaff: boolean;
     accountEmail: string | null;
     unreadCount: number;
@@ -20,12 +18,12 @@ export function RightActionGroup({
     return (
         <div className="flex items-center gap-2 min-[420px]:gap-3">
             <NotificationsPopover
+                currentUserId={profile?.id ?? null}
                 initialUnreadCount={unreadCount}
                 initialNotifications={notificationsPreview}
             />
             <ProfileChip
                 profile={profile}
-                isDemo={isDemo}
                 isStaff={isStaff}
                 accountEmail={accountEmail}
             />

@@ -12,11 +12,8 @@ export function getDefaultAppHomePath(viewRole: AccountType | null | undefined) 
 
 function buildFallbackView(profile: Profile): EffectiveViewSnapshot {
   return {
-    isDemoEnabled: false,
     viewRole: (profile.account_type ?? "job_seeker") as AccountType,
-    source: "live",
     roles: [],
-    overrideExpiresAt: null,
   };
 }
 
@@ -62,15 +59,6 @@ const getVerificationState = cache(async (
     };
   }
 
-  if (guardianStatus !== "linked") {
-    return {
-      guardianStatus: guardianStatus ?? "none",
-      hasActiveGuardian: false,
-      isVerified: false,
-      canApply: false,
-    };
-  }
-
   const supabase = await supabaseServer();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { count } = await (supabase as any)
@@ -103,15 +91,29 @@ export const getAppHomeSnapshot = cache(async (): Promise<AppHomeSnapshot> => {
   const profile = authState.profile!;
   const effectiveView = authState.effectiveView ?? buildFallbackView(profile);
 
-  const [market, verification] = await Promise.all([
-    getMarketSummary(profile.market_id),
-    getVerificationState(
-      profile.id,
-      effectiveView.viewRole,
-      profile.guardian_status,
-      profile.provider_verification_status,
-      profile.provider_verified_at,
-    ),
+  const marketPromise = getMarketSummary(profile.market_id);
+  const verificationPromise = getVerificationState(
+    profile.id,
+    effectiveView.viewRole,
+    profile.guardian_status,
+    profile.provider_verification_status,
+    profile.provider_verified_at,
+  );
+  const supabase = await supabaseServer();
+  const [market, verification, unreadResult, notificationsResult] = await Promise.all([
+    marketPromise,
+    verificationPromise,
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .is("read_at", null),
+    supabase
+      .from("notifications")
+      .select("id, type, title, body, data, created_at, read_at")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
   ]);
 
   const accountEmail = profile.email?.trim() || null;
@@ -128,14 +130,13 @@ export const getAppHomeSnapshot = cache(async (): Promise<AppHomeSnapshot> => {
     profileLite: normalizedProfile,
     effectiveView,
     market,
-    isDemo: effectiveView.source === "demo",
     isStaff: authState.systemRoles.some((role) => ["admin", "moderator", "analyst"].includes(role)),
     accountEmail,
     guardianStatus: verification.guardianStatus,
     hasActiveGuardian: verification.hasActiveGuardian,
     isVerified: verification.isVerified,
     canApply: verification.canApply,
-    unreadCount: 0,
-    notificationsPreview: [],
+    unreadCount: unreadResult.error ? 0 : unreadResult.count ?? 0,
+    notificationsPreview: notificationsResult.error ? [] : notificationsResult.data ?? [],
   };
 });

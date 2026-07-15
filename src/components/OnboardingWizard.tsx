@@ -11,6 +11,7 @@ import { signUpWithEmail, signInWithEmail } from "@/lib/authClient";
 import { supabaseBrowser } from "@/lib/supabaseClient";
 import { useEmailResend } from "@/lib/hooks/useEmailResend";
 import { type OnboardingRole, type Profile } from "@/lib/types";
+import { safeInternalRedirectOr } from "@/lib/safe-redirect";
 import { BRAND_EMAIL } from "@/lib/constants";
 import { Sparkles, HandHeart, Building2, Mail, UserX, KeyRound } from "lucide-react";
 import { LocationStep } from "./onboarding/LocationStep";
@@ -181,6 +182,7 @@ export function OnboardingWizard({
   isJustVerified = false,
   reserveFooterSpace = false,
 }: OnboardingWizardProps) {
+  const safeRedirectTo = safeInternalRedirectOr(redirectTo, "/app-home");
   const [step, setStep] = useState<Step>(forcedStep || "welcome");
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [loading, setLoading] = useState(false);
@@ -333,7 +335,7 @@ export function OnboardingWizard({
       clearOnboardingDraft();
       setCodeMessage("Code bestätigt. Du wirst weitergeleitet...");
       setTimeout(() => {
-        window.location.href = redirectTo || "/app-home";
+        window.location.href = safeRedirectTo;
       }, 1000); // Give user a moment to see success
       return true;
     }
@@ -373,7 +375,7 @@ export function OnboardingWizard({
       }));
     }
     return false;
-  }, [email, redirectTo, mustChooseRole]);
+  }, [email, mustChooseRole, safeRedirectTo]);
 
   useEffect(() => {
     if (step !== "email-confirm") return;
@@ -450,28 +452,13 @@ export function OnboardingWizard({
           return;
         }
 
-        const { getSignInEmailStatus } = await import("@/app/onboarding/actions");
-        const emailStatus = await getSignInEmailStatus(email);
-
-        if (emailStatus === "not_found") {
-          setErrorType("account_not_found");
-          setErrorMsg("Für diese E-Mail-Adresse gibt es noch keinen JobBridge-Account. Prüfe die Schreibweise oder registriere dich neu.");
-          return;
-        }
-
-        if (emailStatus === "unknown") {
-          setErrorType("general");
-          setErrorMsg("Wir konnten diese E-Mail gerade nicht eindeutig prüfen. Bitte versuche es noch einmal oder kontaktiere den Support.");
-          return;
-        }
-
-        setErrorType("wrong_password");
-        setErrorMsg("Das Passwort zu dieser E-Mail-Adresse stimmt nicht.");
+        setErrorType("general");
+        setErrorMsg("Die Anmeldung war nicht möglich. Prüfe E-Mail-Adresse, Passwort und ob dein Account bereits bestätigt ist.");
         return;
       }
 
       clearOnboardingDraft();
-      window.location.href = redirectTo || "/app-home";
+      window.location.href = safeRedirectTo;
     } catch (err: unknown) {
       setErrorType("general");
       setErrorMsg(getErrorMessage(err, "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es noch einmal."));
@@ -581,7 +568,7 @@ export function OnboardingWizard({
       }
 
       clearOnboardingDraft();
-      window.location.href = redirectTo || "/app-home";
+      window.location.href = safeRedirectTo;
     } catch (err: unknown) {
       setErrorType("general");
       setErrorMsg(getErrorMessage(err, "Speichern fehlgeschlagen. Bitte versuche es erneut."));

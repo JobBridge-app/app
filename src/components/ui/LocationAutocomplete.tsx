@@ -24,6 +24,7 @@ export type LocationDetails = {
 };
 
 interface LocationAutocompleteProps {
+  inputId?: string;
   onSelect: (location: LocationDetails) => void;
   onInputChange?: () => void;
   defaultValue?: string;
@@ -33,7 +34,7 @@ interface LocationAutocompleteProps {
   autoFocus?: boolean;
 }
 
-export function LocationAutocomplete({ onSelect, onInputChange, defaultValue = "", className, placeholder, cityOnly = false, autoFocus = false }: LocationAutocompleteProps) {
+export function LocationAutocomplete({ inputId = "location-search", onSelect, onInputChange, defaultValue = "", className, placeholder, cityOnly = false, autoFocus = false }: LocationAutocompleteProps) {
   const [query, setQuery] = useState(defaultValue);
   const [results, setResults] = useState<LocationSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -180,7 +181,7 @@ export function LocationAutocomplete({ onSelect, onInputChange, defaultValue = "
         </div>
         <input
           ref={inputRef}
-          id="location-search"
+          id={inputId}
           name="location"
           autoComplete="off"
           type="text"

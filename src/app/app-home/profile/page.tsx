@@ -1,35 +1,22 @@
 import { requireCompleteProfile } from "@/lib/auth";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
-// Enforce strict type for the roles join
-type UserRoleData = {
-    role_id: string;
-    system_roles: {
-        name: string;
-    } | null;
+type GuardianDisplay = {
+    id: string;
+    full_name: string | null;
+    email: string | null;
 };
 
 export default async function ProfilePage() {
-    const { profile } = await requireCompleteProfile();
-    const supabase = await supabaseServer();
-    const [rolesResult, securityResult, redeemedInvitesResult] = await Promise.all([
-        supabase
-            .from("user_system_roles")
-            .select(`
-                role_id,
-                system_roles (
-                    name
-                )
-            `)
-            .eq("user_id", profile.id),
-        supabase
-            .from("security_events")
-            .select("*")
-            .eq("user_id", profile.id)
-            .order("created_at", { ascending: false })
-            .limit(1),
-        supabase
+    const { profile, session, systemRoles } = await requireCompleteProfile();
+    let guardians: GuardianDisplay[] = [];
+
+    try {
+        // This server-only lookup is intentionally scoped to the signed-in child.
+        // Browser profile policies remain own-row-only.
+        const admin = getSupabaseAdminClient();
+        const { data, error } = await admin
             .from("guardian_invitations")
             .select(`
                 redeemed_by,
@@ -40,27 +27,36 @@ export default async function ProfilePage() {
                 )
             `)
             .eq("child_id", profile.id)
-            .eq("status", "redeemed"),
-    ]);
+            .eq("status", "redeemed");
 
-    const roles = (rolesResult.data ?? []) as unknown as UserRoleData[];
-    const isStaff = roles.length > 0;
-    const securityEvents = securityResult.data ?? [];
-    const lastLogin = securityEvents.length > 0 ? securityEvents[0] : null;
-    const redeemedInvites = redeemedInvitesResult.data ?? [];
-
-    let guardians: Array<{ id: string; full_name: string | null; email: string | null }> = [];
-
-    if (redeemedInvites && redeemedInvites.length > 0) {
-        // Cast to any to avoid complex type mapping issues with joined data
-        guardians = redeemedInvites.map((r: any) => r.guardian_profile).filter(Boolean);
+        if (error) {
+            console.error("Guardian profile lookup failed:", error.message);
+        } else {
+            guardians = (data ?? [])
+                .map((row: any) => {
+                    const joined = Array.isArray(row.guardian_profile)
+                        ? row.guardian_profile[0]
+                        : row.guardian_profile;
+                    return joined ? {
+                        id: joined.id,
+                        full_name: joined.full_name,
+                        email: joined.email,
+                    } : null;
+                })
+                .filter((guardian: GuardianDisplay | null): guardian is GuardianDisplay => Boolean(guardian));
+        }
+    } catch (error) {
+        console.error("Guardian profile lookup unavailable:", error);
     }
+
+    const lastSignInAt = session.user.last_sign_in_at;
+
     return (
         <ProfileEditForm
             profile={profile}
-            isStaff={isStaff}
+            isStaff={systemRoles.length > 0}
             guardians={guardians}
-            lastLogin={lastLogin}
+            lastLogin={lastSignInAt ? { created_at: lastSignInAt } : null}
         />
     );
 }

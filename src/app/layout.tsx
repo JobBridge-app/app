@@ -2,11 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { TestModeBanner } from "@/components/admin/TestModeBanner";
 import { getCurrentSessionAndProfile } from "@/lib/auth";
 import { normalizeThemePreference, type ThemePreference } from "@/lib/theme-preference";
 import "./globals.css";
 import "./jobs-polish.css";
+import "./activity-polish.css";
 
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -101,7 +101,6 @@ export default async function RootLayout({
       </head>
       <body className={`${fontSans.variable} min-h-screen bg-background text-foreground antialiased selection:bg-blue-500/30`}>
         <ThemeProvider defaultTheme={themePreference} enableSystem={true}>
-          <TestModeBanner />
           {children}
         </ThemeProvider>
       </body>

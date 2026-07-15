@@ -2,11 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { Database } from "@/lib/types";
+import { safeInternalRedirectOr } from "@/lib/safe-redirect";
 
 export async function GET(request: NextRequest) {
     const requestUrl = new URL(request.url);
     const code = requestUrl.searchParams.get("code");
-    const next = requestUrl.searchParams.get("next") ?? "/onboarding";
+    const next = safeInternalRedirectOr(requestUrl.searchParams.get("next"), "/onboarding");
 
     if (code) {
         // Build the final redirect URL upfront so we know where to go.

@@ -5,8 +5,12 @@ import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { ButtonSecondary } from "@/components/ui/ButtonSecondary";
 import { Suspense, useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabaseClient";
-import { ShieldCheck, CheckCircle, AlertCircle, LogIn, UserPlus } from "lucide-react";
+import { ShieldCheck, CheckCircle, AlertCircle, UserPlus } from "lucide-react";
 import { LeftBrandChip } from "@/components/layout/header/LeftBrandChip";
+import { redeemGuardianInvitation } from "./actions";
+
+const GUARDIAN_CONFIRMATION_ERROR =
+    "Die Bestätigung konnte nicht abgeschlossen werden. Der Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Bitte fordere einen neuen Link an.";
 
 function GuardianAccessContent() {
     const searchParams = useSearchParams();
@@ -31,7 +35,7 @@ function GuardianAccessContent() {
         if (token) {
             supabaseBrowser
                 .rpc("get_guardian_invitation_info", { token_input: token })
-                .then(({ data, error }) => {
+                .then(({ data }) => {
                     if (data && (data as any).valid) {
                         setChildName((data as any).child_name);
                     }
@@ -63,33 +67,16 @@ function GuardianAccessContent() {
         setState("loading");
         setError(null);
         try {
-            const { data, error } = await supabaseBrowser.rpc("redeem_guardian_invitation", { token_input: token });
-
-            if (error) throw error;
-
-            const res = data as unknown as { success?: boolean; error?: string } | null;
-            if (!res?.success) {
-                throw new Error(res?.error || "Bestätigung fehlgeschlagen.");
+            const result = await redeemGuardianInvitation(token);
+            if (!result.success) {
+                setState("error");
+                setError(result.message);
+                return;
             }
             setState("success");
-        } catch (e: any) {
-            console.error("Redemption Catch Block:", e);
+        } catch {
             setState("error");
-            let msg = "Unbekannter Fehler";
-            if (e instanceof Error) {
-                msg = e.message;
-            } else if (typeof e === "object" && e !== null && "message" in e) {
-                msg = (e as any).message;
-            } else if (typeof e === "string") {
-                msg = e;
-            } else {
-                try {
-                    msg = JSON.stringify(e);
-                } catch {
-                    msg = "Fehler konnte nicht dargestellt werden";
-                }
-            }
-            setError(msg);
+            setError(GUARDIAN_CONFIRMATION_ERROR);
         }
     };
 

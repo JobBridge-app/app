@@ -1,8 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { X, Send, Lock, AlertTriangle } from "lucide-react";
+import { X, Send, Lock, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ButtonPrimary } from "@/components/ui/ButtonPrimary";
 import { applyToJob } from "@/app/app-home/jobs/actions";
 import { GuardianConsentModal } from "@/components/GuardianConsentModal";
@@ -20,11 +21,25 @@ interface JobApplicationModalProps {
 }
 
 export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply, guardianStatus, isWaitlistMode }: JobApplicationModalProps) {
+    const router = useRouter();
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const [showGuardianModal, setShowGuardianModal] = useState(false);
-    const [success, setSuccess] = useState(false);
+    const [submissionOutcome, setSubmissionOutcome] = useState<{ isPrimary: boolean } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleClose = () => {
+        if (loading) return;
+        if (closeTimerRef.current) {
+            clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = null;
+        }
+        onClose();
+        setSubmissionOutcome(null);
+        setMessage("");
+        setError(null);
+    };
 
     useEffect(() => {
         if (!isOpen) return;
@@ -33,6 +48,10 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
         });
         return () => cancelAnimationFrame(frameId);
     }, [isOpen]);
+
+    useEffect(() => () => {
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -50,28 +69,28 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
         formData.append("message", message);
         formData.append("jobId", jobId);
 
-        const result = await applyToJob(formData);
-
-        setLoading(false);
-
-        if (result.success) {
+        try {
+            const result = await applyToJob(formData);
             endPerfMark("job-apply-submit");
-            setSuccess(true);
-            setTimeout(() => {
-                onClose();
-                setSuccess(false);
-                setMessage("");
-            }, 2000);
-        } else {
+            if (result.success) {
+                setSubmissionOutcome({ isPrimary: result.isPrimary });
+                router.refresh();
+                closeTimerRef.current = setTimeout(handleClose, 2600);
+            } else {
+                setError(result.error || "Ein unbekannter Fehler ist aufgetreten.");
+            }
+        } catch {
             endPerfMark("job-apply-submit");
-            setError(result.error || "Ein unbekannter Fehler ist aufgetreten.");
+            setError("Die Bewerbung konnte nicht gespeichert werden. Bitte versuche es erneut.");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <>
             <Transition appear show={isOpen} as={Fragment}>
-                <Dialog as="div" className="relative z-[60]" onClose={onClose}>
+                <Dialog as="div" className="relative z-[60]" onClose={handleClose}>
                     <Transition.Child
                         as={Fragment}
                         enter="ease-out duration-300"
@@ -98,25 +117,28 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                                 <Dialog.Panel className="job-application-modal w-full max-w-md transform overflow-hidden rounded-3xl border p-6 text-left align-middle shadow-xl transition-all">
                                     <div className="absolute top-4 right-4">
                                         <button
-                                            onClick={onClose}
-                                            className="job-application-close transition-colors p-1"
+                                            type="button"
+                                            onClick={handleClose}
+                                            disabled={loading}
+                                            aria-label="Bewerbungsfenster schließen"
+                                            className="job-application-close p-1 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             <X size={20} />
                                         </button>
                                     </div>
 
-                                    {success ? (
-                                        <div className="py-12 flex flex-col items-center text-center">
-                                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isWaitlistMode ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-                                                <Send size={32} />
+                                    {submissionOutcome ? (
+                                        <div className="py-12 flex flex-col items-center text-center" role="status" aria-live="polite">
+                                            <div className="job-application-success-mark mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                                                <CheckCircle2 size={32} aria-hidden="true" />
                                             </div>
                                             <h3 className="text-xl font-bold text-white mb-2">
-                                                {isWaitlistMode ? "Erfolgreich eingetragen!" : "Bewerbung gesendet!"}
+                                                {submissionOutcome.isPrimary ? "Bewerbung gesendet" : "Auf Warteliste eingetragen"}
                                             </h3>
                                             <p className="text-slate-400">
-                                                {isWaitlistMode
-                                                    ? "Du stehst nun auf der Warteliste für diesen Job und rückst automatisch nach, falls der Platz wieder frei wird."
-                                                    : "Viel Erfolg! Der Anbieter wird sich bald bei dir melden."}
+                                                {submissionOutcome.isPrimary
+                                                    ? "Dein Gespräch ist jetzt geöffnet. Der Anbieter kann dir direkt antworten."
+                                                    : "Deine Bewerbung ist sofort gespeichert und für den Anbieter sichtbar. Der Chat öffnet sich, sobald du nachrückst."}
                                             </p>
                                         </div>
                                     ) : (
@@ -125,19 +147,19 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                                                 as="h3"
                                                 className="text-xl font-bold leading-6 text-white mb-1"
                                             >
-                                                Bewerbung schreiben
+                                                {isWaitlistMode ? "Warteliste beitreten" : "Bewerbung schreiben"}
                                             </Dialog.Title>
                                             <p className="text-sm text-slate-400 mb-6">
                                                 Für: <span className="text-indigo-400 font-medium">{jobTitle}</span>
                                             </p>
 
                                             {isWaitlistMode && (
-                                                <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex gap-3 items-start">
-                                                    <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
+                                                <div className="job-application-waitlist-note mb-6 flex items-start gap-3 rounded-xl border p-4">
+                                                    <Clock className="job-application-waitlist-note-icon mt-0.5 shrink-0" size={18} aria-hidden="true" />
                                                     <div className="text-sm">
-                                                        <h4 className="font-semibold text-amber-100 mb-1">Hinweis zur Warteliste</h4>
-                                                        <p className="text-amber-200/70">
-                                                            Deine Bewerbung wird sicher zurückgehalten und auf der Warteliste vermerkt. Sie wird erst gesendet, wenn der Platz wieder frei wird.
+                                                        <h4 className="job-application-waitlist-note-title mb-1 font-semibold">So funktioniert die Warteliste</h4>
+                                                        <p className="job-application-waitlist-note-copy">
+                                                            Deine Bewerbung wird sofort gespeichert und ist für den Anbieter sichtbar. Der Chat öffnet sich, sobald du automatisch nachrückst.
                                                         </p>
                                                     </div>
                                                 </div>
@@ -193,7 +215,7 @@ export function JobApplicationModal({ isOpen, onClose, jobTitle, jobId, canApply
                                                             }
                                                         }}
                                                     >
-                                                        {loading ? "Wird gesendet..." : (
+                                                        {loading ? "Wird gespeichert..." : (
                                                             <>
                                                                 {canApply ? <Send size={16} className="mr-2" /> : <Lock size={16} className="mr-2" />}
                                                                 {canApply ? (isWaitlistMode ? "Auf Warteliste setzen" : "Bewerbung abschicken") : "Bestätigung starten"}

@@ -1,6 +1,7 @@
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { getAuthState } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getSafeInternalRedirect } from "@/lib/safe-redirect";
 
 // server component
 export default async function OnboardingPage(props: {
@@ -13,7 +14,7 @@ export default async function OnboardingPage(props: {
   // where the session is ready but we want to show the "Email Confirmed" state briefly
   // or ensure the user lands on the right step.
   const isJustVerified = searchParams?.verified === "true";
-  const redirectTo = typeof searchParams?.redirectTo === "string" ? searchParams.redirectTo : undefined;
+  const redirectTo = getSafeInternalRedirect(searchParams?.redirectTo) ?? undefined;
   const initialMode =
     searchParams?.authMode === "signup" || searchParams?.authMode === "signin"
       ? searchParams.authMode

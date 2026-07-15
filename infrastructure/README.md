@@ -3,8 +3,13 @@
 This folder contains the technical foundation of the project.
 
 ## `/database`
-Contains the **Master Schema** for the database.
-- **`schema.sql`**: The single, consolidated source of truth for the database structure. This file contains all tables, security policies, and functions.
+Contains the canonical production migration ledger and its rollout documentation.
+- **`migrations/`**: Immutable, ordered production changes.
+- **`README.md`**: Checksums, protected-data rules and release workflow.
+
+The former hand-maintained `schema.sql` was retired because it contained stale
+demo and role-override objects. New environments start from a dated,
+schema-only Supabase baseline and then apply pending migrations in order.
 
 ## `/scripts`
 Contains automated quality assurance tools.

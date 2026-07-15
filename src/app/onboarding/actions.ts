@@ -1,7 +1,6 @@
 "use server";
 
 import { supabaseServer } from "@/lib/supabaseServer";
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
 export type OnboardingData = {
@@ -15,53 +14,6 @@ export type OnboardingData = {
     company_message?: string;
 };
 
-export type SignInEmailStatus = "registered" | "not_found" | "unknown";
-
-export async function getSignInEmailStatus(email: string): Promise<SignInEmailStatus> {
-    const cleanEmail = email.trim().toLowerCase();
-
-    if (!cleanEmail || !cleanEmail.includes("@")) {
-        return "not_found";
-    }
-
-    try {
-        const adminClient = getSupabaseAdminClient();
-
-        const { data: profile, error: profileError } = await adminClient
-            .from("profiles")
-            .select("id")
-            .ilike("email", cleanEmail)
-            .limit(1)
-            .maybeSingle();
-
-        if (profileError) {
-            console.error("Onboarding sign-in email profile lookup failed:", profileError);
-            return "unknown";
-        }
-
-        if (profile) {
-            return "registered";
-        }
-
-        const { data, error } = await adminClient.auth.admin.listUsers({
-            page: 1,
-            perPage: 1000,
-        });
-
-        if (error || !data?.users) {
-            console.error("Onboarding sign-in email auth lookup failed:", error);
-            return "unknown";
-        }
-
-        return data.users.some((user) => user.email?.toLowerCase().trim() === cleanEmail)
-            ? "registered"
-            : "not_found";
-    } catch (error) {
-        console.error("Onboarding sign-in email lookup failed:", error);
-        return "unknown";
-    }
-}
-
 export async function completeOnboarding(data: OnboardingData) {
     const supabase = await supabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,43 +22,53 @@ export async function completeOnboarding(data: OnboardingData) {
         return { error: "Keine aktive Session gefunden." };
     }
 
-    // Map onboarding role to DB types
-    let account_type = "job_seeker";
-    let provider_kind = null;
+    // Authoritative account fields are written atomically by the database.
+    let accountType: "job_seeker" | "job_provider" = "job_seeker";
+    let providerKind: "private" | "company" | null = null;
 
     if (data.role === "company") {
-        account_type = "job_provider";
-        provider_kind = "company";
+        accountType = "job_provider";
+        providerKind = "company";
     } else if (data.role === "adult") {
-        account_type = "job_provider";
-        provider_kind = "private";
+        accountType = "job_provider";
+        providerKind = "private";
     }
 
-    // Prepare payload
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload: any = {
-        id: user.id,
-        full_name: data.full_name,
-        birthdate: data.birthdate,
-        city: data.city,
-        market_id: data.market_id,
-        account_type,
-        provider_kind,
-        company_name: data.role === "company" ? data.company_name : null,
-        company_contact_email: data.role === "company" ? data.company_email : null,
-        company_message: data.role === "company" ? data.company_message : null,
-        updated_at: new Date().toISOString(),
-    };
-
-    const { error } = await supabase
-        .from("profiles")
-        .upsert(payload)
-        .select()
-        .single();
+    const { data: result, error } = await supabase.rpc("complete_profile_onboarding", {
+        p_full_name: data.full_name,
+        p_birthdate: data.birthdate,
+        p_city: data.city,
+        p_market_id: data.market_id,
+        p_account_type: accountType,
+        p_provider_kind: providerKind,
+        p_company_name: data.role === "company" ? data.company_name ?? null : null,
+        p_company_contact_email: data.role === "company" ? data.company_email ?? null : null,
+        p_company_message: data.role === "company" ? data.company_message ?? null : null,
+    });
 
     if (error) {
         console.error("Onboarding Error:", error);
         return { error: "Fehler beim Speichern des Profils." };
+    }
+
+    const response = result && typeof result === "object" && !Array.isArray(result)
+        ? result as { ok?: boolean; error?: string }
+        : null;
+
+    if (!response?.ok) {
+        const messages: Record<string, string> = {
+            profile_already_complete: "Dein Profil wurde bereits eingerichtet.",
+            seeker_age_out_of_range: "Ein Jobsuchenden-Konto ist für Jugendliche von 14 bis 20 Jahren vorgesehen.",
+            provider_must_be_adult: "Ein Anbieter-Konto ist erst ab 18 Jahren möglich.",
+            invalid_birthdate: "Bitte prüfe dein Geburtsdatum.",
+            invalid_market: "Bitte wähle einen gültigen Standort.",
+            company_name_required: "Bitte gib den Namen des Unternehmens an.",
+            invalid_company_email: "Bitte prüfe die Kontakt-E-Mail des Unternehmens.",
+        };
+
+        return {
+            error: messages[response?.error ?? ""] ?? "Das Profil konnte nicht eingerichtet werden.",
+        };
     }
 
     // Force cache revalidation to ensure the layout updates

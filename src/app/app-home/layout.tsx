@@ -1,8 +1,6 @@
 import { AppHeader } from "@/components/layout/AppHeader";
 import { LiquidBackground } from "@/components/ui/LiquidBackground";
-import { DebugRolePanel } from "@/components/debug/DebugRolePanel";
 import { RoleGuard } from "@/components/auth/RoleGuard";
-import { RoleOverrideExpiryWatcher } from "@/components/auth/RoleOverrideExpiryWatcher";
 import { getAppHomeSnapshot } from "@/lib/app-shell";
 import {
     AppNavigationProvider,
@@ -22,9 +20,6 @@ export default async function AppHomeLayout({
                 {/* Shared Background for the entire app area */}
                 <LiquidBackground />
 
-                {/* Persistence & Logic */}
-                <RoleOverrideExpiryWatcher overrideExpiresAt={snapshot.effectiveView.overrideExpiresAt} />
-                <DebugRolePanel profile={snapshot.profile} />
                 <RoleGuard profile={snapshot.profile} />
 
                 {/* Persistent Header */}

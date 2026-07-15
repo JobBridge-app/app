@@ -29,34 +29,22 @@ export default async function NewOfferPage() {
         redirect("/app-home/profile?focus=provider-verification&from=create-job");
     }
 
-    const supabase = await supabaseServer();
-    const { data: defaultLocations } = await supabase.from("provider_locations" as never)
-        .select("*")
-        .eq("provider_id", profile.id)
-        .eq("is_default", true)
-        .limit(1);
-
-    const defaultLocationRaw = defaultLocations?.[0];
-
-    let defaultLocation = (defaultLocationRaw ?? null) as unknown as DefaultLocation | null;
-
-    // Fallback: If no provider_location found, use the Profile Address (v13)
-    if (!defaultLocation) {
-        // We cast profile to any because 'street'/'house_number' might be missing from the strict type definition
-        // but we confirmed they exist in the DB and are used in ProfileEditForm.
-        const p = profile as any;
-        if (p.street && p.city) {
-            defaultLocation = {
-                id: "profile-default",
-                public_label: "Privatadresse",
-                address_line1: `${p.street} ${p.house_number || ""}`.trim(),
-                postal_code: p.zip || p.postal_code || "",
-                city: p.city
-            };
+    const profileStreet = profile.street?.trim();
+    const profileCity = profile.city?.trim();
+    const profilePostalCode = profile.zip?.trim();
+    const profileAddressLine = [profileStreet, profile.house_number?.trim()].filter(Boolean).join(" ");
+    const defaultLocation: DefaultLocation | null = profileStreet && profileCity && profilePostalCode
+        ? {
+            id: "profile-default",
+            public_label: "Privatadresse",
+            address_line1: profileAddressLine,
+            postal_code: profilePostalCode,
+            city: profileCity,
         }
-    }
+        : null;
 
     // Fetch market_name to dynamically display reach text
+    const supabase = await supabaseServer();
     const { data: region } = await supabase.from("regions_live")
         .select("display_name")
         .eq("id", profile.market_id as string)
@@ -66,19 +54,14 @@ export default async function NewOfferPage() {
     return (
         <div className="container mx-auto max-w-3xl px-4 py-8 md:px-6">
             <div className="mb-8">
-                <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">Neuen Job erstellen</h1>
-                <p className="mt-3 max-w-2xl text-base leading-7 text-slate-400">
+                <h1 className="text-4xl font-semibold tracking-tight text-[var(--text-strong)] md:text-5xl">Neuen Job erstellen</h1>
+                <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--text-muted)]">
                     Suche nach Unterstützung in {marketName}.
                 </p>
             </div>
 
-            <div className="relative isolate overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#050817]/78 p-5 shadow-[0_32px_100px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.07)] backdrop-blur-xl sm:p-7 md:p-8">
-                <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-indigo-200/60 to-transparent" />
-                <div className="pointer-events-none absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-sky-200/25 to-transparent" />
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.055),transparent_32%),linear-gradient(180deg,rgba(79,70,229,0.05),transparent_44%)]" />
-                <div className="relative">
-                    <CreateJobForm defaultLocation={defaultLocation} marketName={marketName} />
-                </div>
+            <div className="rounded-[1.75rem] border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-5 shadow-[var(--shadow-card)] sm:p-7 md:p-8">
+                <CreateJobForm defaultLocation={defaultLocation} marketName={marketName} />
             </div>
         </div>
     );
